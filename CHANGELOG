@@ -1,0 +1,20 @@
+## [imcomp-2.0.1] - Not Released Yet
+ * native installer for windows
+ * updated UI for Traherne project
+
+## [imcomp-2.0.0] - November 07, 2017
+ * native installer for Windows for testing by Traherne project
+
+## [imcomp-2.0.0-beta] - October 02, 2017
+ * standalone tool with web browser based user interface
+ * based on via2 initial codebase (region drawing, zoom, etc)
+ * released for initial testing by Trahern project
+
+## [v1.0.0] - August 02, 2017
+ * web based user interface to upload and compare images
+ * for internal testing only (deployed using zeus.robots.ox.ac.uk)
+ * features similar to the MATLAB based image comparison tool developed by Joon Son Chung for the Trahern project
+
+## [v1.0.0-beta] - June 01, 2017
+ * the original relja_register codebase
+ * developed by Relja Arandjelovic during his DPhil / Postdoc at the Visual Geometry Group, Department of Engineering Science, University of Oxford.
