@@ -1,0 +1,14 @@
+#ifndef _IMCOMP_SERVER_CONFIG_H_
+#define _IMCOMP_SERVER_CONFIG_H_
+
+#define IMCOMP_SERVER_NAME "imcomp server"
+
+#define IMCOMP_SERVER_VERSION_MAJOR "2"
+#define IMCOMP_SERVER_VERSION_MINOR "0"
+#define IMCOMP_SERVER_VERSION_PATCH "1"
+
+#define IMCOMP_SERVER_AUTHOR_NAME ""
+#define IMCOMP_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk"
+#define IMCOMP_SERVER_FIRST_RELEASE "Nov. 2017"
+
+#endif

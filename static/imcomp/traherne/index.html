@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Traherne Digital Collator</title>
+  <meta name="author" content="Abhishek Dutta">
+  <meta name="description" content="Web browser based user interface for traherne digital collator">
+
+  <link rel="stylesheet" type="text/css" href="/imcomp/traherne/traherne.css" />
+</head>
+
+<body>
+<div id="page">
+  <div class="horizontal_ref_line"></div>
+  <div id="top_panel">
+    <button type="button" title="Move to previous base and comp. image pair">&lt;</button>
+    <label>Base & Comp Pair</label>
+    <button type="button" title="Move to next base and comp. image pair">&gt;</button>
+
+    <span class="button_group_space1"></span>
+    <label for="toggle_speed">Toggle Speed</label>
+    <select name="toggle_speed">
+      <option value="">Slow</option>
+      <option value="" selected="selected">Medium</option>
+      <option value="">Fast</option>
+    </select>
+
+  </div>
+  <div id="message_panel">This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long.</div>
+
+  <div id="middle_panel">
+    <div id="img_label_panel">
+      <div id="left_img_label" class="img_label">
+        <label for="left_img_filename">Base</label>
+        <select name="left_img_filename">
+          <option value="copy1_page1">Page+529+state+B+(resetting)+of+Jonson+1616++folio+(Oxford_EFL_YKI_1616_26764)+state+B+(resetting)+of+Jonson+1616++folio+(Oxford_EFL_YKI_1616_26764).jpg</option>
+          <option value="">Copy1_page2.jpg</option>
+          <option value="">Copy1_page3.jpg</option>
+          <option value="">...</option>
+          <option value="">Copy1_pageN.jpg</option>
+        </select>
+      </div>
+      <div class="vertical_img_separator_panel"></div>
+      <div id="right_img_label" class="img_label">
+        <label for="right_img_filename">Comp</label>
+        <select name="right_img_filename">
+          <option value="copy2_page1">Page+529+state+B+(resetting)+of+Jonson+1616++folio+(Oxford_EFL_YKI_1616_26764)+state+B+(resetting)+of+Jonson+1616++folio+(Oxford_EFL_YKI_1616_26764).jpg</option>
+          <option value="">Copy1_page2.jpg</option>
+          <option value="">Copy1_page3.jpg</option>
+          <option value="">...</option>
+          <option value="">Copy1_pageN.jpg</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="panel_img_choice">
+      <div id="left_panel_choice" class="centered_text">
+        <input type="radio" id="left_panel_base_img" name="left_panel_choice" checked>
+        <label for="left_panel_base_img">Base</label>
+
+        <input type="radio" id="left_panel_overlap_img" name="left_panel_choice">
+        <label for="left_panel_overlap_img">Overlap</label>
+
+        <input type="radio" id="left_panel_comp_img" name="left_panel_choice">
+        <label for="left_panel_comp_img">Comp</label>
+
+        <input type="radio" id="left_panel_diff_img" name="left_panel_choice">
+        <label for="left_panel_diff_img">Diff</label>
+      </div>
+      <div class="vertical_img_separator_panel"></div>
+      <div id="right_panel_choice" class="centered_text">
+        <input type="radio" id="right_panel_comp_img" name="right_panel_choice" checked>
+        <label for="right_panel_comp_img">Comp</label>
+
+        <input type="radio" id="right_panel_overlap_img" name="right_panel_choice">
+        <label for="right_panel_overlap_img">Overlap</label>
+
+        <input type="radio" id="right_panel_base_img" name="right_panel_choice">
+        <label for="right_panel_base_img">Base</label>
+      </div>
+    </div>
+
+    <div id="img_display_panel">
+<!--
+      <div id="left_panel" class="left_image"><img src="/home/tlm/dev/imcomp/test/f772a-f574-7e0c-eea3_sf5c3f4cb_crop.jpg"></div>
+      <div class="vertical_img_separator_panel">
+        <canvas id="reference_line_control"></canvas>
+      </div>
+      <div id="right_panel" class="right_image"><img src="/home/tlm/dev/imcomp/test/fd372-e7a6-6be2-51fb_sf5c3f4cb_crop_tx.jpg"></div>
+-->
+      <div id="left_panel" class="left_image"><img src="/home/tlm/dev/imcomp/test/f772a-f574-7e0c-eea3.jpg"></div>
+      <div class="vertical_img_separator_panel">
+        <canvas id="reference_line_control"></canvas>
+      </div>
+      <div id="right_panel" class="right_image"><img src="/home/tlm/dev/imcomp/test/fd372-e7a6-6be2-51fb.jpg"></div>
+
+    </div>
+
+    <div id="img_control_panel">
+      <div id="base_control_panel" class="img_control">
+        <button type="button">&lt;</button>
+        <button type="button">Load Base Images</button>
+        <button type="button">&gt;</button>
+      </div>
+      <div class="vertical_separator_panel"></div>
+      <div id="comp_control_panel" class="img_control">
+        <button type="button">&lt;</button>
+        <button type="button">Load Comp. Images</button>
+        <button type="button">&gt;</button>
+
+        <span class="button_group_space1"></span>
+        <select name="comp_toggle_options">
+          <option value="">Base &harr; Overlap</option>
+          <option value="">Comp &harr; Overlap</option>
+        </select>
+        <button type="button">Toggle</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+
+</html>

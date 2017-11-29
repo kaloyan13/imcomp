@@ -1,0 +1,97 @@
+{
+  "configurations": [
+    {
+      "inheritEnvironments": [
+        "msvc_x86"
+      ],
+      "name": "x86-Debug",
+      "includePath": [
+        "${env.INCLUDE}",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ImageContent",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\gauss_iir",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ttime",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\homography",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\stats",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\descriptor",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\matrix"
+      ],
+      "defines": [
+        "WIN32",
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "intelliSenseMode": "msvc-x86"
+    },
+    {
+      "inheritEnvironments": [
+        "msvc_x86"
+      ],
+      "name": "x86-Release",
+      "includePath": [
+        "${env.INCLUDE}",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ImageContent",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\gauss_iir",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ttime",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\homography",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\stats",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\descriptor",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\matrix",
+        "c:\\tlm\\deps\\img_libraries\\include"
+      ],
+      "defines": [
+        "WIN32",
+        "NDEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "intelliSenseMode": "msvc-x86"
+    },
+    {
+      "inheritEnvironments": [
+        "msvc_x64"
+      ],
+      "name": "x64-Debug",
+      "includePath": [
+        "${env.INCLUDE}",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ImageContent",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\gauss_iir",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ttime",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\homography",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\stats",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\descriptor",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\matrix"
+      ],
+      "defines": [
+        "WIN32",
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "intelliSenseMode": "msvc-x64"
+    },
+    {
+      "inheritEnvironments": [
+        "msvc_x64"
+      ],
+      "name": "x64-Release",
+      "includePath": [
+        "${env.INCLUDE}",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ImageContent",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\gauss_iir",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\ttime",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\homography",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\stats",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\descriptor",
+        "c:\\tlm\\imcomp\\imcomp-develop-883a034565515eda40b5c58afdb22f44ec067950\\src\\external_lib\\KMCode_relja\\matrix"
+      ],
+      "defines": [
+        "WIN32",
+        "NDEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "intelliSenseMode": "msvc-x64"
+    }
+  ]
+}

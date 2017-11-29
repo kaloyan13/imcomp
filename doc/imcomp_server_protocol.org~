@@ -1,0 +1,19 @@
+## imcomp server
+|---------------------------------------------------------------+-----+------------------------------------------------|
+| Client                                                        |     | Server                                         |
+|---------------------------------------------------------------+-----+------------------------------------------------|
+| GET /                                                         | --> | redirect to Location: /imcomp/imcomp.html      |
+|                                                               |     |                                                |
+| GET /imcomp/imcomp.js                                         | --> | respond with static resource                   |
+| GET /imcomp/imcomp.css                                        |     |                                                |
+| GET /imcomp/*.*                                               |     |                                                |
+|                                                               |     |                                                |
+| GET /result/_ANY_DYNAMIC_RESOURCE_                            | --> | responds with the result produced by _compare  |
+|                                                               |     |                                                |
+| POST /imcomp/_compare?file1=id1&file2=id2&region1=x0,y0,x1,y1 | --> | Responds with homography                       |
+| POST /imcomp/_upload                                          | --> | Responds with file-id (for _compare operation) |
+|---------------------------------------------------------------+-----+------------------------------------------------|
+
+
+Abhishek Dutta
+11 August 2017
