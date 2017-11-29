@@ -367,9 +367,13 @@ _imcomp_ctrl.prototype.compare = function() {
         this.show_imcomp_server_error('aborted sending request to imcomp server!');
       }.bind(this));
 
-      cr.open('POST', url);
+      cr.open('POST', url + '?' + args.join('&'));
       cr.timeout = 40000; // 20 sec
-      cr.send(args.join('&'));
+      cr.send();
+
+      //cr.open('POST', url);
+      //cr.timeout = 40000; // 20 sec
+      //cr.send(args.join('&'));
     }.bind(this));
   }.bind(this));
 

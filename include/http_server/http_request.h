@@ -52,6 +52,7 @@ class http_request {
 
   map<string, string> fields_;
   map<string, string> multipart_data_;
+  map<string, string> uri_arg_;
 
   ostringstream payload_;
 
@@ -82,7 +83,7 @@ class http_request {
   bool exists_multipart_data_name(string name) const;
   string multipart_data_value(string name) const;
 
-  bool parse_uri();
+  bool parse_uri(map<string,string>& uri_arg) const;
 };
 
 #endif

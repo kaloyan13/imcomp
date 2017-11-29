@@ -126,8 +126,12 @@ registerImages::registerFromGuess(
   // temp image file where transformed image is written in each iteration
   boost::filesystem::path tmp_dir = boost::filesystem::temp_directory_path() / "imcomp";
   tmp_dir = tmp_dir / "tmp";
+  if( !boost::filesystem::exists(tmp_dir) ) {
+    boost::filesystem::create_directories(tmp_dir);
+  }
+
   boost::filesystem::path fullSizeFn2_t = tmp_dir / boost::filesystem::unique_path("rr_register_%%%%-%%%%-%%%%-%%%%.jpg");
-  std::cout << "\nfullSizeFn2_t = " << fullSizeFn2_t.string() << std::flush;
+  //std::cout << "\nfullSizeFn2_t = " << fullSizeFn2_t.string() << std::flush;
 
   // compute RootSIFT: image 1
   thread1= new boost::thread( featWorker( featGetterObj, fullSizeFn1, xl, xu, yl, yu, numFeats1, regions1, descs1 ) );

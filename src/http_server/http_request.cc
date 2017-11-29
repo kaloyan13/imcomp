@@ -302,3 +302,36 @@ string http_request::multipart_data_value(string name) const {
   }
 }
 
+// /imcomp/_compare?file1=id1&file2=id2&region1=x0,y0,x1,y1
+bool http_request::parse_uri(map<string,string>& uri_arg) const {
+  uri_arg.clear();
+  size_t start = uri_.find("?");
+  cout << "\nparsing uri " << uri_ << ", start=" << start << flush;
+
+  if( start != string::npos ) {
+    bool parsing_key = true;
+    start = start + 1;
+    string key;
+    string value;
+    for( size_t i=start; i<uri_.length(); i++ ) {
+      if( uri_.at(i) == '=' && parsing_key) {
+        key = uri_.substr(start, i - start);
+        start = i + 1;
+        parsing_key = false;
+      }
+      if( uri_.at(i) == '&' && !parsing_key) {
+        value = uri_.substr(start, i - start);
+        uri_arg.insert( pair<string,string>(key, value) );
+        cout << "\n  " << key << ":" << value << flush;
+        start = i + 1;
+        parsing_key = true;
+      }
+    }
+    value = uri_.substr(start);
+    uri_arg.insert( pair<string,string>(key, value) );
+    return true;
+  } else {
+    return false;
+  }
+}
+

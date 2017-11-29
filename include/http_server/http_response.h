@@ -51,6 +51,32 @@ class http_response {
     fields_.insert( make_pair(name, value) );
   }
 
+  void set_content_type_from_filename(string filename) {
+    string ctype = "application/octet-stream";
+    size_t dot = filename.rfind(".");
+    string ext = filename.substr(dot + 1);
+    if( ext == "html" ) {
+      ctype = "text/html";
+    } 
+    else if( ext == "jpg" ) {
+      ctype = "image/jpeg";
+    }
+    else if( ext == "png" ) {
+      ctype = "image/png";
+    }
+    else if( ext == "css" ) {
+      ctype = "text/css";
+    }
+    else if( ext == "js" ) {
+      ctype = "application/javascript";
+    }
+    else if( ext == "txt" ) {
+      ctype = "text/plain";
+    }
+
+    set_field("Content-Type", ctype);
+  }
+
   void set_payload(string payload) {
     payload_ = payload;
     fields_["Content-Length"] = to_string(payload_.length());
