@@ -24,6 +24,7 @@ void imcomp_request_handler::init(const boost::filesystem::path upload_dir, cons
 void imcomp_request_handler::handle_http_request(const http_request& request, http_response& response) {
   cout << "\n" << request.method_ << " [" << request.uri_ << "]" << flush;
   response.set_status(200);
+/*
   if ( (request.uri_ == "/imcomp") || (request.uri_ == "/imcomp/")) {
     std::string asset_fn("/imcomp/index.html");
     auto asset_loc = imcomp::asset::files_.find(asset_fn);
@@ -37,6 +38,50 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     auto asset_loc = imcomp::asset::files_.find(asset_fn);
     response.set_payload(asset_loc->second);
     response.set_field("Content-Type", "text/html");
+    return;
+  }
+*/
+  if ( util::begins_with(request.uri_, "/imcomp/traherne/") ) {
+    // serve dynamic resource from result_dir_
+    // @todo
+    string prefix = "/imcomp/traherne/";
+    string res = request.uri_.substr(prefix.length());
+    
+    if(has_invalid_char(res)) {
+      response.set_status(400);
+    } else {
+      boost::filesystem::path fn("/home/tlm/dev/imcomp/asset/imcomp/traherne");
+      fn = fn / res;
+      std::string file_contents;
+      if( load_file_contents(fn, file_contents) ) {
+        response.set_payload(file_contents);
+        response.set_content_type_from_filename(fn.string());
+      } else {
+        response.set_status(400);
+      }
+    }
+    return;
+  }
+
+  if ( request.method_ == "GET" && util::begins_with(request.uri_, "/imcomp/") ) {
+    // serve dynamic resource from result_dir_
+    // @todo
+    string prefix = "/imcomp/";
+    string res = request.uri_.substr(prefix.length());
+    
+    if(has_invalid_char(res)) {
+      response.set_status(400);
+    } else {
+      boost::filesystem::path fn("/home/tlm/dev/imcomp/asset/imcomp");
+      fn = fn / res;
+      std::string file_contents;
+      if( load_file_contents(fn, file_contents) ) {
+        response.set_payload(file_contents);
+        response.set_content_type_from_filename(fn.string());
+      } else {
+        response.set_status(400);
+      }
+    }
     return;
   }
 

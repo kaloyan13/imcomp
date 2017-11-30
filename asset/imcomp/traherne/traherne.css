@@ -6,10 +6,18 @@ body {
   background-color: #ffffff;
   color: #000000;
   opacity: 1.0;
+  min-width: 1280px; min-height: 720px; /* laptop screen */
 }
 
 * {
   box-sizing: border-box;
+}
+
+.display-none {
+  display: none;
+}
+.display-inline-block {
+  display: inline-block;
 }
 
 #page {
@@ -39,43 +47,56 @@ body {
   overflow: hidden;
   width: 100%;
 }
-#middle_panel div {
+#middle_panel .row {
   display: table-row;
   margin: 0;
   padding: 0;
 }
-#middle_panel div div {
+#middle_panel .cell {
   display: table-cell;
   margin: 0;
   padding: 0.2% 0;
   width: 48%;
-  border-right: 1px solid #9E9E9E;
+  border: 1px solid #9E9E9E;
   text-align: center;
+  vertical-align: middle;
 }
 .horizontal_ref_line {
   content: " ";
   display: block;
   border-bottom: 1px solid black;
 }
-.left_image {
+
+/* base panel */
+#left_panel {
   text-align: right !important;
   padding: 0 !important;
   margin: 0 !important;
-  overflow: scroll !important;
+  vertical-align: middle;
 }
-.left_image img {
+#left_panel_content { /* container for via or base image */
+  position: relative;
+  display: inline-block;
+  border: 1px solid red;
+  width: 100%;
+  height: 70vh;
+}
+#left_panel_img img {
   max-width: 100%;
 }
-.right_image {
+
+/* comp panel */
+#right_panel {
   text-align: left !important;
   padding: 0 !important;
-  margin: 0;
+  margin: 0 !important;
+  vertical-align: middle;
 }
-.right_image img {
+#right_panel img {
   max-width: 100%;
 }
 .img_label {
-  font-size: default;
+  font-size: medium;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

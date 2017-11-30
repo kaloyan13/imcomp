@@ -1,0 +1,21 @@
+## Traherne User Interface
+The traherne html user interface is based on the Model View Controller (MVC) design.
+
+| action           | ui element id     | event | _traherne_controller      | _traherne_model   | _traherne_view          |
+|------------------+-------------------+-------+---------------------------+-------------------+-------------------------|
+| Load Base Images | base_load_images  | click |                           |                   | 1. select_local_files() |
+|                  |                   |       | 2. update_files()         |                   |                         |
+|                  |                   |       |                           | 3. add_images()   |                         |
+|                  |                   |       | 4. on_filelist_update()   |                   |                         |
+|                  |                   |       |                           | 5. get_filelist() |                         |
+|                  |                   |       | 6. update_view_filelist() |                   |                         |
+|                  |                   |       | 7. set_now()              |                   |                         |
+|                  |                   |       | 8. on_now_update()        |                   |                         |
+|                  |                   |       |                           |                   |                         |
+| Prev Base Image  | base_move_to_prev |       |                           |                   |                         |
+|                  |                   |       |                           |                   |                         |
+
+
+
+Abhishek Dutta
+30 Nov. 2017

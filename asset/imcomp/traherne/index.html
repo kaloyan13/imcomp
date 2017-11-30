@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Traherne Digital Collator</title>
+  <meta name="author" content="Abhishek Dutta">
+  <meta name="description" content="Web browser based user interface for traherne digital collator">
+
+  <link rel="stylesheet" type="text/css" href="./traherne.css" />
+</head>
+
+<body>
+<div id="page">
+  <div class="horizontal_ref_line"></div>
+  <div id="top_panel">
+    <button type="button" title="Move to previous base and comp. image pair">&lt;</button>
+    <label>Base & Comp Pair</label>
+    <button type="button" title="Move to next base and comp. image pair">&gt;</button>
+
+    <span class="button_group_space1"></span>
+    <label for="toggle_speed">Toggle Speed</label>
+    <select name="toggle_speed">
+      <option value="">Slow</option>
+      <option value="" selected="selected">Medium</option>
+      <option value="">Fast</option>
+    </select>
+
+  </div>
+  <div id="message_panel">This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long. This is a very long test message. Yes this is really long.</div>
+
+  <div id="middle_panel">
+    <div class="row">
+      <div class="img_label cell">
+        <label for="base_img_filename_list">Base</label>
+        <select name="base_img_filename_list" id="base_img_filename_list">
+        </select>
+      </div>
+      <div class="vertical_img_separator_panel cell"></div>
+      <div class="img_label cell">
+        <label for="comp_img_filename_list">Comp</label>
+        <select name="comp_img_filename_list" id="comp_img_filename_list">
+        </select>
+      </div>
+    </div>
+
+    <div id="panel_img_choice" class="row">
+      <div id="left_panel_choice" class="centered_text cell">
+        <input type="radio" id="left_panel_base_img" name="left_panel_choice" disabled="true">
+        <label for="left_panel_base_full_img">Base</label>
+
+        <input type="radio" id="left_panel_base_img" name="left_panel_choice" disabled="true">
+        <label for="left_panel_base_region_img">Base (sel. region)</label>
+
+        <input type="radio" id="left_panel_overlap_img" name="left_panel_choice" disabled="true">
+        <label for="left_panel_overlap_img">Overlap</label>
+
+        <input type="radio" id="left_panel_comp_img" name="left_panel_choice" disabled="true">
+        <label for="left_panel_comp_img">Comp</label>
+
+        <input type="radio" id="left_panel_diff_img" name="left_panel_choice" disabled="true">
+        <label for="left_panel_diff_img">Diff</label>
+      </div>
+
+      <div class="vertical_img_separator_panel cell"></div>
+
+      <div id="right_panel_choice" class="centered_text cell">
+        <input type="radio" id="right_panel_comp_img" name="right_panel_choice"  disabled="true">
+        <label for="right_panel_comp_img">Comp</label>
+
+        <input type="radio" id="right_panel_overlap_img" name="right_panel_choice" disabled="true">
+        <label for="right_panel_overlap_img">Overlap</label>
+
+        <input type="radio" id="right_panel_base_img" name="right_panel_choice" disabled="true">
+        <label for="right_panel_base_img">Base</label>
+      </div>
+    </div>
+
+    <div id="img_display_panel" class="row">
+      <!--
+          <div id="left_panel" class="left_image"><img src="/home/tlm/dev/imcomp/test/f772a-f574-7e0c-eea3_sf5c3f4cb_crop.jpg"></div>
+          <div class="vertical_img_separator_panel">
+            <canvas id="reference_line_control"></canvas>
+          </div>
+          <div id="right_panel" class="right_image"><img src="/home/tlm/dev/imcomp/test/fd372-e7a6-6be2-51fb_sf5c3f4cb_crop_tx.jpg"></div>
+          -->
+      <div id="left_panel" class="left_right_panel cell">
+        <div id="left_panel_content">
+          <!-- Note:
+               * the parent of via_panel should have user-defined dimensions
+               * the parent should have "display: inline-block; position: relative"
+            -->
+          <div id="left_via_panel" class="display-inline-block"></div>
+          <img id="left_image" src="" class="display-none">
+        </div>
+      </div>
+      <div class="vertical_img_separator_panel left_right_panel cell">
+        <canvas id="reference_line_control"></canvas>
+      </div>
+      <div id="right_panel" class="left_right_panel cell">
+        <img id="right_image" src="">
+      </div>
+
+    </div>
+
+    <div id="img_control_panel" class="row">
+      <div id="base_control_panel" class="img_control cell">
+        <button id="base_move_to_prev" type="button">&lt;</button>
+        <button id="base_load_images" type="button">Load Base Images</button>
+        <button id="base_move_to_next" type="button">&gt;</button>
+      </div>
+      <div class="vertical_separator_panel cell"></div>
+      <div id="comp_control_panel" class="img_control cell">
+        <button type="button">&lt;</button>
+        <button type="button">Load Comp. Images</button>
+        <button type="button">&gt;</button>
+
+        <span class="button_group_space1"></span>
+        <select name="comp_toggle_options">
+          <option value="">Base &harr; Overlap</option>
+          <option value="">Comp &harr; Overlap</option>
+        </select>
+        <button type="button">Toggle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- load the javascripts that implement the user interface interactions -->
+<script src="./_via_min.js"></script>
+<script src="./_traherne_model.js"></script>
+<script src="./_traherne_view.js"></script>
+<script src="./_traherne_controller.js"></script>
+<script src="./traherne.js"></script>
+</body>
+
+</html>
