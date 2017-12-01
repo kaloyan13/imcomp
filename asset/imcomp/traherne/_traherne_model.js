@@ -284,6 +284,7 @@ _traherne_model.prototype.set_compare_status = function(status, msg) {
 // c is an instance of _traherne_compare_instance
 _traherne_model.prototype.compare_img_pair = function(c) {
   return new Promise( function(ok_callback, err_callback) {
+    this.c.on_compare_start();
     var args = [];
     args.push('file1=' + c.upload_id1);
     args.push('file2=' + c.upload_id2);

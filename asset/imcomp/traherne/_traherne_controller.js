@@ -17,6 +17,7 @@ function _traherne_controller() {
   this.compare.start_time = {};
   this.compare.end_time = {};
   this.compare.promise = {};  // promise to current compare operation
+  this.compare.result = {};
 }
 
 function _traherne_compare_instance(findex1, findex2) {
@@ -27,6 +28,8 @@ function _traherne_compare_instance(findex1, findex2) {
 _traherne_controller.prototype.init = function( traherne_model, traherne_view ) {
   this.m = traherne_model;
   this.v = traherne_view;
+
+  this.deactivate_compare_tools();
 }
 
 _traherne_controller.prototype.update_files = function(type, e) {
@@ -73,6 +76,7 @@ _traherne_controller.prototype.on_filelist_update = function(type) {
   this.update_view_filelist(type, filelist);
   this.set_now(type, 0); // show first image
 
+  this.activate_panel_choice_radio(type, 'via');
 }
 
 _traherne_controller.prototype.update_view_filelist = function(type, filelist) {
@@ -208,14 +212,14 @@ _traherne_controller.prototype.on_compare_start = function() {
 
 _traherne_controller.prototype.on_compare_end = function() {
   this.compare.end_time = new Date();
+  this.compare.is_ongoing = false;
   console.log('_traherne_controller.prototype.on_compare_end()');
   this.compare.promise.then( function(c) {
-    console.log(c);
+    this.compare.result = c;
     if( c.result.status === 'OK' ) {
-      var time = this.compare.end_time - this.compare.start_time;
-      var msg = 'Comparison completed in ' + (time/1000) + ' sec.';
-      this.v.msg(msg);
-      this.show_compare_result(c);
+      this.on_compare_success();
+    } else {
+      this.on_compare_failure();
     }
   }.bind(this));
 }
@@ -224,12 +228,70 @@ _traherne_controller.prototype.on_compare_status_update = function() {
   this.v.msg('Compare status: ' + this.m.compare_status.msg);
 }
 
+_traherne_controller.prototype.on_compare_success = function() {
+  var time = this.compare.end_time - this.compare.start_time;
+  var msg = 'Comparison completed in ' + Math.round(time/1000) + ' sec.';
+  this.v.msg(msg);
+
+  this.show_compare_result(this.compare.result);
+
+  this.activate_compare_tools();
+}
+
+_traherne_controller.prototype.on_compare_failure = function() {
+  var time = this.compare.end_time - this.compare.start_time;
+  var msg = 'Comparison failed';
+  this.v.msg(msg);
+}
+
 _traherne_controller.prototype.show_compare_result = function(c) {
   // in base panel, show file1 crop
   this.set_panel_content('base', c.result.file1_crop);
+  this.activate_panel_choice_radio('base', 'crop');
 
   // in comp panel, show file2 transformed + crop
   this.set_panel_content('comp', c.result.file2_crop_tx);
+  this.activate_panel_choice_radio('comp', 'crop_tx');
+}
+
+_traherne_controller.prototype.deactivate_compare_tools = function() {
+  var el = document.getElementsByClassName('compare_tool');
+  var n = el.length;
+  for( var i=0; i<n; i++ ) {
+    el[i].setAttribute('disabled', 'true');
+  }
+
+  // @@@@@@@@@ todo
+  var rb = document.getElementsByName('base_display_selector');
+  n = rb.length;
+  for( var i=0; i<n; i++ ) {
+  }
+
+}
+_traherne_controller.prototype.activate_compare_tools = function() {
+  var el = document.getElementsByClassName('compare_tool');
+  var n = el.length;
+  for( var i=0; i<n; i++ ) {
+    el[i].removeAttribute('disabled');
+  }
+}
+
+_traherne_controller.prototype.activate_panel_choice_radio = function(type, name) {
+  // radio button activations in the panel_choice is mutually exclusive
+  var el = document.getElementsByClassName('compare_tool');
+  var n = el.length;
+  var activated_radio_id = type + '_' + name;
+  for( var i=0; i<n; i++ ) {
+    var id = el[i].getAttribute('id');
+    if( id.startsWith(type) ) {
+      if( id == activated_radio_id ) {
+        el[i].setAttribute('checked', 'checked');
+        el[i].removeAttribute('disabled');
+      } else {
+        el[i].removeAttribute('checked');
+      }
+    }
+  }
 }
 
 _traherne_controller.prototype.set_panel_content = function(type, url) {
