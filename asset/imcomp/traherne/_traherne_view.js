@@ -5,11 +5,10 @@ function _traherne_view() {
 
   this.cpanel = document.getElementById('top_panel'); // global control panel
 
+  this.theme = {};
+  this.theme.MSG_TIMEOUT_MS = 5000;
 
-  _traherne_view.prototype.init = function( traherne_controller ) {
-    this.c = traherne_controller;
-    this.connect_ui_elements_to_traherne_view();
-  }
+  this.message_panel = document.getElementById('message_panel');
 
   // capture all user interface events and notify _traherne_controller
   this.handleEvent = function(e) {
@@ -42,11 +41,20 @@ function _traherne_view() {
       this.c.move_to_prev_pair();
       break;
 
+    case 'compare_base_comp':
+      this.c.compare_base_comp();
+      break;
+
     default:
       console.log('_via_view: handler unknown for event: ' + e.currentTarget);
     }
     e.stopPropagation();
   }
+}
+
+_traherne_view.prototype.init = function( traherne_controller ) {
+  this.c = traherne_controller;
+  this.connect_ui_elements_to_traherne_view();
 }
 
 _traherne_view.prototype.select_local_files = function(type) {
@@ -82,4 +90,21 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
 
   document.getElementById( 'move_to_prev_pair').addEventListener('click', this, false);
   document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
+
+  document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
+}
+
+_traherne_view.prototype.msg = function(msg, t) {
+  //console.log('showing msg: ' + msg);
+  if ( this.message_clear_timer ) {
+    clearTimeout(this.message_clear_timer); // stop any previous timeouts
+  }
+  this.message_panel.innerHTML = msg;
+
+  if ( t !== 0 ) {
+    var timeout = t || this.theme.MSG_TIMEOUT_MS;
+    this.message_clear_timer = setTimeout( function() {
+      this.message_panel.innerHTML = '&nbsp;';
+    }.bind(this), timeout);
+  }
 }

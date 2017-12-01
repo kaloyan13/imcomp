@@ -1,24 +1,31 @@
 ## Traherne User Interface
 The traherne html user interface is based on the Model View Controller (MVC) design.
 
-| action           | ui element id     | event | _traherne_controller      | _traherne_model   | _traherne_view          |
-|------------------+-------------------+-------+---------------------------+-------------------+-------------------------|
-| Load Base Images | base_load_images  | click |                           |                   | 1. select_local_files() |
-|                  |                   |       | 2. update_files()         |                   |                         |
-|                  |                   |       |                           | 3. add_images()   |                         |
-|                  |                   |       | 4. on_filelist_update()   |                   |                         |
-|                  |                   |       |                           | 5. get_filelist() |                         |
-|                  |                   |       | 6. update_view_filelist() |                   |                         |
-|                  |                   |       | 7. set_now()              |                   |                         |
-|                  |                   |       | 8. on_now_update()        |                   |                         |
-|                  |                   |       |                           |                   |                         |
-| Prev Base Image  | base_move_to_prev | click | 1. move_to_prev()         |                   |                         |
-|                  |                   |       | 2. set_now                |                   |                         |
-|                  |                   |       | 3. on_now_update()        |                   |                         |
-|                  |                   |       |                           |                   |                         |
-| Prev Image Pair  | move_to_prev_pair | click | 1. move_to_prev_pair()    |                   |                         |
-|                  |                   |       | 2. move_to_prev()         |                   |                         |
-|                  |                   |       |                           |                   |                         |
+| action           | ui element id     | event | _traherne_controller      | _traherne_model       | _traherne_view          |
+|------------------+-------------------+-------+---------------------------+-----------------------+-------------------------|
+| Load Base Images | base_load_images  | click |                           |                       | 1. select_local_files() |
+|                  |                   |       | 2. update_files()         |                       |                         |
+|                  |                   |       |                           | 3a add_images()       |                         |
+|                  |                   |       |                           | 3b upload_file()      |                         |
+|                  |                   |       | 4. on_filelist_update()   |                       |                         |
+|                  |                   |       |                           | 5. get_filelist()     |                         |
+|                  |                   |       | 6a update_view_filelist() |                       |                         |
+|                  |                   |       | 6b set_now()              |                       |                         |
+|                  |                   |       | 6c on_now_update()        |                       |                         |
+|                  |                   |       |                           |                       |                         |
+| Prev Base Image  | base_move_to_prev | click | 1a move_to_prev()         |                       |                         |
+|                  |                   |       | 1b set_now                |                       |                         |
+|                  |                   |       | 1c on_now_update()        |                       |                         |
+|                  |                   |       |                           |                       |                         |
+| Prev Image Pair  | move_to_prev_pair | click | 1a move_to_prev_pair()    |                       |                         |
+|                  |                   |       | 1b. move_to_prev()        |                       |                         |
+|                  |                   |       |                           |                       |                         |
+| Compare          | compare           | click | 1a compare_base_comp()    |                       |                         |
+|                  |                   |       | 1b on_compare_start()     |                       |                         |
+|                  |                   |       |                           | 2. compare_img_pair() |                         |
+|                  |                   |       | 3a on_compare_end()       |                       |                         |
+|                  |                   |       | 3b show_comapre_result()  |                       |                         |
+|                  |                   |       |                           |                       |                         |
 
 
 

@@ -129,6 +129,12 @@ body {
   width: 2%;
 }
 
+.img_upload_status {
+  display: inline-block;
+  font-size: large;
+  cursor: default;
+}
+
 #message_panel {
   font-size: small;
   font-family: mono;

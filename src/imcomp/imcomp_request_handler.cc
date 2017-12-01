@@ -41,6 +41,27 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     return;
   }
 */
+
+  if ( util::begins_with(request.uri_, "/imcomp/result/") ) {
+    // serve dynamic resource from result_dir_
+    // @todo
+    string prefix = "/imcomp/result/";
+    string res = request.uri_.substr(prefix.length());
+    if(has_invalid_char(res)) {
+      response.set_status(400);
+    } else {
+      boost::filesystem::path fn = result_dir_ / res;
+      std::string file_contents;
+      if( load_file_contents(fn, file_contents) ) {
+        response.set_payload(file_contents);
+        response.set_content_type_from_filename(fn.string());
+      } else {
+        response.set_status(400);
+      }
+    }
+    return;
+  }
+
   if ( util::begins_with(request.uri_, "/imcomp/traherne/") ) {
     // serve dynamic resource from result_dir_
     // @todo
@@ -74,27 +95,6 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     } else {
       boost::filesystem::path fn("/home/tlm/dev/imcomp/asset/imcomp");
       fn = fn / res;
-      std::string file_contents;
-      if( load_file_contents(fn, file_contents) ) {
-        response.set_payload(file_contents);
-        response.set_content_type_from_filename(fn.string());
-      } else {
-        response.set_status(400);
-      }
-    }
-    return;
-  }
-
-  if ( util::begins_with(request.uri_, "/imcomp/result/") ) {
-    // serve dynamic resource from result_dir_
-    // @todo
-    string prefix = "/imcomp/result/";
-    string res = request.uri_.substr(prefix.length());
-    
-    if(has_invalid_char(res)) {
-      response.set_status(400);
-    } else {
-      boost::filesystem::path fn = result_dir_ / res;
       std::string file_contents;
       if( load_file_contents(fn, file_contents) ) {
         response.set_payload(file_contents);
@@ -190,10 +190,10 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
              << h[6] << ", " << h[7] << ", " << h[8] << "],"
              << "\"file2_region\": [" << file2_region[0] << "," << file2_region[1] << "," << file2_region[2] << "," << file2_region[3] << ","
              << file2_region[4] << "," << file2_region[5] << "," << file2_region[6] << "," << file2_region[7] << "],"
-             << "\"file1_crop\":\"result/" + im1_out_fn.filename().string() << "\","
-             << "\"file2_crop\":\"result/" + im2_out_fn.filename().string() << "\","
-             << "\"file2_crop_tx\":\"result/" + im2_tx_fn.filename().string() << "\","
-             << "\"file1_file2_diff\":\"result/" + diff_fn.filename().string() << "\"";
+             << "\"file1_crop\":\"/imcomp/result/" + im1_out_fn.filename().string() << "\","
+             << "\"file2_crop\":\"/imcomp/result/" + im2_out_fn.filename().string() << "\","
+             << "\"file2_crop_tx\":\"/imcomp/result/" + im2_tx_fn.filename().string() << "\","
+             << "\"file1_file2_diff\":\"/imcomp/result/" + diff_fn.filename().string() << "\"";
       } else {
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"ERR\","
