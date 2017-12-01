@@ -13,16 +13,16 @@
 <div id="page">
   <div class="horizontal_ref_line"></div>
   <div id="top_panel">
-    <button type="button" title="Move to previous base and comp. image pair">&lt;</button>
+    <button id="move_to_prev_pair" type="button" title="Move to previous base and comp. image pair">&lt;</button>
     <label>Base & Comp Pair</label>
-    <button type="button" title="Move to next base and comp. image pair">&gt;</button>
+    <button id="move_to_next_pair" type="button" title="Move to next base and comp. image pair">&gt;</button>
 
     <span class="button_group_space1"></span>
     <label for="toggle_speed">Toggle Speed</label>
     <select name="toggle_speed">
-      <option value="">Slow</option>
-      <option value="" selected="selected">Medium</option>
-      <option value="">Fast</option>
+      <option value="600">Slow</option>
+      <option value="300" selected="selected">Medium</option>
+      <option value="150">Fast</option>
     </select>
 
   </div>
@@ -89,15 +89,22 @@
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"
             -->
-          <div id="left_via_panel" class="display-inline-block"></div>
-          <img id="left_image" src="" class="display-none">
+          <div id="base_via_panel" class="display-inline-block"></div>
+          <img id="base_image" src="" class="display-none">
         </div>
       </div>
       <div class="vertical_img_separator_panel left_right_panel cell">
         <canvas id="reference_line_control"></canvas>
       </div>
       <div id="right_panel" class="left_right_panel cell">
-        <img id="right_image" src="">
+        <div id="right_panel_content">
+          <!-- Note:
+               * the parent of via_panel should have user-defined dimensions
+               * the parent should have "display: inline-block; position: relative"
+            -->
+          <div id="comp_via_panel" class="display-inline-block"></div>
+          <img id="comp_image" src="" class="display-none">
+        </div>
       </div>
 
     </div>
@@ -110,9 +117,9 @@
       </div>
       <div class="vertical_separator_panel cell"></div>
       <div id="comp_control_panel" class="img_control cell">
-        <button type="button">&lt;</button>
-        <button type="button">Load Comp. Images</button>
-        <button type="button">&gt;</button>
+        <button id="comp_move_to_prev" type="button">&lt;</button>
+        <button id="comp_load_images" type="button">Load Comp. Images</button>
+        <button id="comp_move_to_next" type="button">&gt;</button>
 
         <span class="button_group_space1"></span>
         <select name="comp_toggle_options">

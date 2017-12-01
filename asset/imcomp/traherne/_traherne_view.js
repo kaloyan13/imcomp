@@ -16,21 +16,36 @@ function _traherne_view() {
     if( e.currentTarget.classList.contains('disabled') ) {
       return;
     }
+    var action_id = e.currentTarget.id;
+    if ( action_id.length >= 4 ) {
+      var type = action_id.substr(0, 4);
+    }
+
     switch(e.currentTarget.id) {
     case 'base_load_images':
-      this.select_local_files('base');
+    case 'comp_load_images':
+      this.select_local_files(type);
       break;
     case 'base_move_to_next':
-      this.c.move_to_next('base');
+    case 'comp_move_to_next':
+      this.c.move_to_next(type);
       break;
     case 'base_move_to_prev':
-      this.c.move_to_prev('base');
+    case 'comp_move_to_prev':
+      this.c.move_to_prev(type);
       break;
+
+    case 'move_to_next_pair':
+      this.c.move_to_next_pair();
+      break;
+    case 'move_to_prev_pair':
+      this.c.move_to_prev_pair();
+      break;
+
     default:
       console.log('_via_view: handler unknown for event: ' + e.currentTarget);
     }
     e.stopPropagation();
-
   }
 }
 
@@ -46,9 +61,6 @@ _traherne_view.prototype.select_local_files = function(type) {
 
   if( type === 'base' || type === 'comp' ) {
     this.local_file_selector.addEventListener('change', function(e) {
-      console.log(e);
-      console.log(type);
-      console.log(this.c);
       this.c.update_files(type, e);
     }.bind(this), false);
     this.local_file_selector.click();
@@ -59,9 +71,15 @@ _traherne_view.prototype.select_local_files = function(type) {
 }
 
 _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
-  document.getElementById('base_load_images').addEventListener('click', this, false);
-  document.getElementById('base_move_to_prev').addEventListener('click', this, false);
-  document.getElementById('base_move_to_next').addEventListener('click', this, false);
-  document.getElementById('base_img_filename_list').addEventListener('change', this.c.base_now_update.bind(this.c), false);
-  document.getElementById('comp_img_filename_list').addEventListener('change', this.c.comp_now_update.bind(this.c), false);
+  for( var type in this.c.type_list ) {
+    document.getElementById( type + '_load_images').addEventListener('click', this, false);
+    document.getElementById( type + '_move_to_prev').addEventListener('click', this, false);
+    document.getElementById( type + '_move_to_next').addEventListener('click', this, false);
+    document.getElementById( type + '_img_filename_list').addEventListener('change', function(e) {
+      this.c.update_now(type, e);
+    }.bind(this.c), false);
+  }
+
+  document.getElementById( 'move_to_prev_pair').addEventListener('click', this, false);
+  document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
 }

@@ -12,7 +12,12 @@ The traherne html user interface is based on the Model View Controller (MVC) des
 |                  |                   |       | 7. set_now()              |                   |                         |
 |                  |                   |       | 8. on_now_update()        |                   |                         |
 |                  |                   |       |                           |                   |                         |
-| Prev Base Image  | base_move_to_prev |       |                           |                   |                         |
+| Prev Base Image  | base_move_to_prev | click | 1. move_to_prev()         |                   |                         |
+|                  |                   |       | 2. set_now                |                   |                         |
+|                  |                   |       | 3. on_now_update()        |                   |                         |
+|                  |                   |       |                           |                   |                         |
+| Prev Image Pair  | move_to_prev_pair | click | 1. move_to_prev_pair()    |                   |                         |
+|                  |                   |       | 2. move_to_prev()         |                   |                         |
 |                  |                   |       |                           |                   |                         |
 
 
