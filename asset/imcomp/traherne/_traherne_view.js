@@ -1,7 +1,5 @@
 function _traherne_view() {
   this.now = {};
-  this.now['base'] = {};
-  this.now['comp'] = {};
 
   this.cpanel = document.getElementById('top_panel'); // global control panel
 
@@ -54,6 +52,11 @@ function _traherne_view() {
 
 _traherne_view.prototype.init = function( traherne_controller ) {
   this.c = traherne_controller;
+
+  for( var type in this.c.type_list ) {
+    this.now[type] = {};
+  }
+
   this.connect_ui_elements_to_traherne_view();
 }
 

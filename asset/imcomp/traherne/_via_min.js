@@ -1815,8 +1815,8 @@ _via_ctrl.prototype.compute_view_panel_to_nowfile_tform = function() {
 
     /*  */
     // determine the position of content on content_layer
-    //this.v.now.tform.x = Math.floor( (lw - txw)/2 );
-    this.v.now.tform.x = 0;
+    this.v.now.tform.x = Math.floor( (lw - txw)/2 ); // to align to center
+    //this.v.now.tform.x = 0; // to align to left
     this.v.now.tform.y = Math.floor( (lh - txh)/2 );
     this.v.now.tform.width  = Math.floor(txw);
     this.v.now.tform.height = Math.floor(txh);

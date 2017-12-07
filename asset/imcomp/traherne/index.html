@@ -12,7 +12,9 @@
 <body>
 <div id="page">
   <div class="horizontal_ref_line"></div>
-  <div id="top_panel">
+  <div id="message_panel">Traherne Digital Collator (2.0.1) : To start, load base and comp. images.</div>
+
+  <div id="global_control_panel">
     <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare</button>
 
     <span class="button_group_space1"></span>
@@ -27,12 +29,12 @@
       <option value="300" selected="selected">Medium</option>
       <option value="150">Fast</option>
     </select>
-
   </div>
-  <div id="message_panel">Traherne Digital Collator (2.0.1) : To start, load base and comp. images.</div>
 
   <div id="middle_panel">
-    <div class="row">
+
+    <!-- Content name, description and status -->
+    <div id="content_label" class="row">
       <div class="img_label cell">
         <label for="base_img_filename_list">Base</label>
         <select name="base_img_filename_list" id="base_img_filename_list">
@@ -48,68 +50,70 @@
       </div>
     </div>
 
-    <div id="panel_img_choice" class="row">
-      <div id="left_panel_choice" class="centered_text cell">
-        <input type="radio" name="base_display_selector" id="base_via" class="compare_tool">
-        <label for="base_via">Base (full image)</label>
+    <!-- Content choice: choose what is displayed in the content panel -->
+    <div id="content_selector" class="row">
+      <div id="left_content_selector" class="centered_text cell">
+        <input type="radio" name="left_content_option" id="left_content_base_via" class="content_selector">
+        <label for="left_content_base_via">Base (full image)</label>
 
-        <input type="radio" name="base_display_selector" id="base_crop" class="compare_tool">
-        <label for="base_crop">Base (cropped)</label>
+        <input type="radio" name="left_content_option" id="left_content_base_crop" class="content_selector">
+        <label for="left_content_base_crop">Base (cropped)</label>
 
-        <input type="radio" name="base_display_selector" id="" class="compare_tool">
-        <label for="">Overlap</label>
+        <input type="radio" name="left_content_option" id="left_content_base_comp_overlap" class="content_selector">
+        <label for="left_content_base_comp_overlap">Overlap</label>
 
-        <input type="radio" name="base_display_selector" id="base_comp_crop_tx" class="compare_tool">
-        <label for="base_comp_crop_tx">Comp.</label>
+        <input type="radio" name="left_content_option" id="left_content_comp_crop_tx" class="content_selector">
+        <label for="left_content_comp_crop_tx">Comp.</label>
 
-        <input type="radio" name="base_display_selector" id="base_diff" class="compare_tool">
-        <label for="base_diff">Diff</label>
+        <input type="radio" name="left_content_option" id="left_content_base_comp_diff" class="content_selector">
+        <label for="left_content_base_comp_diff">Diff</label>
       </div>
 
       <div class="vertical_img_separator_panel cell"></div>
 
-      <div name="right_panel_choice" class="centered_text cell">
-        <input type="radio" name="comp_display_selector" id="comp_via" class="compare_tool">
-        <label for="comp_via">Comp. (full image)</label>
+      <div name="right_content_selector" class="centered_text cell">
+        <input type="radio" name="right_content_option" id="right_content_comp_via" class="content_selector">
+        <label for="right_content_comp_via">Comp. (full image)</label>
 
-        <input type="radio" name="comp_display_selector" id="comp_crop_tx" class="compare_tool">
-        <label for="comp_crop_tx">Comp. (cropped)</label>
+        <input type="radio" name="right_content_option" id="right_content_comp_crop_tx" class="content_selector">
+        <label for="right_content_comp_crop_tx">Comp. (cropped)</label>
 
-        <input type="radio" name="comp_display_selector" id="" class="compare_tool">
-        <label for="">Overlap</label>
+        <input type="radio" name="right_content_option" id="right_content_base_comp_overlap" class="content_selector">
+        <label for="right_content_base_comp_overlap">Overlap</label>
 
-        <input type="radio" name="comp_display_selector" id="comp_base_crop" class="compare_tool">
-        <label for="comp_base_crop">Base</label>
+        <input type="radio" name="right_content_option" id="right_content_base_crop" class="content_selector">
+        <label for="right_content_base_crop">Base (cropped)</label>
       </div>
     </div>
 
-    <div id="img_display_panel" class="row">
-      <div id="left_panel" class="left_right_panel cell">
-        <div id="left_panel_content">
+    <!-- Content panel: display images and annotation window to the user -->
+    <div id="content_panel" class="row">
+      <div id="left_content_panel" class="cell">
+        <div id="left_content_panel_container">
           <!-- Note:
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"
             -->
-          <div id="base_via_panel" class="display-inline-block"></div>
-          <img id="base_image" src="" class="display-none">
+          <div id="left_content_via_panel" class="display-inline-block"></div>
+          <img id="left_content_image" src="" class="display-none">
         </div>
       </div>
       <div class="vertical_img_separator_panel left_right_panel cell">
         <canvas id="reference_line_control"></canvas>
       </div>
-      <div id="right_panel" class="left_right_panel cell">
-        <div id="right_panel_content">
+      <div id="right_content_panel" class="cell">
+        <div id="right_content_panel_container">
           <!-- Note:
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"
             -->
-          <div id="comp_via_panel" class="display-inline-block"></div>
-          <img id="comp_image" src="" class="display-none">
+          <div id="right_content_via_panel" class="display-inline-block"></div>
+          <img id="right_content_image" src="" class="display-none">
         </div>
       </div>
-
     </div>
 
+    <!-- Panel for image specific actions -->
     <div id="img_control_panel" class="row">
       <div id="base_control_panel" class="img_control cell">
         <button id="base_move_to_prev" type="button">&lt;</button>
@@ -130,6 +134,7 @@
         <button type="button">Toggle</button>
       </div>
     </div>
+
   </div>
 </div>
 

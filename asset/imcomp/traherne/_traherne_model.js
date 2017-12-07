@@ -19,7 +19,7 @@ _traherne_model.prototype.init = function( traherne_controller ) {
   this.c = traherne_controller;
 
   for( var type in this.c.type_list ) {
-    var via_panel = document.getElementById( type + '_via_panel' );
+    var via_panel = document.getElementById( this.c.type_list[type] + '_via_panel' );
     this.via[type] = new _via();
     this.via[type].init(via_panel);
 
