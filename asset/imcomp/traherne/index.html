@@ -12,7 +12,7 @@
 <body>
 <div id="page">
   <div class="horizontal_ref_line"></div>
-  <div id="message_panel">Traherne Digital Collator (2.0.1) : To start, load base and comp. images.</div>
+  <div id="message_panel">Traherne Digital Collator (2.0.1) : To start collation, load base and comp. images.</div>
 
   <div id="global_control_panel">
     <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare</button>
@@ -88,8 +88,8 @@
 
     <!-- Content panel: display images and annotation window to the user -->
     <div id="content_panel" class="row">
-      <div id="left_content_panel" class="cell">
-        <div id="left_content_panel_container">
+      <div id="left_content" class="cell">
+        <div id="left_content_container">
           <!-- Note:
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"
@@ -101,8 +101,8 @@
       <div class="vertical_img_separator_panel left_right_panel cell">
         <canvas id="reference_line_control"></canvas>
       </div>
-      <div id="right_content_panel" class="cell">
-        <div id="right_content_panel_container">
+      <div id="right_content" class="cell">
+        <div id="right_content_container">
           <!-- Note:
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"

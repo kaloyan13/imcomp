@@ -156,6 +156,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       boost::filesystem::path im2_out_fn = result_dir_ / (fid2 + "_" + compare_id + + "_crop.jpg");
       boost::filesystem::path im2_tx_fn  = result_dir_ / (fid2 + "_" + compare_id + + "_crop_tx.jpg");
       boost::filesystem::path diff_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_diff.jpg");
+      boost::filesystem::path overlap_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_overlap.jpg");
 
       double h[9];
       uint32_t best_inliers_count = -1;
@@ -167,7 +168,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                          im1_out_fn.string().c_str(),
                                          im2_out_fn.string().c_str(),
                                          im2_tx_fn.string().c_str(),
-                                         diff_fn.string().c_str()
+                                         diff_fn.string().c_str(),
+                                         overlap_fn.string().c_str()
                                          );
       eye.exportToDoubleArray( h );
 
@@ -193,6 +195,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
              << "\"file1_crop\":\"/imcomp/result/" + im1_out_fn.filename().string() << "\","
              << "\"file2_crop\":\"/imcomp/result/" + im2_out_fn.filename().string() << "\","
              << "\"file2_crop_tx\":\"/imcomp/result/" + im2_tx_fn.filename().string() << "\","
+             << "\"file1_file2_overlap\":\"/imcomp/result/" + overlap_fn.filename().string() << "\","
              << "\"file1_file2_diff\":\"/imcomp/result/" + diff_fn.filename().string() << "\"";
       } else {
         json << "{\"IMAGE_HOMOGRAPHY\":[{"

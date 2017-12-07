@@ -317,13 +317,13 @@ _traherne_model.prototype.compare_img_pair = function(c) {
     cr.addEventListener('load', function() {
       var response_str = cr.responseText;
       try {
-        c.result = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
-        if( c.result.status === 'OK' ) {
+        c.response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
+        if( c.response.status === 'OK' ) {
           var msg = 'finished comparison';
           this.set_compare_status('OK', msg);
           ok_callback(c);
         } else {
-          var msg = 'comparison failed [' + c.result + ']';
+          var msg = 'comparison failed [' + c.response + ']';
           this.set_compare_status('ERR', msg);
           err_callback();
         }

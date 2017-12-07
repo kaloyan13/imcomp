@@ -12,6 +12,7 @@ class registerImages {
                                 homography &Hinit, uint32_t& bestNInliners,
                                 const char outFn1[], const char outFn2[], const char outFn2t[],
                                 const char diff_image[],
+                                const char overlap_image[],
                                 const char *fullSizeFn1= NULL, const char *fullSizeFn2= NULL );
   static void compute_homography(const char image1_fn[], const char image2_fn[],
                                  double x, double y, double w, double h,

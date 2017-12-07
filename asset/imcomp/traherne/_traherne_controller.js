@@ -30,7 +30,7 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
   this.m = traherne_model;
   this.v = traherne_view;
 
-  this.deactivate_compare_tools();
+  this.deactivate_all_content_selectors();
 }
 
 _traherne_controller.prototype.update_files = function(type, e) {
@@ -217,7 +217,9 @@ _traherne_controller.prototype.on_compare_end = function() {
   console.log('_traherne_controller.prototype.on_compare_end()');
   this.compare.promise.then( function(c) {
     this.compare.result = c;
-    if( c.result.status === 'OK' ) {
+    console.log(c);
+    console.log(this.compare.result);
+    if( c.response.status === 'OK' ) {
       this.on_compare_success();
     } else {
       this.on_compare_failure();
@@ -230,13 +232,14 @@ _traherne_controller.prototype.on_compare_status_update = function() {
 }
 
 _traherne_controller.prototype.on_compare_success = function() {
+  // note: this.compare.result contains the result
   var time = this.compare.end_time - this.compare.start_time;
   var msg = 'Comparison completed in ' + Math.round(time/1000) + ' sec.';
   this.v.msg(msg);
 
   this.show_compare_result(this.compare.result);
 
-  this.activate_compare_tools();
+  this.activate_all_content_selectors();
 }
 
 _traherne_controller.prototype.on_compare_failure = function() {
@@ -247,33 +250,29 @@ _traherne_controller.prototype.on_compare_failure = function() {
 
 _traherne_controller.prototype.show_compare_result = function(c) {
   // in base panel, show file1 crop
-  this.set_content('base', c.result.file1_crop);
+  this.set_content('base', c.response.file1_crop);
   this.activate_content_selector_button('base', 'base_crop');
 
   // in comp panel, show file2 transformed + crop
-  this.set_content('comp', c.result.file2_crop_tx);
+  this.set_content('comp', c.response.file2_crop_tx);
   this.activate_content_selector_button('comp', 'comp_crop_tx');
 }
 
-_traherne_controller.prototype.deactivate_compare_tools = function() {
-  var el = document.getElementsByClassName('compare_tool');
+_traherne_controller.prototype.deactivate_all_content_selectors = function() {
+  var el = document.getElementsByClassName('content_selector');
   var n = el.length;
   for( var i=0; i<n; i++ ) {
     el[i].setAttribute('disabled', 'true');
+    el[i].removeEventListener('click', this.update_content.bind(this), false);
   }
-
-  // @@@@@@@@@ todo
-  var rb = document.getElementsByName('base_display_selector');
-  n = rb.length;
-  for( var i=0; i<n; i++ ) {
-  }
-
 }
-_traherne_controller.prototype.activate_compare_tools = function() {
-  var el = document.getElementsByClassName('compare_tool');
+
+_traherne_controller.prototype.activate_all_content_selectors = function() {
+  var el = document.getElementsByClassName('content_selector');
   var n = el.length;
   for( var i=0; i<n; i++ ) {
     el[i].removeAttribute('disabled');
+    el[i].addEventListener('click', this.update_content.bind(this), false);
   }
 }
 
@@ -292,6 +291,56 @@ _traherne_controller.prototype.activate_content_selector_button = function(type,
         el[i].removeAttribute('checked');
       }
     }
+  }
+}
+
+_traherne_controller.prototype.update_content = function(e) {
+  console.log(e);
+  console.log(e.target.id);
+  // NOTE: this.compare.result contains the comparison result
+  // var c = this.compare.result;
+  // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
+  var cid = e.target.id;
+  var content_container = 'right_content';
+  if( cid.startsWith('left_content') ) {
+    content_container = 'left_content';
+  }
+  var content_type = '';
+  for( var type in this.type_list ) {
+    if( this.type_list[type] == content_container ) {
+      content_type = type;
+      break;
+    }
+  }
+
+  var content_name = cid.substr(content_container.length + 1);
+
+  console.log(this.compare.result);
+  console.log(content_type);
+  console.log(content_name)
+
+  var url = '';
+  switch(content_name) {
+  case 'base_via':
+  case 'comp_via':
+    url = 'via_panel';
+    break;
+  case 'base_crop':
+    url = this.compare.result.response.file1_crop;
+    break;
+  case 'base_comp_overlap':
+    url = this.compare.result.response.file1_file2_overlap;
+    break;
+  case 'comp_crop_tx':
+    url = this.compare.result.response.file2_crop_tx;
+    break;
+  case 'base_comp_diff':
+    url = this.compare.result.response.file1_file2_diff;
+    break;
+  }
+
+  if(url != '') {
+    this.set_content(content_type, url);
   }
 }
 

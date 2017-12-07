@@ -78,6 +78,7 @@ registerImages::registerFromGuess(
                                   homography &Hinit, uint32_t& bestNInliers,
                                   const char outFn1[], const char outFn2[], const char outFn2t[],
                                   const char diff_image[],
+                                  const char overlap_image[],
                                   const char *fullSizeFn1, const char *fullSizeFn2 ) {
 
   static const double expandOutBy= 0.1;
@@ -287,6 +288,11 @@ registerImages::registerFromGuess(
     }
   }
   diff.write(diff_image);
+
+  // create overlay image
+  Magick::Image overlap = im1;
+  overlap.composite(im2t, 0, 0, Magick::OverCompositeOp);
+  overlap.write(overlap_image);
 
   delete featGetterObj;
 }
