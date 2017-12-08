@@ -271,6 +271,7 @@ registerImages::registerFromGuess(
   // blue         : min(image1, image2)
   // see: https://stackoverflow.com/a/33673440/7814484
   Magick::Image diff( im1.size(), "white");
+  Magick::Image overlap( im1.size(), "white");
   for(unsigned int x=0; x<im1.columns(); x++) {
     for(unsigned int y=0; y<im1.rows(); y++) {
       Magick::Color c1 = im1.pixelColor(x,y);
@@ -285,13 +286,15 @@ registerImages::registerFromGuess(
       }
       Magick::Color cdiff = Magick::Color(c1_avg, c2_avg, dark);
       diff.pixelColor(x, y, cdiff);
+
+      unsigned int overlay_r = ( c1.redQuantum() + c2.redQuantum() ) / 2;
+      unsigned int overlay_g = ( c1.greenQuantum() + c2.greenQuantum() ) / 2;
+      unsigned int overlay_b = ( c1.blueQuantum() + c2.blueQuantum() ) / 2;
+
+      overlap.pixelColor(x, y, Magick::Color(overlay_r, overlay_g, overlay_b));
     }
   }
   diff.write(diff_image);
-
-  // create overlay image
-  Magick::Image overlap = im1;
-  overlap.composite(im2t, 0, 0, Magick::OverCompositeOp);
   overlap.write(overlap_image);
 
   delete featGetterObj;

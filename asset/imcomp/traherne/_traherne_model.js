@@ -272,7 +272,7 @@ _traherne_model.prototype.file_count = function(type) {
 }
 
 _traherne_model.prototype.set_compare_status = function(status, msg) {
-  console.log('set_compare_status() : ' + status + ':' + msg);
+  //console.log('set_compare_status() : ' + status + ':' + msg);
   if( status === 'OK' || status === 'ERR' ) {
     this.c.on_compare_end();
   }

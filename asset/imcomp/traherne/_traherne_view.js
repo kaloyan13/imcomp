@@ -5,6 +5,7 @@ function _traherne_view() {
 
   this.theme = {};
   this.theme.MSG_TIMEOUT_MS = 5000;
+  this.theme.TOGGLE_SPEED = 300; // { 150, 300, 600 } ms
 
   this.message_panel = document.getElementById('message_panel');
 
@@ -57,6 +58,14 @@ _traherne_view.prototype.init = function( traherne_controller ) {
     this.now[type] = {};
   }
 
+  // set toggle speed to default value selection
+  var toggle_speed_dropdown = document.getElementById('toggle_speed');
+  for( var i=0; i < toggle_speed_dropdown.options.length; i++ ) {
+    if( parseInt(toggle_speed_dropdown.options[i].value) == this.theme.TOGGLE_SPEED ) {
+      toggle_speed_dropdown.selectedIndex = i;
+    }
+  }
+
   this.connect_ui_elements_to_traherne_view();
 }
 
@@ -68,7 +77,7 @@ _traherne_view.prototype.select_local_files = function(type) {
   this.local_file_selector.setAttribute('multiple', 'multiple');
   this.local_file_selector.setAttribute('style', 'display:none;');
   //this.local_file_selector.classList.add('display-none');
-  this.local_file_selector.setAttribute('accept', '.jpg,.jpeg,.png,.bmp,.tif,.tiff');
+  this.local_file_selector.setAttribute('accept', '.jpg,.jpeg,.png,.bmp');
 
   if( type === 'base' || type === 'comp' ) {
     this.local_file_selector.addEventListener('change', function(e) {
@@ -87,14 +96,19 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
     document.getElementById( type + '_move_to_prev').addEventListener('click', this, false);
     document.getElementById( type + '_move_to_next').addEventListener('click', this, false);
     document.getElementById( type + '_img_filename_list').addEventListener('change', function(e) {
+      var type = e.target.id.substr(0,4);
       this.c.update_now(type, e);
-    }.bind(this.c), false);
+    }.bind(this), false);
   }
 
   document.getElementById( 'move_to_prev_pair').addEventListener('click', this, false);
   document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
 
   document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
+
+  document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
+    this.theme.TOGGLE_SPEED = e.target.value;
+  }.bind(this), false);
 }
 
 _traherne_view.prototype.msg = function(msg, t) {

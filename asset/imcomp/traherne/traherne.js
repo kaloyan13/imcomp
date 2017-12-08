@@ -25,7 +25,7 @@ _traherne_about.date_current_release  = "";
 _traherne_about.author_name  = "Abhishek Dutta";
 _traherne_about.author_email = "adutta@robots.ox.ac.uk";
 
-var _traherne_toggle_timer = 0;
+var _traherne_toggle_timer = {};
 
 var _traherne_imcomp_user_interface = new traherne_imcomp_user_interface();
 _traherne_imcomp_user_interface.init();

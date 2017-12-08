@@ -33,10 +33,25 @@ body {
   display: block;
   overflow-y: auto;
   width: 100%;
-  padding: 0.8% 0.4%;
+  padding: 0.8%;
   margin: 0;
   background-color: #F2F2F2;
   text-align: left;
+  border: 1px solid #9E9E9E;
+  border-bottom: 0;
+}
+
+#message_panel {
+  font-family: mono;
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-top: 0.4%;
+  margin-bottom: 1.2%;
+  text-align: center;
 }
 
 #middle_panel {
@@ -45,7 +60,6 @@ body {
   margin: 0;
   padding: 0;
   border: 1px solid #9E9E9E;
-  border-top: 0;
   overflow: hidden;
   width: 100%;
 }
@@ -57,10 +71,11 @@ body {
 #middle_panel .cell {
   display: table-cell;
   margin: 0;
-  padding: 0.2% 0;
+  padding: 0.4% 0;
   width: 48%;
   text-align: center;
   vertical-align: middle;
+  border-right: 1px solid #9E9E9E;
 }
 .horizontal_ref_line {
   content: " ";
@@ -73,8 +88,6 @@ body {
   text-align: right !important;
   padding: 0 !important;
   margin: 0 !important;
-  vertical-align: middle;
-  border-right: 1px solid #9E9E9E;
 }
 #left_content_container { /* container for via or base image */
   position: relative;
@@ -91,8 +104,6 @@ body {
   text-align: left !important;
   padding: 0 !important;
   margin: 0 !important;
-  vertical-align: middle;
-  border-left: 1px solid #9E9E9E;
 }
 #right_content_container { /* container for via or comp image */
   position: relative;
@@ -137,19 +148,4 @@ body {
   font-size: large;
   cursor: default;
 }
-
-#message_panel {
-  font-size: small;
-  font-family: mono;
-  color: #222222;
-  position: relative;
-  display: inline-block;
-  width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  padding: 0.5% 0;
-  margin: 0;
-}
-
 

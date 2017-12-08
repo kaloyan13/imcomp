@@ -12,9 +12,9 @@
 <body>
 <div id="page">
   <div class="horizontal_ref_line"></div>
-  <div id="message_panel">Traherne Digital Collator (2.0.1) : To start collation, load base and comp. images.</div>
-
   <div id="global_control_panel">
+    <div id="message_panel"><a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">Traherne Digital Collator</a>&nbsp;(version <a href="https://gitlab.com/vgg/imcomp/blob/master/CHANGELOG">2.0.1</a>) : To start collation, load base and comp. images.</div>
+
     <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare</button>
 
     <span class="button_group_space1"></span>
@@ -24,9 +24,9 @@
 
     <span class="button_group_space1"></span>
     <label for="toggle_speed">Toggle Speed</label>
-    <select name="toggle_speed">
+    <select name="toggle_speed" id="toggle_speed">
       <option value="600">Slow</option>
-      <option value="300" selected="selected">Medium</option>
+      <option value="300">Medium</option>
       <option value="150">Fast</option>
     </select>
   </div>
@@ -71,7 +71,7 @@
 
       <div class="vertical_img_separator_panel cell"></div>
 
-      <div name="right_content_selector" class="centered_text cell">
+      <div id="right_content_selector" class="centered_text cell">
         <input type="radio" name="right_content_option" id="right_content_comp_via" class="content_selector">
         <label for="right_content_comp_via">Comp. (full image)</label>
 
@@ -94,11 +94,11 @@
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"
             -->
-          <div id="left_content_via_panel" class="display-inline-block"></div>
-          <img id="left_content_image" src="" class="display-none">
+          <div id="left_content_via_panel" class="content"></div>
+          <img id="left_content_image" src="" class="content">
         </div>
       </div>
-      <div class="vertical_img_separator_panel left_right_panel cell">
+      <div class="vertical_img_separator_panel cell">
         <canvas id="reference_line_control"></canvas>
       </div>
       <div id="right_content" class="cell">
@@ -107,31 +107,32 @@
                * the parent of via_panel should have user-defined dimensions
                * the parent should have "display: inline-block; position: relative"
             -->
-          <div id="right_content_via_panel" class="display-inline-block"></div>
-          <img id="right_content_image" src="" class="display-none">
+          <div id="right_content_via_panel" class="content"></div>
+          <img id="right_content_image" src="" class="content">
         </div>
       </div>
     </div>
 
-    <!-- Panel for image specific actions -->
-    <div id="img_control_panel" class="row">
-      <div id="base_control_panel" class="img_control cell">
+    <!-- Panel for content specific controls -->
+    <div id="content_control" class="row">
+      <div id="left_content_controls" class="img_control cell">
+        <input id="left_content_toggle" type="checkbox">
+        <label for="left_content_toggle">Toggle</label>
+        <span class="button_group_space1"></span>
+
         <button id="base_move_to_prev" type="button">&lt;</button>
         <button id="base_load_images" type="button">Load Base Images</button>
         <button id="base_move_to_next" type="button">&gt;</button>
       </div>
       <div class="vertical_separator_panel cell"></div>
-      <div id="comp_control_panel" class="img_control cell">
+      <div id="right_content_controls" class="img_control cell">
         <button id="comp_move_to_prev" type="button">&lt;</button>
         <button id="comp_load_images" type="button">Load Comp. Images</button>
         <button id="comp_move_to_next" type="button">&gt;</button>
 
         <span class="button_group_space1"></span>
-        <select name="comp_toggle_options">
-          <option value="">Base &harr; Overlap</option>
-          <option value="">Comp. &harr; Overlap</option>
-        </select>
-        <button type="button">Toggle</button>
+        <input id="right_content_toggle" type="checkbox">
+        <label for="right_content_toggle">Toggle</label>
       </div>
     </div>
 

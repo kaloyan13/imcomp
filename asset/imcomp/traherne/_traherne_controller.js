@@ -30,7 +30,11 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
   this.m = traherne_model;
   this.v = traherne_view;
 
-  this.deactivate_all_content_selectors();
+  for(var type in this.type_list) {
+    this.clear_content(type);
+  }
+  this.disable_all_content_selectors();
+  this.disable_all_toggle_switches();
 }
 
 _traherne_controller.prototype.update_files = function(type, e) {
@@ -77,7 +81,10 @@ _traherne_controller.prototype.on_filelist_update = function(type) {
   this.update_view_filelist(type, filelist);
   this.set_now(type, 0); // show first image
 
-  this.activate_content_selector_button(type, type + '_via');
+  var sid_suffix = type + '_via';
+
+  this.content_selector_set_state(type, sid_suffix, true);
+  this.set_content(type, sid_suffix);
 }
 
 _traherne_controller.prototype.update_view_filelist = function(type, filelist) {
@@ -167,7 +174,6 @@ _traherne_controller.prototype.is_upload_resize_req = function(type, findex, w, 
 _traherne_controller.prototype.compare_base_comp = function() {
   // sanity checks
   for( type in this.type_list ) {
-    console.log(type)
     if( this.m.file_count[type] === 0 ) {
       var type_name = this.type_list[type];
       this.v.msg('Add ' + type + ' images by clicking "Load ' + type_name + ' Images" button');
@@ -214,11 +220,8 @@ _traherne_controller.prototype.on_compare_start = function() {
 _traherne_controller.prototype.on_compare_end = function() {
   this.compare.end_time = new Date();
   this.compare.is_ongoing = false;
-  console.log('_traherne_controller.prototype.on_compare_end()');
   this.compare.promise.then( function(c) {
     this.compare.result = c;
-    console.log(c);
-    console.log(this.compare.result);
     if( c.response.status === 'OK' ) {
       this.on_compare_success();
     } else {
@@ -237,9 +240,9 @@ _traherne_controller.prototype.on_compare_success = function() {
   var msg = 'Comparison completed in ' + Math.round(time/1000) + ' sec.';
   this.v.msg(msg);
 
-  this.show_compare_result(this.compare.result);
+  this.show_compare_result();
 
-  this.activate_all_content_selectors();
+  this.enable_all_content_selectors();
 }
 
 _traherne_controller.prototype.on_compare_failure = function() {
@@ -249,113 +252,148 @@ _traherne_controller.prototype.on_compare_failure = function() {
 }
 
 _traherne_controller.prototype.show_compare_result = function(c) {
+  // NOTE: this.compare.result contains the comparison result
+  // var c = this.compare.result.response;
+  // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
+  var c = this.compare.result.response;
   // in base panel, show file1 crop
-  this.set_content('base', c.response.file1_crop);
-  this.activate_content_selector_button('base', 'base_crop');
+  this.set_content('base', 'base_crop');
 
   // in comp panel, show file2 transformed + crop
-  this.set_content('comp', c.response.file2_crop_tx);
-  this.activate_content_selector_button('comp', 'comp_crop_tx');
+  this.set_content('comp', 'comp_crop_tx');
 }
 
-_traherne_controller.prototype.deactivate_all_content_selectors = function() {
-  var el = document.getElementsByClassName('content_selector');
-  var n = el.length;
-  for( var i=0; i<n; i++ ) {
-    el[i].setAttribute('disabled', 'true');
-    el[i].removeEventListener('click', this.update_content.bind(this), false);
-  }
-}
-
-_traherne_controller.prototype.activate_all_content_selectors = function() {
-  var el = document.getElementsByClassName('content_selector');
-  var n = el.length;
-  for( var i=0; i<n; i++ ) {
-    el[i].removeAttribute('disabled');
-    el[i].addEventListener('click', this.update_content.bind(this), false);
-  }
-}
-
-_traherne_controller.prototype.activate_content_selector_button = function(type, name) {
-  // radio button activations in the panel_choice is mutually exclusive
-  var el = document.getElementsByClassName('content_selector');
-  var n = el.length;
-  var activated_radio_id = this.type_list[type] + '_' + name;
-  for( var i=0; i<n; i++ ) {
-    var id = el[i].getAttribute('id');
-    if( id.startsWith( this.type_list[type] ) ) {
-      if( id == activated_radio_id ) {
-        el[i].setAttribute('checked', 'checked');
-        el[i].removeAttribute('disabled');
-      } else {
-        el[i].removeAttribute('checked');
-      }
-    }
-  }
-}
-
-_traherne_controller.prototype.update_content = function(e) {
-  console.log(e);
-  console.log(e.target.id);
-  // NOTE: this.compare.result contains the comparison result
-  // var c = this.compare.result;
-  // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
-  var cid = e.target.id;
-  var content_container = 'right_content';
-  if( cid.startsWith('left_content') ) {
-    content_container = 'left_content';
-  }
-  var content_type = '';
+_traherne_controller.prototype.disable_all_content_selectors = function() {
   for( var type in this.type_list ) {
-    if( this.type_list[type] == content_container ) {
-      content_type = type;
-      break;
-    }
-  }
-
-  var content_name = cid.substr(content_container.length + 1);
-
-  console.log(this.compare.result);
-  console.log(content_type);
-  console.log(content_name)
-
-  var url = '';
-  switch(content_name) {
-  case 'base_via':
-  case 'comp_via':
-    url = 'via_panel';
-    break;
-  case 'base_crop':
-    url = this.compare.result.response.file1_crop;
-    break;
-  case 'base_comp_overlap':
-    url = this.compare.result.response.file1_file2_overlap;
-    break;
-  case 'comp_crop_tx':
-    url = this.compare.result.response.file2_crop_tx;
-    break;
-  case 'base_comp_diff':
-    url = this.compare.result.response.file1_file2_diff;
-    break;
-  }
-
-  if(url != '') {
-    this.set_content(content_type, url);
+    this.content_selector_group_set_state(type, false);
   }
 }
 
-_traherne_controller.prototype.set_content = function(type, url) {
+_traherne_controller.prototype.enable_all_content_selectors = function() {
+  for( var type in this.type_list ) {
+    this.content_selector_group_set_state(type, true);
+  }
+}
+
+_traherne_controller.prototype.content_selector_set_state = function(type, sid_suffix, is_enabled) {
+  var container_name_prefix = this.type_list[type];
+  var content_selector_name = container_name_prefix + '_' + sid_suffix;
+  var content_selector = document.getElementById(content_selector_name);
+  if(is_enabled) {
+    this.enable_content_selector(content_selector);
+  } else {
+    this.disable_content_selector(content_selector);
+  }
+}
+
+_traherne_controller.prototype.content_selector_set_checked = function(type, name_suffix) {
+  this.content_selector_uncheck_all(type);
+  var container_name_prefix = this.type_list[type];
+  var content_selector_name = container_name_prefix + '_' + name_suffix;
+  var content_selector = document.getElementById(content_selector_name);
+  content_selector.checked = true;
+}
+
+_traherne_controller.prototype.content_selector_uncheck_all = function(type) {
+  var container_name = this.type_list[type] + '_selector';
+  var container = document.getElementById(container_name);
+  var child = container.getElementsByClassName('content_selector');
+  var n = child.length;
+  for( var i=0; i<n; i++ ) {
+    child[i].checked = false;
+  }
+}
+
+_traherne_controller.prototype.enable_content_selector = function(element) {
+  element.removeAttribute('disabled');
+  element.addEventListener('click', this.content_selector_event_handler.bind(this), false);
+}
+
+_traherne_controller.prototype.disable_content_selector = function(element) {
+  element.setAttribute('disabled', 'disabled');
+  element.removeEventListener('click', this.content_selector_event_handler.bind(this), false);
+}
+
+_traherne_controller.prototype.content_selector_group_set_state = function(type, is_enabled) {
+  var container_name_prefix = this.type_list[type];
+  var container_name = container_name_prefix + '_selector';
+  var container = document.getElementById(container_name);
+  var child = container.getElementsByClassName('content_selector');
+  var n = child.length;
+
+  for( var i=0; i<n; i++ ) {
+    if(is_enabled) {
+      this.enable_content_selector(child[i]);
+    } else {
+      this.disable_content_selector(child[i]);
+    }
+  }
+}
+
+_traherne_controller.prototype.content_selector_event_handler = function(e) {
+  var id = e.target.id;
+  var container_type = this.get_container_type(id);
+  var container_name = this.type_list[container_type];
+  var sid_suffix = id.substr(container_name.length + 1);
+  this.set_content(container_type, sid_suffix);
+}
+
+_traherne_controller.prototype.clear_content = function(type) {
+  var container_name = this.type_list[type] + '_container';
+  var container = document.getElementById(container_name);
+  var child = container.getElementsByClassName('content');
+  var n = child.length;
+  for( var i=0; i<n; i++ ) {
+    this.hide_element(child[i]);
+  }
+}
+
+_traherne_controller.prototype.set_content = function(type, sid_suffix) {
   var via = document.getElementById( this.type_list[type] + '_via_panel' );
   var img = document.getElementById( this.type_list[type] + '_image' );
 
-  if( url == 'via_panel' ) {
+  if( sid_suffix.endsWith('_via') ) {
     this.hide_element(img);
     this.show_element(via);
+    this.disable_all_toggle_switches(); // toggle requires image content
   } else {
     this.hide_element(via);
     this.show_element(img);
-    img.setAttribute('src', url);
+    this.clear_toggle( this.type_list[type] ); // clear any existing toggle
+    this.enable_all_toggle_switches();
+
+    var content_url = this.get_content_url(type, sid_suffix);
+    img.setAttribute('src', content_url);
   }
+
+  this.content_selector_set_checked(type, sid_suffix);
+}
+
+_traherne_controller.prototype.get_content_url = function(type, sid_suffix) {
+  // NOTE: this.compare.result contains the comparison result
+  // var c = this.compare.result.response;
+  // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
+
+  var content_url = '';
+  switch(sid_suffix) {
+  case 'base_via':
+  case 'comp_via':
+    content_url = 'via_panel';
+    break;
+  case 'base_crop':
+    content_url = this.compare.result.response.file1_crop;
+    break;
+  case 'base_comp_overlap':
+    content_url = this.compare.result.response.file1_file2_overlap;
+    break;
+  case 'comp_crop_tx':
+    content_url = this.compare.result.response.file2_crop_tx;
+    break;
+  case 'base_comp_diff':
+    content_url = this.compare.result.response.file1_file2_diff;
+    break;
+  }
+  return content_url;
 }
 
 _traherne_controller.prototype.show_element = function(e) {
@@ -370,4 +408,130 @@ _traherne_controller.prototype.hide_element = function(e) {
     e.classList.remove('display-inline-block');
   }
   e.classList.add('display-none');
+}
+
+///
+/// toggle
+///
+// extract suffix from selector-id
+// example: left_content_base_comp_diff => type=left_content, suffix=base_comp_diff
+_traherne_controller.prototype.get_sid_suffix = function(type, sid) {
+  var container_name = this.type_list[type];
+  if( sid.startsWith(container_name) ) {
+    return sid.substr( container_name.length + 1 );
+  } else {
+    console.log('get_sid_suffix(): mismatch ' + type + ', ' + sid);
+    return '';
+  }
+}
+
+_traherne_controller.prototype.get_container_type = function(id) {
+  var container_type = '';
+  for( var type in this.type_list ) {
+    if( id.startsWith(this.type_list[type]) ) {
+      container_type = type;
+      break;
+    }
+  }
+  return container_type;
+}
+
+_traherne_controller.prototype.toggle_event_handler = function(e) {
+  var id = e.target.id;
+  var type = this.get_container_type(id);
+  if( e.target.checked ) {
+    this.set_toggle(type);
+  } else {
+    this.clear_toggle(type);
+  }
+}
+
+_traherne_controller.prototype.clear_toggle = function(type) {
+  if( _traherne_toggle_timer[type] > 0 ) {
+    clearInterval(_traherne_toggle_timer[type]);
+    _traherne_toggle_timer[type] = 0;
+    this.content_selector_group_set_state(type, true);
+
+    // reset the content to that pointed by content selector
+    var sid = this.get_current_content_selector_id(type);
+    var sid_suffix = sid.substr( this.type_list[type].length + 1 );
+    this.set_content(type, sid_suffix);
+  }
+}
+
+_traherne_controller.prototype.get_current_content_selector_id = function(type) {
+  var container = document.getElementById( this.type_list[type] + '_selector' );
+  var child = container.getElementsByClassName('content_selector');
+  var n = child.length;
+  for( var i=0; i<n; i++ ) {
+    if( child[i].checked ) {
+      return child[i].id;
+    }
+  }
+}
+
+_traherne_controller.prototype.set_toggle = function(type) {
+  if( _traherne_toggle_timer[type] > 0 ) {
+    this.clear_toggle(type);
+  }
+
+  var toggle_url_list = [];
+  for( var t in this.type_list ) {
+    var sid = this.get_current_content_selector_id(t);
+    var sid_suffix = this.get_sid_suffix(t, sid);
+    var url = this.get_content_url(t, sid_suffix);
+    toggle_url_list.push(url);
+  }
+
+  if( type === 'comp' ) {
+    // reverse the order
+    toggle_url_list.reverse();
+  }
+
+  this.content_selector_group_set_state(type, false);
+  _traherne_toggle_timer[type] = setInterval( function() {
+    this.toggle_content(type, toggle_url_list);
+  }.bind(this), this.v.theme.TOGGLE_SPEED);
+}
+
+_traherne_controller.prototype.toggle_content = function(type, toggle_url_list) {
+  var container_name = this.type_list[type];
+  var img_elem_name = container_name + '_image';
+  var img_elem = document.getElementById(img_elem_name);
+
+  var current_value = img_elem.getAttribute('src');
+  var current_value_index = toggle_url_list.indexOf(current_value);
+
+  if( current_value_index >= 0 ) {
+    var next_index = current_value_index + 1;
+    if ( next_index == (toggle_url_list.length) ) {
+      next_index = 0;
+    }
+    img_elem.setAttribute('src', toggle_url_list[next_index]);
+  } else {
+    console.log('_traherne_controller.prototype.toggle_content : error');
+    console.log(img_elem_name);
+    console.log(toggle_url_list);
+    return;
+  }
+}
+
+_traherne_controller.prototype.disable_all_toggle_switches = function() {
+  for( var type in this.type_list ) {
+    var el = document.getElementById( this.type_list[type] + '_toggle' );
+    if( !el.hasAttribute('disabled') ) {
+      el.setAttribute('disabled', 'true');
+      el.removeEventListener('click', this.toggle_event_handler.bind(this), false);
+    }
+  }
+}
+
+_traherne_controller.prototype.enable_all_toggle_switches = function() {
+  for( var type in this.type_list ) {
+    var el = document.getElementById( this.type_list[type] + '_toggle' );
+    if( el.hasAttribute('disabled') ) {
+      el.removeAttribute('disabled');
+      el.addEventListener('click', this.toggle_event_handler.bind(this), false);
+    }
+  }
 }
