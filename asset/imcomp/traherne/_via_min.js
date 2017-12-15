@@ -2997,7 +2997,7 @@ _via_ctrl.prototype.update_zoom_panel_contents = function() {
   style.push('height:' + this.v.zoom.size + 'px');
   style.push('top:' + zoom_panel_top + 'px');
   style.push('left:' + zoom_panel_left + 'px');
-  //style.push('border: 1px solid red');
+  style.push('border: 1px solid red');
   style.push('border-radius:' + this.v.zoom.sizeby2 + 'px');
   this.v.zoom.container.setAttribute('style', style.join(';'));
 

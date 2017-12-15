@@ -11,7 +11,7 @@
 
 <body>
 <div id="page">
-  <div class="horizontal_ref_line"></div>
+  <div id="horizontal_line" class="horizontal_ref_line"></div>
   <div id="global_control_panel">
     <div id="message_panel"><a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">Traherne Digital Collator</a>&nbsp;(version <a href="https://gitlab.com/vgg/imcomp/blob/master/CHANGELOG">2.0.1</a>) : To start collation, load base and comp. images.</div>
 
@@ -98,8 +98,8 @@
           <img id="left_content_image" src="" class="content">
         </div>
       </div>
-      <div class="vertical_img_separator_panel cell">
-        <canvas id="reference_line_control"></canvas>
+      <div id="ref_line_container" class="vertical_img_separator_panel cell">
+        <canvas id="ref_line_canvas" title="Click to show or hide a horizontal reference line"></canvas>
       </div>
       <div id="right_content" class="cell">
         <div id="right_content_container">
@@ -116,6 +116,8 @@
     <!-- Panel for content specific controls -->
     <div id="content_control" class="row">
       <div id="left_content_controls" class="img_control cell">
+        <input id="left_content_zoom" type="checkbox">
+        <label for="left_content_zoom">Zoom</label>
         <input id="left_content_toggle" type="checkbox">
         <label for="left_content_toggle">Toggle</label>
         <span class="button_group_space1"></span>
@@ -133,6 +135,8 @@
         <span class="button_group_space1"></span>
         <input id="right_content_toggle" type="checkbox">
         <label for="right_content_toggle">Toggle</label>
+        <input id="right_content_zoom" type="checkbox">
+        <label for="right_content_zoom">Zoom</label>
       </div>
     </div>
 

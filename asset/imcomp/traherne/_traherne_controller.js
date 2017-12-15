@@ -19,6 +19,8 @@ function _traherne_controller() {
   this.compare.end_time = {};
   this.compare.promise = {};  // promise to current compare operation
   this.compare.result = {};
+
+  this.ref_line = {};
 }
 
 function _traherne_compare_instance(findex1, findex2) {
@@ -34,7 +36,10 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
     this.clear_content(type);
   }
   this.disable_all_content_selectors();
-  this.disable_all_toggle_switches();
+  this.disable_all_switches('_toggle');
+  this.disable_all_switches('_zoom');
+
+  this.init_ref_line();
 }
 
 _traherne_controller.prototype.update_files = function(type, e) {
@@ -85,6 +90,8 @@ _traherne_controller.prototype.on_filelist_update = function(type) {
 
   this.content_selector_set_state(type, sid_suffix, true);
   this.set_content(type, sid_suffix);
+
+  this.enable_switch(type, '_zoom');
 }
 
 _traherne_controller.prototype.update_view_filelist = function(type, filelist) {
@@ -146,10 +153,10 @@ _traherne_controller.prototype.update_now_file_status = function(type) {
   var status_symbol;
   switch(status) {
   case 'OK':
-    status_symbol = '&#9745;';
+    status_symbol = '<span style="color:green">&#9745;</span>';
     break;
   case 'ERR':
-    status_symbol = '&#9746;';
+    status_symbol = '<span style="color:red">&#9746;</span>';
     break;
   default:
     status_symbol = '&#9744;';
@@ -355,12 +362,14 @@ _traherne_controller.prototype.set_content = function(type, sid_suffix) {
   if( sid_suffix.endsWith('_via') ) {
     this.hide_element(img);
     this.show_element(via);
-    this.disable_all_toggle_switches(); // toggle requires image content
+    this.disable_all_switches('_toggle'); // toggle requires image content
+    this.enable_switch(type, '_zoom');
   } else {
     this.hide_element(via);
     this.show_element(img);
     this.clear_toggle( this.type_list[type] ); // clear any existing toggle
-    this.enable_all_toggle_switches();
+    this.enable_all_switches('_toggle');
+    this.disable_switch(type, '_zoom'); // @todo: enable zoom for all images
 
     var content_url = this.get_content_url(type, sid_suffix);
     img.setAttribute('src', content_url);
@@ -516,22 +525,133 @@ _traherne_controller.prototype.toggle_content = function(type, toggle_url_list) 
   }
 }
 
-_traherne_controller.prototype.disable_all_toggle_switches = function() {
-  for( var type in this.type_list ) {
-    var el = document.getElementById( this.type_list[type] + '_toggle' );
-    if( !el.hasAttribute('disabled') ) {
-      el.setAttribute('disabled', 'true');
-      el.removeEventListener('click', this.toggle_event_handler.bind(this), false);
+_traherne_controller.prototype.enable_switch = function(type, switch_suffix) {
+  var el = document.getElementById( this.type_list[type] + switch_suffix );
+  if( el.hasAttribute('disabled') ) {
+    el.removeAttribute('disabled');
+    switch( switch_suffix ) {
+    case '_toggle':
+      el.addEventListener('click', this.toggle_event_handler.bind(this), false);
+      break;
+    case '_zoom':
+      el.addEventListener('click', this.zoom_event_handler.bind(this), false);
+      break;
     }
   }
 }
 
-_traherne_controller.prototype.enable_all_toggle_switches = function() {
-  for( var type in this.type_list ) {
-    var el = document.getElementById( this.type_list[type] + '_toggle' );
-    if( el.hasAttribute('disabled') ) {
-      el.removeAttribute('disabled');
-      el.addEventListener('click', this.toggle_event_handler.bind(this), false);
+_traherne_controller.prototype.disable_switch = function(type, switch_suffix) {
+  var el = document.getElementById( this.type_list[type] + switch_suffix );
+  if( !el.hasAttribute('disabled') ) {
+    el.setAttribute('disabled', 'true');
+    switch( switch_suffix ) {
+    case '_toggle':
+      el.removeEventListener('click', this.toggle_event_handler.bind(this), false);
+      break;
+    case '_zoom':
+      el.removeEventListener('click', this.zoom_event_handler.bind(this), false);
+      break;
     }
+  }
+}
+
+_traherne_controller.prototype.disable_all_switches = function(switch_suffix) {
+  for( var type in this.type_list ) {
+    this.disable_switch(type, switch_suffix);
+  }
+}
+
+_traherne_controller.prototype.enable_all_switches = function(switch_suffix) {
+  for( var type in this.type_list ) {
+    this.enable_switch(type, switch_suffix);
+  }
+}
+
+///
+/// horizontal reference line
+///
+
+_traherne_controller.prototype.ref_line_clear = function() {
+  this.ref_line.ctx.clearRect(0, 0, this.ref_line.c.width, this.ref_line.c.height);
+}
+
+_traherne_controller.prototype.ref_line_marker_draw = function(y) {
+  this.ref_line.ctx.fillRect(0,
+                             y - this.ref_line.LINE_HEIGHT,
+                             this.ref_line.c.width,
+                             2*this.ref_line.LINE_HEIGHT);
+  this.ref_line.current_y = y;
+}
+
+_traherne_controller.prototype.ref_line_position = function(y) {
+  var st = document.documentElement.scrollTop;
+  var ot = document.getElementById('ref_line_container').offsetTop;
+  this.ref_line.hline.style.top = (ot + y - st) + 'px';
+}
+
+_traherne_controller.prototype.ref_line_resize_canvas = function() {
+  // update the dim. of canvas to match the content
+  var parent = document.getElementById('ref_line_container');
+  this.ref_line.c.width = Math.floor(parent.clientWidth);
+  this.ref_line.c.height = Math.floor(parent.clientHeight) - 4;
+}
+
+_traherne_controller.prototype.init_ref_line = function() {
+  this.ref_line.hline = document.getElementById('horizontal_line');
+  this.hide_element(this.ref_line.hline);
+
+  this.ref_line.c = document.getElementById('ref_line_canvas');
+  this.ref_line.ctx = this.ref_line.c.getContext('2d');
+  this.ref_line.current_y = 0;
+  this.ref_line.LINE_HEIGHT = 4;
+  this.ref_line_resize_canvas();
+  /*
+  this.ref_line.c.addEventListener('mousedown', function(e) {
+    var c = document.getElementById('ref_line_container');
+    var cot = c.offsetTop;
+    var cst = c.scrollTop;
+    var cct = c.clientTop;
+    var pst = document.documentElement.scrollTop;
+    var ltop = this.ref_line.hline.style.top;
+
+    console.log('ref_line container: clientTop='+cct+', offsetTop='+cot+', scrollTop='+cst+', page.scrollTop='+pst+', line.top='+ltop);
+  }.bind(this));
+  */
+
+  window.addEventListener('scroll', function(e) {
+    if( this.ref_line.hline.classList.contains('display-inline-block') ) {
+      // update the ref_line
+      this.ref_line_position(this.ref_line.current_y);
+    }
+  }.bind(this));
+
+  this.ref_line.c.addEventListener('mouseup', function(e) {
+    this.ref_line_resize_canvas();
+
+    var y = e.offsetY;
+    this.ref_line_clear();
+
+    if( Math.abs(y - this.ref_line.current_y) <= this.ref_line.LINE_HEIGHT ) {
+      this.hide_element(this.ref_line.hline);
+      return;
+    }
+
+    this.ref_line_marker_draw(y);
+    this.ref_line_position(y);
+    this.show_element(this.ref_line.hline);
+  }.bind(this));
+}
+
+
+///
+/// zoom
+///
+_traherne_controller.prototype.zoom_event_handler = function(e) {
+  var id = e.target.id;
+  var type = this.get_container_type(id);
+  if( e.target.checked ) {
+    this.m.via[type].c.zoom_activate();
+  } else {
+    this.m.via[type].c.zoom_deactivate();
   }
 }
