@@ -28,18 +28,48 @@ body {
   padding: 0.4%;
 }
 
-#global_control_panel {
-  position: relative;
+#top_panel {
   display: block;
-  overflow-y: auto;
   width: 100%;
-  padding: 0.8%;
-  margin: 0;
-  background-color: #F2F2F2;
-  text-align: left;
-  border: 1px solid #9E9E9E;
-  border-bottom: 0;
 }
+
+#about_panel {
+  display: inline-table;
+  border: 1px solid #9E9E9E;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+#about_panel .row {
+  display: table-row;
+}
+#about_panel .allcaps {
+  font-variant: small-caps;
+  font-size: 1.4rem;
+}
+#about_panel .small {
+  font-size: 0.7rem;
+}
+#about_panel .lh2 {
+  line-height: 2rem;
+}
+
+.control_block {
+  display: inline-table;
+  border: 0px solid #9E9E9E;
+  background-color: #e6e6e6;
+}
+.control_block .title {
+  display: table-row;
+  font-variant: small-caps;
+  font-size: 0.8rem;
+  line-height: 1.6rem;
+  text-align: center;
+  margin: auto;
+}
+.control_block .row {
+  display: table-row;
+}
+
 
 #message_panel {
   font-family: mono;

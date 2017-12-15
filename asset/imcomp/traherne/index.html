@@ -11,24 +11,55 @@
 
 <body>
 <div id="page">
-  <div id="horizontal_line" class="horizontal_ref_line"></div>
-  <div id="global_control_panel">
-    <div id="message_panel"><a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">Traherne Digital Collator</a>&nbsp;(version <a href="https://gitlab.com/vgg/imcomp/blob/master/CHANGELOG">2.0.1</a>) : To start collation, load base and comp. images.</div>
+  <div id="horizontal_line" class="horizontal_ref_line display-none"></div>
+  <div id="top_panel">
+    <div id="about_panel">
+      <div class="row allcaps">Traherne</div>
+      <div class="row allcaps">Digital</div>
+      <div class="row allcaps">Collator</div>
+      <div class="row small lh2">ver. 2.0.1 | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/UserGuide.html">help</a></div>
+    </div>
 
-    <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare</button>
+    <div class="control_block">
+      <span class="title">Commands</span>
 
-    <span class="button_group_space1"></span>
-    <button id="move_to_prev_pair" type="button" title="Move to previous base and comp. image pair">&lt;</button>
-    <label>Base & Comp Pair</label>
-    <button id="move_to_next_pair" type="button" title="Move to next base and comp. image pair">&gt;</button>
+      <span class="row">
+        <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare Base & Comp.</button>
+      </span>
 
-    <span class="button_group_space1"></span>
-    <label for="toggle_speed">Toggle Speed</label>
-    <select name="toggle_speed" id="toggle_speed">
-      <option value="600">Slow</option>
-      <option value="300">Medium</option>
-      <option value="150">Fast</option>
-    </select>
+      <span class="row">
+        <button>Command2</button>
+        <button>Command3</button>
+      </span>
+    </div>
+
+    <div class="control_block">
+      <span class="title">Navigation</span>
+      <span class="row">
+        <button id="move_to_prev_pair" type="button" title="Move to previous base and comp. image pair">&lt; Prev Pair</button>
+        <button id="move_to_next_pair" type="button" title="Move to next base and comp. image pair">Next Pair &gt;</button>
+      </span>
+    </div>
+
+    <div class="control_block">
+      <span class="title">Settings</span>
+
+      <label for="toggle_speed">Toggle Speed</label>
+      <select name="toggle_speed" id="toggle_speed">
+        <option value="600">Slow</option>
+        <option value="300">Medium</option>
+        <option value="150">Fast</option>
+      </select>
+
+      <label for="zoom_level">Zoom Level</label>
+      <select name="zoom_level" id="zoom_level">
+        <option value="0.1">0.2X</option>
+        <option value="0.2">0.5X</option>
+        <option value="2.0">2X</option>
+        <option value="3.0">3X</option>
+      </select>
+    </div>
+
   </div>
 
   <div id="middle_panel">
