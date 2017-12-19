@@ -6,6 +6,7 @@ function _traherne_view() {
   this.theme = {};
   this.theme.MSG_TIMEOUT_MS = 5000;
   this.theme.TOGGLE_SPEED = 300; // { 150, 300, 600 } ms
+  this.theme.ZOOM_LEVEL = 2; // { 0.2, 0.5, 2, 3 } X
 
   this.message_panel = document.getElementById('message_panel');
 
@@ -22,6 +23,8 @@ function _traherne_view() {
     switch(e.currentTarget.id) {
     case 'base_load_images':
     case 'comp_load_images':
+    case 'base_load_images2':
+    case 'comp_load_images2':
       this.select_local_files(type);
       break;
     case 'base_move_to_next':
@@ -66,6 +69,14 @@ _traherne_view.prototype.init = function( traherne_controller ) {
     }
   }
 
+  // set zoom level to default value selection
+  var zoom_level_dropdown = document.getElementById('zoom_level');
+  for( var i=0; i < zoom_level_dropdown.options.length; i++ ) {
+    if( parseInt(zoom_level_dropdown.options[i].value) == this.theme.ZOOM_LEVEL ) {
+      zoom_level_dropdown.selectedIndex = i;
+    }
+  }
+
   this.connect_ui_elements_to_traherne_view();
 }
 
@@ -93,6 +104,7 @@ _traherne_view.prototype.select_local_files = function(type) {
 _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
   for( var type in this.c.type_list ) {
     document.getElementById( type + '_load_images').addEventListener('click', this, false);
+    document.getElementById( type + '_load_images2').addEventListener('click', this, false);
     document.getElementById( type + '_move_to_prev').addEventListener('click', this, false);
     document.getElementById( type + '_move_to_next').addEventListener('click', this, false);
     document.getElementById( type + '_img_filename_list').addEventListener('change', function(e) {
@@ -108,6 +120,11 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
 
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
+  }.bind(this), false);
+
+  document.getElementById( 'zoom_level').addEventListener('change', function(e) {
+    this.theme.ZOOM_LEVEL = e.target.value;
+    this.c.zoom_update_level();
   }.bind(this), false);
 }
 

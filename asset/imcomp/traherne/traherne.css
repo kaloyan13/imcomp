@@ -38,6 +38,8 @@ body {
   border: 1px solid #9E9E9E;
   overflow: hidden;
   padding: 0.5rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 #about_panel .row {
   display: table-row;
@@ -57,12 +59,14 @@ body {
   display: inline-table;
   border: 0px solid #9E9E9E;
   background-color: #e6e6e6;
+  border-radius: 0.4rem;
+  padding: 0.4rem;
 }
 .control_block .title {
   display: table-row;
   font-variant: small-caps;
   font-size: 0.8rem;
-  line-height: 1.6rem;
+  line-height: 2rem;
   text-align: center;
   margin: auto;
 }
@@ -127,6 +131,7 @@ body {
 */
 #left_content_image {
   max-width: 100%;
+  overflow: hidden;
 }
 
 /* comp panel */
@@ -148,6 +153,7 @@ body {
 */
 #right_content_image {
   max-width: 100%;
+  overflow: hidden;
 }
 
 .img_label {

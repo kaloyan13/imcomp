@@ -28,8 +28,8 @@
       </span>
 
       <span class="row">
-        <button>Command2</button>
-        <button>Command3</button>
+        <button id="base_load_images2" type="button">Load Base</button>
+        <button id="comp_load_images2" type="button">Load Comp</button>
       </span>
     </div>
 
@@ -44,20 +44,23 @@
     <div class="control_block">
       <span class="title">Settings</span>
 
-      <label for="toggle_speed">Toggle Speed</label>
-      <select name="toggle_speed" id="toggle_speed">
-        <option value="600">Slow</option>
-        <option value="300">Medium</option>
-        <option value="150">Fast</option>
-      </select>
+      <span class="row">
+        <select name="toggle_speed" id="toggle_speed">
+          <option value="600">Toggle Speed: Slow</option>
+          <option value="300">Toggle Speed: Medium</option>
+          <option value="150">Toggle Speed: Fast</option>
+        </select>
+      </span>
 
-      <label for="zoom_level">Zoom Level</label>
-      <select name="zoom_level" id="zoom_level">
-        <option value="0.1">0.2X</option>
-        <option value="0.2">0.5X</option>
-        <option value="2.0">2X</option>
-        <option value="3.0">3X</option>
-      </select>
+      <span class="row">
+        <select name="zoom_level" id="zoom_level">
+          <option value="0.4">Zoom: 0.4X (shrink)</option>
+          <option value="0.8">Zoom: 0.8X (shrink)</option>
+          <option value="2.0">Zoom:   2X (magnify)</option>
+          <option value="3.0">Zoom:   3X (magnify)</option>
+          <option value="4.0">Zoom:   4X (magnify)</option>
+        </select>
+      </span>
     </div>
 
   </div>

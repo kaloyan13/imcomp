@@ -650,8 +650,26 @@ _traherne_controller.prototype.zoom_event_handler = function(e) {
   var id = e.target.id;
   var type = this.get_container_type(id);
   if( e.target.checked ) {
+    var oldz = this.m.via[type].v.zoom.scale;
+    var newz = this.v.theme.ZOOM_LEVEL;
+    console.log('zoom: old=' + oldz + ', new=' + newz);
+    this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
     this.m.via[type].c.zoom_activate();
   } else {
     this.m.via[type].c.zoom_deactivate();
+  }
+}
+_traherne_controller.prototype.zoom_update_level = function() {
+  for( var type in this.type_list ) {
+    var switch_name = this.type_list[type] + '_zoom';
+    var e = document.getElementById(switch_name);
+    if( e.checked ) {
+      var oldz = this.m.via[type].v.zoom.scale;
+      var newz = this.v.theme.ZOOM_LEVEL;
+      console.log('updating zoom: old=' + oldz + ', new=' + newz);
+      this.m.via[type].c.zoom_deactivate();
+      this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+      this.m.via[type].c.zoom_activate();
+    }
   }
 }
