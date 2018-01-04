@@ -78,7 +78,8 @@ body {
 #message_panel {
   font-family: mono;
   position: relative;
-  display: block;
+/*  display: block;*/
+  display: none;
   width: 100%;
   overflow: hidden;
   white-space: nowrap;

@@ -9,12 +9,13 @@ if [ ! -d $SRC_DIR ] && [ ! -d $INC_DIR ]; then
   exit 1;
 fi
 
+#rm -fr "${curdir}/build"
 mkdir -p "${curdir}/build"
 cd "${curdir}/build"
 #cmake ../
 cmake ../ && make -j8
 
-rm -fr /tmp/imcomp
+#rm -fr /tmp/imcomp
 "${curdir}/bin/imcomp_server" 0.0.0.0 9971 4 /tmp/imcomp
 
 
