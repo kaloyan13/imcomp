@@ -161,7 +161,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       double h[9];
       uint32_t best_inliers_count = -1;
       homography eye;
-
+/*
       registerImages::registerFromGuess( im1_fn.string().c_str(),
                                          im2_fn.string().c_str(),
                                          file1_region[0], file1_region[2], file1_region[1], file1_region[3],
@@ -172,8 +172,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                          diff_fn.string().c_str(),
                                          overlap_fn.string().c_str()
                                          );
+*/
 
-/*
       vl_register_images::register_images( im1_fn.string().c_str(),
                                          im2_fn.string().c_str(),
                                          file1_region[0], file1_region[2], file1_region[1], file1_region[3],
@@ -184,7 +184,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                          diff_fn.string().c_str(),
                                          overlap_fn.string().c_str()
                                          );
-*/
+
       eye.exportToDoubleArray( h );
 
       std::ostringstream json;

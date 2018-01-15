@@ -17,6 +17,7 @@ extern "C" {
 #include <vl/getopt_long.h>
 }
 
+#include <stdio.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -27,6 +28,11 @@ extern "C" {
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
+
+#include <Magick++.h>            // to transform images
+#include <boost/filesystem.hpp>
+
+#include "homography.h"
 
 using namespace Eigen;
 
@@ -113,6 +119,15 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
     fdata [q] = data [q] ;
   }
 
+  if(verbose) {
+    cout << "\nimage dimension = " << pim.width << " x " << pim.height << flush;
+    cout << "\nimage data = " << flush;
+    for (q = 0 ; q < 10 ; ++q) {
+      fdata [q] = data [q] ;
+      cout << (int) data[q] << ", " << flush;
+    }
+  }
+
   // create filter
   VlSiftFilt *filt = 0 ;
   filt = vl_sift_new (pim.width, pim.height, O, S, o_min) ;
@@ -150,7 +165,7 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
   keypoint_list.clear();
   while (1) {
     if(verbose) {
-      cout << "\n**** processing octave " << vl_sift_get_octave_index (filt) << flush;
+      cout << "\n\n**** processing octave " << vl_sift_get_octave_index (filt) << flush;
     }
 
     VlSiftKeypoint const *keys = 0 ;
@@ -180,8 +195,17 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
     i     = 0 ;
 
     if(verbose) {
-      cout << "\n\tvl_sift: detected " << nkeys << " (unoriented) keypoints" << flush;
+      cout << "\n\tvl_sift: detected " << nkeys << " (unoriented) keypoints\n" << flush;
     }
+
+    for (i=0; i < nkeys ; ++i) {
+      VlSiftKeypoint const *k ;
+      k = keys+i;
+      //printf ("keypoint[%d] : (x,y,sigma)=(%.2f,%.2f,%.5f)\n", i, k->x, k->y, k->sigma) ;
+      //printf ("%.2f,%.2f\n", k->x, k->y) ;
+      //printf ("%d,%d\n", (int) k->x, (int) k->y) ;
+    }
+    i = 0;
 
     /* for each keypoint ........................................ */
     for (; i < nkeys ; ++i) {
@@ -192,33 +216,35 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
       /* obtain keypoint orientations ........................... */
       k = keys + i ;
 
-      VlSiftKeypoint key_data;
-      key_data.x = k->x;
-      key_data.y = k->y;
-      key_data.sigma = k->sigma;
+      VlSiftKeypoint key_data = *k;
 
       nangles = vl_sift_calc_keypoint_orientations(filt, angles, k) ;
-      //cout << "\nnangles=" << nangles << ", angles = " << angles[0] << ", " << angles[1] << ", " << angles[2] << ", " << angles[3] << flush;
+      //cout << "\nnangles=" << nangles << ", k->s=" << (k->s) << ", k->o=" << (k->o) << ", vl_sift_get_octave_index (filt)=" << vl_sift_get_octave_index (filt) << endl<<flush;
 
+      vl_uint8 d[128]; // added by @adutta
       /* for each orientation ................................... */
       for (q = 0 ; q < (unsigned) nangles ; ++q) {
         vl_sift_pix descr[128];
 
         /* compute descriptor (if necessary) */
-        vl_sift_calc_keypoint_descriptor(filt, descr, k, angles [q]) ;
+        vl_sift_calc_keypoint_descriptor(filt, descr, k, angles[q]) ;
 
-        vector<vl_uint8> descriptor(128, 255);
-        for( size_t l=0; l<128; l++ ) {
-          double value = descr[l] * 512.0;
-          if(value < 255.0) {
-            descriptor[l] = (vl_uint8) (value);
-          }
-          //cout << "[" << value << ":" << (int) descriptor[l] << "], ";
+        vector<vl_uint8> descriptor(128);
+        int j;
+        for( j=0; j<128; ++j ) {
+          float value = 512.0 * descr[j];
+          value = ( value < 255.0F ) ? value : 255.0F;
+          descriptor[j] = (vl_uint8) value;
+          d[j] = (vl_uint8) value;
         }
         descriptor_list.push_back(descriptor);
         ++ndescriptors;
 
         keypoint_list.push_back(key_data); // add corresponding keypoint
+
+        if(verbose) {
+          printf ("  - k(%.2f,%.2f) angle[%d]=%.2f | descriptor=[%d,%d,%d,%d,%d, ..., %d,%d,%d,%d]\n",k->x, k->y, (int)q, angles[q], d[0], d[1], d[2], d[3], d[4], d[124], d[125], d[126], d[127]) ;
+        }
       }
     }
   }
@@ -262,15 +288,8 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
     } else {
       return true;
     }
-}
 
-inline float dist_l2(const vector<float> a, const vector<float> b, unsigned int ndim)
-{
-  float ret = 0.0f;
-  for (unsigned d=0; d<ndim; ++d) {
-    ret += (a[d] - b[d])*(a[d] - b[d]);
-  }
-  return ret;
+  return true;
 }
 
 void get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1, vector< vector<vl_uint8> >& descriptor_list2, std::vector< std::pair<uint32_t, uint32_t> > &putative_matches, float threshold) {
@@ -316,59 +335,83 @@ void get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1, vector< 
 }
 
 int main (int argc, const char * argv[]) {
+  Magick::InitializeMagick(*argv);
   cout << "Image Registration using vlfeat\n" << flush;
   if(argc!=3) {
     cout << "  Usage: " << argv[0] << " image1_filename image2_filename" << endl << flush;
     return 0;
   }
 
-  string filename1 = argv[1];
-  string filename2 = argv[2];
+  string fullSizeFn1 = argv[1];
+  string fullSizeFn2 = argv[2];
 
+  Magick::Image im1; im1.read( fullSizeFn1 );
+  Magick::Image im2; im2.read( fullSizeFn2 );
+
+/*
+  double xl=116;
+  double xu=560;
+  double yl=135;
+  double yu=620;
+*/
+  double xl=2;
+  double xu=700;
+  double yl=2;
+  double yu=580;
+
+  const char *outFn1 = "/home/tlm/dev/imcomp/src/vlfeat_register/result/a_crop.jpg";
+  const char *outFn2 = "/home/tlm/dev/imcomp/src/vlfeat_register/result/b_crop.jpg";
+  const char *outFn2t = "/home/tlm/dev/imcomp/src/vlfeat_register/result/b_crop_tx.jpg";
+  const char *diff_image = "/home/tlm/dev/imcomp/src/vlfeat_register/result/a_b_diff.jpg";
+  const char *overlap_image = "/home/tlm/dev/imcomp/src/vlfeat_register/result/a_b_overlap.jpg";
+
+  // temp image file where transformed image is written in each iteration
+  boost::filesystem::path tmp_dir = boost::filesystem::temp_directory_path() / "imcomp";
+  tmp_dir = tmp_dir / "tmp";
+  if( !boost::filesystem::exists(tmp_dir) ) {
+    boost::filesystem::create_directories(tmp_dir);
+  }
+
+  boost::filesystem::path filename1 = tmp_dir / boost::filesystem::unique_path("file1_grayscale_%%%%-%%%%-%%%%-%%%%.pgm");
+  boost::filesystem::path filename2 = tmp_dir / boost::filesystem::unique_path("file2_grayscale_%%%%-%%%%-%%%%-%%%%.pgm");
+  Magick::Image im1_g = im1;
+  im1_g.magick("pgm");
+  im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
+  im1_g.write(filename1.string().c_str());
+  Magick::Image im2_g = im2;
+  im2_g.magick("pgm");
+  im2_g.write(filename2.string().c_str());
+
+/**/
   vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
-  bool result1 = compute_sift_features(filename1, keypoint_list1, descriptor_list1, true);
-  cout << "\nFilename = " << filename1 << ", result=" << result1 << flush;
+  compute_sift_features(filename1.string().c_str(), keypoint_list1, descriptor_list1);
+  cout << "\nFilename = " << filename1 << flush;
   cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
   cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
 
-  ofstream kp("/home/tlm/kp1.txt");
-  for( size_t i=0; i<keypoint_list1.size(); i++ ) {
-    kp << keypoint_list1[i].x << "," << keypoint_list1[i].y << "," << keypoint_list1[i].sigma << endl;
-  }
-  kp.close();
 
-/*
-  bool result2 = compute_sift_features(filename2, keypoint_list2, descriptor_list2);
-  cout << "\nFilename = " << filename2 << ", result=" << result2 << flush;
+  compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2);
+  cout << "\nFilename = " << filename2 << flush;
   cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
   cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
-*/
-/*
-  for( size_t i=10; i<14; i++ ) {
-    cout << "\ndescriptor_list1[" << i << "]: " << flush;
-    for( size_t j=0; j<descriptor_list1[i].size(); j++ ) {
-      cout << (int) descriptor_list1[i][j] << ", ";
-    }
-  }
-  cout << flush;
-*/
 
-/*
   // use Lowe's 2nd nn test to find putative matches
   float threshold = 1.5f;
   std::vector< std::pair<uint32_t, uint32_t> > putative_matches;
   get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
 
+/*
   cout << "\nShowing putative matches :" << flush;
   for( size_t i=0; i<putative_matches.size(); i++ ) {
     cout << "[" << putative_matches[i].first << ":" << putative_matches[i].second << "], " << flush;
   }
-  cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
 */
+  cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
 
-/*
+
+/**/
   // initialize random number generator to randomly sample putative_matches
   size_t n_match = putative_matches.size();
   random_device rand_device;
@@ -378,8 +421,11 @@ int main (int argc, const char * argv[]) {
   // estimate homography using RANSAC
   size_t max_score = 0;
   Matrix3d max_score_H(3,3);
+  MatrixXd best_singular_values;
+  MatrixXd bestV;
+  MatrixXd bestA;
 
-  for( unsigned int iter=0; iter<10000; iter++ ) {
+  for( unsigned int iter=0; iter<1000; iter++ ) {
     //cout << "\niter=" << iter << flush;
 
     // randomly select 4 matches from putative_matches
@@ -414,11 +460,11 @@ int main (int argc, const char * argv[]) {
         A(i*3 + 2, j*3 + 1) =  x1(j) * x2(0);
       }
     }
-    JacobiSVD<MatrixXd> svd(A, ComputeThinV);
+    JacobiSVD<MatrixXd> svd(A, ComputeFullV);
+
     MatrixXd V = svd.matrixV().col(8);
     MatrixXd H(V);
     H.resize(3,3);
-    //cout << "\n  H=" << H << flush;
 
     size_t score = 0;
     for( unsigned int k=0; k<putative_matches.size(); k++ ) {
@@ -442,17 +488,128 @@ int main (int argc, const char * argv[]) {
     if( score > max_score ) {
       max_score = score;
       max_score_H = H;
+      best_singular_values = svd.singularValues();
+      bestV = svd.matrixV();
+      bestA = A;
     }
+    /*
     MatrixXd Hdisp(H);
     Hdisp.resize(1,9);
-    //cout << "\niter " << iter << " : H=[" << Hdisp << "], score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
+    cout << "\niter " << iter << " : H=[" << Hdisp << "], score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
+    */
   }
+/*
   MatrixXd max_score_H_disp(max_score_H);
   max_score_H_disp.resize(1,9);
   cout << "\nResult : H=[" << max_score_H_disp << "], score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
 
+  cout << "\n  inliers=" << max_score << flush;
+  cout << "\n  bestH=\n" << max_score_H << flush;
+  cout << "\n  bestA=\n" << bestA << flush;
+  cout << "\n  best_singular_values=\n" << best_singular_values << flush;
+  cout << "\n  bestV=\n" << bestV << flush;
 */
+  max_score_H = max_score_H / max_score_H(2,2);
+  cout << "\nmax_score_H (norm) = \n" << max_score_H << flush;
 
+  // im1 crop
+  Magick::Image im1_crop(im1);
+  Magick::Geometry cropRect1(xu-xl, yu-yl, xl, yl);
+  im1_crop.crop( cropRect1 );
+  im1_crop.write( outFn1 );
+
+  // im2 crop and transform
+  MatrixXd H = max_score_H;
+  Magick::Image im2t_crop( im1_crop.size(), "white");
+  cout << "\nTransforming image ..." << flush;
+  double x0,x1,y0,y1;
+  double x, y, homogeneous_norm;
+  double dx0, dx1, dy0, dy1;
+  double fxy0, fxy1;
+  double fxy_red, fxy_green, fxy_blue;
+  double xi, yi;
+  Magick::Image diff1(im1_crop.size(), "black");
+  Magick::Image diff2(im1_crop.size(), "black");
+  Magick::Image diff(im1_crop.size(), "white");
+  Magick::Image overlap(im1_crop.size(), "white");
+
+  for(unsigned int j=0; j<im2t_crop.rows(); j++) {
+    for(unsigned int i=0; i<im2t_crop.columns(); i++) {
+      xi = ((double) i) + 0.5; // center of pixel
+      yi = ((double) j) + 0.5; // center of pixel
+      x = H(0,0) * xi + H(0,1) * yi + H(0,2);
+      y = H(1,0) * xi + H(1,1) * yi + H(1,2);
+      homogeneous_norm = H(2,0) * xi + H(2,1) * yi + H(2,2);
+      x = x / homogeneous_norm;
+      y = y / homogeneous_norm;
+
+      // neighbourhood of xh
+      x0 = ((int) x);
+      x1 = x0 + 1;
+      dx0 = x - x0;
+      dx1 = x1 - x;
+
+      y0 = ((int) y);
+      y1 = y0 + 1;
+      dy0 = y - y0;
+      dy1 = y1 - y;
+
+      Magick::ColorRGB fx0y0 = im2.pixelColor(x0, y0);
+      Magick::ColorRGB fx1y0 = im2.pixelColor(x1, y0);
+      Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
+      Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
+
+      // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
+      fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1
+      fxy1 = dx1 * fx0y1.red() + dx0 * fx1y1.red(); // note: x1 - x0 = 1
+      fxy_red = dy1 * fxy0 + dy0 * fxy1;
+
+      fxy0 = dx1 * fx0y0.green() + dx0 * fx1y0.green(); // note: x1 - x0 = 1
+      fxy1 = dx1 * fx0y1.green() + dx0 * fx1y1.green(); // note: x1 - x0 = 1
+      fxy_green = dy1 * fxy0 + dy0 * fxy1;
+
+      fxy0 = dx1 * fx0y0.blue() + dx0 * fx1y0.blue(); // note: x1 - x0 = 1
+      fxy1 = dx1 * fx0y1.blue() + dx0 * fx1y1.blue(); // note: x1 - x0 = 1
+      fxy_blue = dy1 * fxy0 + dy0 * fxy1;
+
+      Magick::ColorRGB fxy(fxy_red, fxy_green, fxy_blue);
+      im2t_crop.pixelColor(i, j, fxy);
+
+      // compute difference image
+      Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
+      double avg1 = ((double)(c1.red() + c1.green() + c1.blue())) / (3.0f);
+      double avg2 = (fxy_red + fxy_green + fxy_blue) / (3.0f);
+      double diff_val1 = avg1 - avg2;
+      double diff_val2 = avg2 - avg1;
+
+      if( diff_val1 > 0.3 ) {
+        diff.pixelColor(i, j, Magick::ColorRGB(0, 0.447, 0.698)); // blue color safe for the color blind 
+      }
+      if( diff_val2 > 0.3 ) {
+        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind 
+      }
+
+      // overlap
+      double red_avg = (c1.red() + fxy_red) / (2.0f);
+      double green_avg = (c1.green() + fxy_green) / (2.0f);
+      double blue_avg = (c1.blue() + fxy_blue) / (2.0f);
+      overlap.pixelColor(i, j, Magick::ColorRGB(red_avg, green_avg, blue_avg));
+    }
+  }
+  im2t_crop.write( outFn2t );
+
+  // difference image
+  diff.write(diff_image);
+  overlap.write(overlap_image);
+
+/*
+  .quantize
+  .adaptiveThreshold
+  .threshold
+MagickCore::OpenMorphology
+*/
   cout << "\nDone\n" << flush;
   return 0;
 }
+
+

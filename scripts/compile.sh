@@ -15,7 +15,7 @@ cd "${curdir}/build"
 #cmake ../
 cmake ../ && make -j8
 
-#rm -fr /tmp/imcomp
+rm -fr /tmp/imcomp
 "${curdir}/bin/imcomp_server" 0.0.0.0 9971 4 /tmp/imcomp
 
 

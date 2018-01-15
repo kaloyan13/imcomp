@@ -111,6 +111,11 @@ _traherne_controller.prototype.set_now = function(type, findex) {
   this.m.via[type].c.load_file_from_index( findex );
   this.v.now[type].findex = findex;
 
+  // update the content to show {base,comp} full image
+  var sid_suffix = type + '_via';
+  this.content_selector_set_state(type, sid_suffix, true);
+  this.set_content(type, sid_suffix);
+
   this.on_now_update(type);
 }
 

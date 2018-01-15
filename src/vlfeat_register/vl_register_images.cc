@@ -11,7 +11,7 @@ some code borrowed from: vlfeat-0.9.20/src/sift.c
 
 #include "vl_register_images.h"
 
-void vl_register_images::compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false) {
+void vl_register_images::compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
   vl_bool  err    = VL_ERR_OK ;
   char     err_msg [1024] ;
 
@@ -37,6 +37,9 @@ void vl_register_images::compute_sift_features(const string filename, vector<VlS
 
   double           *ikeys = 0 ;
   int              nikeys = 0, ikeys_size = 0 ;
+
+  // create filter
+  VlSiftFilt *filt = 0 ;
 
   // load pgm image
   const char* name = filename.c_str();
@@ -92,8 +95,15 @@ void vl_register_images::compute_sift_features(const string filename, vector<VlS
     fdata [q] = data [q] ;
   }
 
-  // create filter
-  VlSiftFilt *filt = 0 ;
+  if(verbose) {
+    cout << "\nimage dimension = " << pim.width << " x " << pim.height << flush;
+    cout << "\nimage data = " << flush;
+    for (q = 0 ; q < 10 ; ++q) {
+      fdata [q] = data [q] ;
+      cout << (int) data[q] << ", " << flush;
+    }
+  }
+
   filt = vl_sift_new (pim.width, pim.height, O, S, o_min) ;
 
   if (peak_thresh >= 0) vl_sift_set_peak_thresh (filt, peak_thresh) ;
@@ -129,7 +139,7 @@ void vl_register_images::compute_sift_features(const string filename, vector<VlS
   keypoint_list.clear();
   while (1) {
     if(verbose) {
-      cout << "\n**** processing octave " << vl_sift_get_octave_index (filt) << flush;
+      cout << "\n\n**** processing octave " << vl_sift_get_octave_index (filt) << flush;
     }
 
     VlSiftKeypoint const *keys = 0 ;
@@ -159,8 +169,17 @@ void vl_register_images::compute_sift_features(const string filename, vector<VlS
     i     = 0 ;
 
     if(verbose) {
-      cout << "\n\tvl_sift: detected " << nkeys << " (unoriented) keypoints" << flush;
+      cout << "\n\tvl_sift: detected " << nkeys << " (unoriented) keypoints\n" << flush;
     }
+
+    for (i=0; i < nkeys ; ++i) {
+      VlSiftKeypoint const *k ;
+      k = keys+i;
+      //printf ("keypoint[%d] : (x,y,sigma)=(%.2f,%.2f,%.5f)\n", i, k->x, k->y, k->sigma) ;
+      //printf ("%.2f,%.2f\n", k->x, k->y) ;
+      //printf ("%d,%d\n", (int) k->x, (int) k->y) ;
+    }
+    i = 0;
 
     /* for each keypoint ........................................ */
     for (; i < nkeys ; ++i) {
@@ -171,33 +190,35 @@ void vl_register_images::compute_sift_features(const string filename, vector<VlS
       /* obtain keypoint orientations ........................... */
       k = keys + i ;
 
-      VlSiftKeypoint key_data;
-      key_data.x = k->x;
-      key_data.y = k->y;
-      key_data.sigma = k->sigma;
+      VlSiftKeypoint key_data = *k;
 
       nangles = vl_sift_calc_keypoint_orientations(filt, angles, k) ;
-      //cout << "\nnangles=" << nangles << ", angles = " << angles[0] << ", " << angles[1] << ", " << angles[2] << ", " << angles[3] << flush;
+      //cout << "\nnangles=" << nangles << ", k->s=" << (k->s) << ", k->o=" << (k->o) << ", vl_sift_get_octave_index (filt)=" << vl_sift_get_octave_index (filt) << endl<<flush;
 
+      vl_uint8 d[128]; // added by @adutta
       /* for each orientation ................................... */
       for (q = 0 ; q < (unsigned) nangles ; ++q) {
         vl_sift_pix descr[128];
 
         /* compute descriptor (if necessary) */
-        vl_sift_calc_keypoint_descriptor(filt, descr, k, angles [q]) ;
+        vl_sift_calc_keypoint_descriptor(filt, descr, k, angles[q]) ;
 
-        vector<vl_uint8> descriptor(128, 255);
-        for( size_t l=0; l<128; l++ ) {
-          double value = descr[l] * 512.0;
-          if(value < 255.0) {
-            descriptor[l] = (vl_uint8) (value);
-          }
-          //cout << "[" << value << ":" << (int) descriptor[l] << "], ";
+        vector<vl_uint8> descriptor(128);
+        int j;
+        for( j=0; j<128; ++j ) {
+          float value = 512.0 * descr[j];
+          value = ( value < 255.0F ) ? value : 255.0F;
+          descriptor[j] = (vl_uint8) value;
+          d[j] = (vl_uint8) value;
         }
         descriptor_list.push_back(descriptor);
         ++ndescriptors;
 
         keypoint_list.push_back(key_data); // add corresponding keypoint
+
+        if(verbose) {
+          printf ("  - k(%.2f,%.2f) angle[%d]=%.2f | descriptor=[%d,%d,%d,%d,%d, ..., %d,%d,%d,%d]\n",k->x, k->y, (int)q, angles[q], d[0], d[1], d[2], d[3], d[4], d[124], d[125], d[126], d[127]) ;
+        }
       }
     }
   }
@@ -237,14 +258,10 @@ void vl_register_images::compute_sift_features(const string filename, vector<VlS
          "sift: err: %s (%d)\n",
          err_msg,
          err) ;
-      return false;
-    } else {
-      return true;
     }
 }
 
 void vl_register_images::get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1, vector< vector<vl_uint8> >& descriptor_list2, std::vector< std::pair<uint32_t, uint32_t> > &putative_matches, float threshold) {
-
   size_t n1 = descriptor_list1.size();
   size_t n2 = descriptor_list2.size();
 
@@ -291,11 +308,9 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
                                 const char outFn1[], const char outFn2[], const char outFn2t[],
                                 const char diff_image[],
                                 const char overlap_image[]) {
-  static const double expandOutBy= 0.1;
 
   Magick::Image im1; im1.read( fullSizeFn1 );
   Magick::Image im2; im2.read( fullSizeFn2 );
-
 
   // temp image file where transformed image is written in each iteration
   boost::filesystem::path tmp_dir = boost::filesystem::temp_directory_path() / "imcomp";
@@ -314,6 +329,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   im2_g.magick("pgm");
   im2_g.write(filename2.string().c_str());
 
+/**/
   vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
@@ -328,19 +344,21 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
   cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
 
-  // cleanup
-  cout << "\nclearning up tmp files " << filename1 << flush;
-  //boost::filesystem::remove(filename1);
-  cout << "\nclearning up tmp files " << filename2 << flush;
-  //boost::filesystem::remove(filename2);
-
   // use Lowe's 2nd nn test to find putative matches
-  cout << "\ncomputing putative matches " << flush;
   float threshold = 1.5f;
   std::vector< std::pair<uint32_t, uint32_t> > putative_matches;
   get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
+
+/*
+  cout << "\nShowing putative matches :" << flush;
+  for( size_t i=0; i<putative_matches.size(); i++ ) {
+    cout << "[" << putative_matches[i].first << ":" << putative_matches[i].second << "], " << flush;
+  }
+*/
   cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
 
+
+/**/
   // initialize random number generator to randomly sample putative_matches
   size_t n_match = putative_matches.size();
   random_device rand_device;
@@ -350,8 +368,11 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   // estimate homography using RANSAC
   size_t max_score = 0;
   Matrix3d max_score_H(3,3);
+  MatrixXd best_singular_values;
+  MatrixXd bestV;
+  MatrixXd bestA;
 
-  for( unsigned int iter=0; iter<10000; iter++ ) {
+  for( unsigned int iter=0; iter<1000; iter++ ) {
     //cout << "\niter=" << iter << flush;
 
     // randomly select 4 matches from putative_matches
@@ -386,11 +407,11 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
         A(i*3 + 2, j*3 + 1) =  x1(j) * x2(0);
       }
     }
-    JacobiSVD<MatrixXd> svd(A, ComputeThinV);
+    JacobiSVD<MatrixXd> svd(A, ComputeFullV);
+
     MatrixXd V = svd.matrixV().col(8);
     MatrixXd H(V);
     H.resize(3,3);
-    //cout << "\n  H=" << H << flush;
 
     size_t score = 0;
     for( unsigned int k=0; k<putative_matches.size(); k++ ) {
@@ -414,116 +435,126 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
     if( score > max_score ) {
       max_score = score;
       max_score_H = H;
+      best_singular_values = svd.singularValues();
+      bestV = svd.matrixV();
+      bestA = A;
     }
+    /*
     MatrixXd Hdisp(H);
     Hdisp.resize(1,9);
-    //cout << "\niter " << iter << " : H=[" << Hdisp << "], score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
+    cout << "\niter " << iter << " : H=[" << Hdisp << "], score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
+    */
   }
+/*
   MatrixXd max_score_H_disp(max_score_H);
   max_score_H_disp.resize(1,9);
   cout << "\nResult : H=[" << max_score_H_disp << "], score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
 
-  homography H;
-  H.H[0] = max_score_H(0,0); H.H[1] = max_score_H(0,1); H.H[2] = max_score_H(0,2);
-  H.H[3] = max_score_H(1,0); H.H[4] = max_score_H(1,1); H.H[5] = max_score_H(1,2);
-  H.H[6] = max_score_H(2,0); H.H[7] = max_score_H(2,1); H.H[8] = max_score_H(2,2);
-  H.normLast();
+  cout << "\n  inliers=" << max_score << flush;
+  cout << "\n  bestH=\n" << max_score_H << flush;
+  cout << "\n  bestA=\n" << bestA << flush;
+  cout << "\n  best_singular_values=\n" << best_singular_values << flush;
+  cout << "\n  bestV=\n" << bestV << flush;
+*/
+  max_score_H = max_score_H / max_score_H(2,2);
+  cout << "\nmax_score_H (norm) = \n" << max_score_H << flush;
 
-  // draw resulting images
-  double xl_= xl, xu_= xu, yl_= yl, yu_= yu;
-  double dw_= expandOutBy*(xu-xl), dh_= expandOutBy*(yu-yl);
-  xl_= std::max(0.0, xl_-dw_/2);
-  yl_= std::max(0.0, yl_-dh_/2);
-  xu_= std::min(static_cast<double>(im1.columns() ), xu_+dw_/2);
-  yu_= std::min(static_cast<double>(im1.rows()), yu_+dh_/2);
-  Magick::Geometry cropRect1(xu_-xl_, yu_-yl_, xl_, yl_);
-  double xl2_, xu2_, yl2_, yu2_;
-  findBBox2( xl_, xu_, yl_, yu_, H, xl2_, xu2_, yl2_, yu2_, im2.columns(), im2.rows() );
-  Magick::Geometry cropRect2(xu2_-xl2_, yu2_-yl2_, xl2_, yl2_);
+  // im1 crop
+  Magick::Image im1_crop(im1);
+  Magick::Geometry cropRect1(xu-xl, yu-yl, xl, yl);
+  im1_crop.crop( cropRect1 );
+  im1_crop.write( outFn1 );
 
-  im1.crop( cropRect1 );
-  im1.write( outFn1 );
-  im2.crop( cropRect2 );
-  im2.write( outFn2 );
+  // im2 crop and transform
+  MatrixXd H = max_score_H;
+  // used by caller of register_images()
+  Hinit.H[0] = H(0,0); Hinit.H[1] = H(0,1); Hinit.H[2] = H(0,2);
+  Hinit.H[3] = H(1,0); Hinit.H[4] = H(1,1); Hinit.H[5] = H(1,2);
+  Hinit.H[6] = H(2,0); Hinit.H[7] = H(2,1); Hinit.H[8] = H(2,2);
 
-  Magick::Image im2t = im2;
-  double Hinv[9];
-  H.getInverse(Hinv);
-  homography::normLast(Hinv);
-  // AffineProjection(sx, rx, ry, sy, tx, ty) <=> H=[sx, ry, tx; sy, rx, ty; 0 0 1]
-  double MagickAffine[6] = {Hinv[0], Hinv[3], Hinv[1], Hinv[4], Hinv[2], Hinv[5]};
-  im2t.virtualPixelMethod(Magick::BlackVirtualPixelMethod);
-  if ( im1.rows() == im2.rows() || im1.columns() == im2.columns() ) {
-    im2t.distort(Magick::AffineProjectionDistortion, 6, MagickAffine, false);
-  } else {
-    im2t.distort(Magick::AffineProjectionDistortion, 6, MagickAffine, true);
-  }
-  //std::cout << "\nim2t = " << im2t.columns() << "," << im2t.rows() << std::flush;
-  im2t.crop( cropRect1 );
-  //std::cout << "\ncropRect1=" << cropRect1.width() << "," << cropRect1.height() << "," << cropRect1.xOff() << "," << cropRect1.yOff() << std::flush;
-  //std::cout << "\nim2t (cropped) = " << im2t.columns() << "," << im2t.rows() << std::flush;
-  im2t.write( outFn2t );
+  Magick::Image im2t_crop( im1_crop.size(), "white");
 
-  Hinit = H;
+  double x0,x1,y0,y1;
+  double x, y, homogeneous_norm;
+  double dx0, dx1, dy0, dy1;
+  double fxy0, fxy1;
+  double fxy_red, fxy_green, fxy_blue;
+  double xi, yi;
+  Magick::Image diff1(im1_crop.size(), "black");
+  Magick::Image diff2(im1_crop.size(), "black");
+  Magick::Image diff(im1_crop.size(), "white");
+  Magick::Image overlap(im1_crop.size(), "white");
 
-  // create difference image
-  // red channel  : image 1
-  // green channel: image 2
-  // blue         : min(image1, image2)
-  // see: https://stackoverflow.com/a/33673440/7814484
-  Magick::Image diff( im1.size(), "white");
-  Magick::Image overlap( im1.size(), "white");
-  for(unsigned int x=0; x<im1.columns(); x++) {
-    for(unsigned int y=0; y<im1.rows(); y++) {
-      Magick::Color c1 = im1.pixelColor(x,y);
-      Magick::Color c2 = im2t.pixelColor(x,y);
+  cout << "\nComputing transformed image ..." << flush;
+  for(unsigned int j=0; j<im2t_crop.rows(); j++) {
+    for(unsigned int i=0; i<im2t_crop.columns(); i++) {
+      xi = ((double) i) + 0.5; // center of pixel
+      yi = ((double) j) + 0.5; // center of pixel
+      x = H(0,0) * xi + H(0,1) * yi + H(0,2);
+      y = H(1,0) * xi + H(1,1) * yi + H(1,2);
+      homogeneous_norm = H(2,0) * xi + H(2,1) * yi + H(2,2);
+      x = x / homogeneous_norm;
+      y = y / homogeneous_norm;
 
-      unsigned int c1_avg = ( c1.redQuantum() + c1.greenQuantum() + c1.blueQuantum() ) / 3;
-      unsigned int c2_avg = ( c2.redQuantum() + c2.greenQuantum() + c2.blueQuantum() ) / 3;
+      // neighbourhood of xh
+      x0 = ((int) x);
+      x1 = x0 + 1;
+      dx0 = x - x0;
+      dx1 = x1 - x;
 
-      unsigned dark = c1_avg;
-      if ( c2_avg < c1_avg ) {
-        dark = c2_avg;
+      y0 = ((int) y);
+      y1 = y0 + 1;
+      dy0 = y - y0;
+      dy1 = y1 - y;
+
+      Magick::ColorRGB fx0y0 = im2.pixelColor(x0, y0);
+      Magick::ColorRGB fx1y0 = im2.pixelColor(x1, y0);
+      Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
+      Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
+
+      // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
+      fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1
+      fxy1 = dx1 * fx0y1.red() + dx0 * fx1y1.red(); // note: x1 - x0 = 1
+      fxy_red = dy1 * fxy0 + dy0 * fxy1;
+
+      fxy0 = dx1 * fx0y0.green() + dx0 * fx1y0.green(); // note: x1 - x0 = 1
+      fxy1 = dx1 * fx0y1.green() + dx0 * fx1y1.green(); // note: x1 - x0 = 1
+      fxy_green = dy1 * fxy0 + dy0 * fxy1;
+
+      fxy0 = dx1 * fx0y0.blue() + dx0 * fx1y0.blue(); // note: x1 - x0 = 1
+      fxy1 = dx1 * fx0y1.blue() + dx0 * fx1y1.blue(); // note: x1 - x0 = 1
+      fxy_blue = dy1 * fxy0 + dy0 * fxy1;
+
+      Magick::ColorRGB fxy(fxy_red, fxy_green, fxy_blue);
+      im2t_crop.pixelColor(i, j, fxy);
+
+      // compute difference image
+      Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
+      double avg1 = ((double)(c1.red() + c1.green() + c1.blue())) / (3.0f);
+      double avg2 = (fxy_red + fxy_green + fxy_blue) / (3.0f);
+      double diff_val1 = avg1 - avg2;
+      double diff_val2 = avg2 - avg1;
+
+      if( diff_val1 > 0.3 ) {
+        diff.pixelColor(i, j, Magick::ColorRGB(0, 0.447, 0.698)); // blue color safe for the color blind 
       }
-      Magick::Color cdiff = Magick::Color(c1_avg, c2_avg, dark);
-      diff.pixelColor(x, y, cdiff);
+      if( diff_val2 > 0.3 ) {
+        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind 
+      }
 
-      unsigned int overlay_r = ( c1.redQuantum() + c2.redQuantum() ) / 2;
-      unsigned int overlay_g = ( c1.greenQuantum() + c2.greenQuantum() ) / 2;
-      unsigned int overlay_b = ( c1.blueQuantum() + c2.blueQuantum() ) / 2;
-
-      overlap.pixelColor(x, y, Magick::Color(overlay_r, overlay_g, overlay_b));
+      // overlap
+      double red_avg = (c1.red() + fxy_red) / (2.0f);
+      double green_avg = (c1.green() + fxy_green) / (2.0f);
+      double blue_avg = (c1.blue() + fxy_blue) / (2.0f);
+      overlap.pixelColor(i, j, Magick::ColorRGB(red_avg, green_avg, blue_avg));
     }
   }
+  im2t_crop.write( outFn2t );
+
+  // difference image
   diff.write(diff_image);
   overlap.write(overlap_image);
 
-  cout << "\nDone\n" << flush;
-  return 0;
+  cout << "\nWritten transformed images.\n" << flush;
 }
 
-void vl_register_images::findBBox2( double xl, double xu, double yl, double yu, homography const &H, double &xl2, double &xu2, double &yl2, double &yu2, uint32_t w2, uint32_t h2 ){
-  if( fabs(H.H[8]-1.0) > 1e-5 ) {
-    cerr << "vl_register_images::findBBox2() : malformed Homography matrix\n" << flush;
-  }
-
-  xl2= 10000; xu2= -10000; yl2= 10000; yu2= -10000;
-  double x_, y_;
-
-  homography::affTransform(H.H, xl, yl, x_, y_);
-  xl2= std::min(xl2,x_); xu2= std::max(xu2,x_); yl2= std::min(yl2,y_); yu2= std::max(yu2,y_);
-
-  homography::affTransform(H.H, xl, yu, x_, y_);
-  xl2= std::min(xl2,x_); xu2= std::max(xu2,x_); yl2= std::min(yl2,y_); yu2= std::max(yu2,y_);
-
-  homography::affTransform(H.H, xu, yl, x_, y_);
-  xl2= std::min(xl2,x_); xu2= std::max(xu2,x_); yl2= std::min(yl2,y_); yu2= std::max(yu2,y_);
-
-  homography::affTransform(H.H, xu, yu, x_, y_);
-  xl2= std::min(xl2,x_); xu2= std::max(xu2,x_); yl2= std::min(yl2,y_); yu2= std::max(yu2,y_);
-
-  xl2= std::max(0.0,xl2);
-  yl2= std::max(0.0,yl2);
-  xu2= std::min(xu2,static_cast<double>(w2));
-  yu2= std::min(yu2,static_cast<double>(h2));
-}
