@@ -312,6 +312,10 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   Magick::Image im1; im1.read( fullSizeFn1 );
   Magick::Image im2; im2.read( fullSizeFn2 );
 
+  // to ensure that image pixel values are 8bit RGB
+  im1.type(Magick::TrueColorType);
+  im2.type(Magick::TrueColorType);
+
   // temp image file where transformed image is written in each iteration
   boost::filesystem::path tmp_dir = boost::filesystem::temp_directory_path() / "imcomp";
   tmp_dir = tmp_dir / "tmp";
@@ -337,12 +341,13 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   cout << "\nFilename = " << filename1 << flush;
   cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
   cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
-
+  boost::filesystem::remove(filename1);
 
   compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2);
   cout << "\nFilename = " << filename2 << flush;
   cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
   cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
+  boost::filesystem::remove(filename2);
 
   // use Lowe's 2nd nn test to find putative matches
   float threshold = 1.5f;
@@ -465,15 +470,14 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   im1_crop.crop( cropRect1 );
   im1_crop.write( outFn1 );
 
+  Magick::Image im2_crop(im2);
+  im2_crop.crop( cropRect1 );
+  im2_crop.write( outFn2 );
+
   // im2 crop and transform
   MatrixXd H = max_score_H;
-  // used by caller of register_images()
-  Hinit.H[0] = H(0,0); Hinit.H[1] = H(0,1); Hinit.H[2] = H(0,2);
-  Hinit.H[3] = H(1,0); Hinit.H[4] = H(1,1); Hinit.H[5] = H(1,2);
-  Hinit.H[6] = H(2,0); Hinit.H[7] = H(2,1); Hinit.H[8] = H(2,2);
-
   Magick::Image im2t_crop( im1_crop.size(), "white");
-
+  cout << "\nTransforming image ..." << flush;
   double x0,x1,y0,y1;
   double x, y, homogeneous_norm;
   double dx0, dx1, dy0, dy1;
@@ -485,7 +489,6 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   Magick::Image diff(im1_crop.size(), "white");
   Magick::Image overlap(im1_crop.size(), "white");
 
-  cout << "\nComputing transformed image ..." << flush;
   for(unsigned int j=0; j<im2t_crop.rows(); j++) {
     for(unsigned int i=0; i<im2t_crop.columns(); i++) {
       xi = ((double) i) + 0.5; // center of pixel
@@ -554,7 +557,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   // difference image
   diff.write(diff_image);
   overlap.write(overlap_image);
-
+  
   cout << "\nWritten transformed images.\n" << flush;
 }
 

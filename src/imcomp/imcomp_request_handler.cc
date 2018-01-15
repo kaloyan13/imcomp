@@ -247,6 +247,7 @@ bool imcomp_request_handler::save_user_upload(const http_request& request, strin
 
       boost::filesystem::path fn = upload_dir_ / ( fid + ".jpg");
       im.magick("JPEG");
+      im.colorSpace(Magick::sRGBColorspace);
       im.write(fn.string());
       std::clog << "\n  imcomp_request_handler::save_user_upload() : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
       return true;

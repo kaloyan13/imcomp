@@ -25,14 +25,13 @@ extern "C" {
 #include <limits>
 #include <random>
 #include <fstream>
+#include <algorithm>
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 
 #include <Magick++.h>            // to transform images
 #include <boost/filesystem.hpp>
-
-#include "homography.h"
 
 using namespace Eigen;
 
@@ -64,6 +63,9 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
 
   double           *ikeys = 0 ;
   int              nikeys = 0, ikeys_size = 0 ;
+
+  // create filter
+  VlSiftFilt *filt = 0 ;
 
   // load pgm image
   const char* name = filename.c_str();
@@ -128,8 +130,6 @@ bool compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoi
     }
   }
 
-  // create filter
-  VlSiftFilt *filt = 0 ;
   filt = vl_sift_new (pim.width, pim.height, O, S, o_min) ;
 
   if (peak_thresh >= 0) vl_sift_set_peak_thresh (filt, peak_thresh) ;
@@ -334,6 +334,34 @@ void get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1, vector< 
   }
 }
 
+string get_colorspace_name(Magick::Image& im) {
+  switch( im.colorSpace() ) {
+    case Magick::UndefinedColorspace:
+      return "UndefinedColorspace";
+      break;
+    case Magick::CMYColorspace:
+      return "CMYColorspace";
+      break;
+    case Magick::CMYKColorspace:
+      return "CMYKColorspace";
+      break;
+    case Magick::GRAYColorspace:
+      return "GRAYColorspace";
+      break;
+    case Magick::RGBColorspace:
+      return "RGBColorspace";
+      break;
+
+    case Magick::sRGBColorspace:
+      return "sRGBColorspace";
+      break;
+
+    default:
+      return "unknown";
+      break;
+  }
+}
+
 int main (int argc, const char * argv[]) {
   Magick::InitializeMagick(*argv);
   cout << "Image Registration using vlfeat\n" << flush;
@@ -348,16 +376,29 @@ int main (int argc, const char * argv[]) {
   Magick::Image im1; im1.read( fullSizeFn1 );
   Magick::Image im2; im2.read( fullSizeFn2 );
 
+  // to ensure that image pixel values are 8bit RGB
+  im1.type(Magick::TrueColorType);
+  im2.type(Magick::TrueColorType);
+
+
 /*
   double xl=116;
   double xu=560;
   double yl=135;
   double yu=620;
 */
+
   double xl=2;
   double xu=700;
   double yl=2;
   double yu=580;
+
+/*
+  double xl=80;
+  double xu=460;
+  double yl=180;
+  double yu=620;
+*/
 
   const char *outFn1 = "/home/tlm/dev/imcomp/src/vlfeat_register/result/a_crop.jpg";
   const char *outFn2 = "/home/tlm/dev/imcomp/src/vlfeat_register/result/b_crop.jpg";
@@ -518,6 +559,10 @@ int main (int argc, const char * argv[]) {
   im1_crop.crop( cropRect1 );
   im1_crop.write( outFn1 );
 
+  Magick::Image im2_crop(im2);
+  im2_crop.crop( cropRect1 );
+  im2.write( outFn2 );
+
   // im2 crop and transform
   MatrixXd H = max_score_H;
   Magick::Image im2t_crop( im1_crop.size(), "white");
@@ -531,7 +576,7 @@ int main (int argc, const char * argv[]) {
   Magick::Image diff1(im1_crop.size(), "black");
   Magick::Image diff2(im1_crop.size(), "black");
   Magick::Image diff(im1_crop.size(), "white");
-  Magick::Image overlap(im1_crop.size(), "white");
+  Magick::Image overlap(im1_crop.size(), "black");
 
   for(unsigned int j=0; j<im2t_crop.rows(); j++) {
     for(unsigned int i=0; i<im2t_crop.columns(); i++) {
@@ -559,6 +604,9 @@ int main (int argc, const char * argv[]) {
       Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
       Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
 
+      Magick::ColorGray f = im2.pixelColor(x0, y0);
+      //cout << "gray = " << f.shade() << endl;
+
       // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
       fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1
       fxy1 = dx1 * fx0y1.red() + dx0 * fx1y1.red(); // note: x1 - x0 = 1
@@ -582,11 +630,13 @@ int main (int argc, const char * argv[]) {
       double diff_val1 = avg1 - avg2;
       double diff_val2 = avg2 - avg1;
 
+      double diff_val = fabs(avg1 - avg2);
+
       if( diff_val1 > 0.3 ) {
         diff.pixelColor(i, j, Magick::ColorRGB(0, 0.447, 0.698)); // blue color safe for the color blind 
       }
       if( diff_val2 > 0.3 ) {
-        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind 
+        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // orange color safe for the color blind 
       }
 
       // overlap
@@ -596,9 +646,11 @@ int main (int argc, const char * argv[]) {
       overlap.pixelColor(i, j, Magick::ColorRGB(red_avg, green_avg, blue_avg));
     }
   }
+
   im2t_crop.write( outFn2t );
 
   // difference image
+  // despeckleImage
   diff.write(diff_image);
   overlap.write(overlap_image);
 

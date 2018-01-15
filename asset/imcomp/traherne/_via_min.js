@@ -1045,7 +1045,8 @@ _via_model.prototype.add_file = function(filename, filesize, frame, count, files
       this.regions[fileid] = {};
       ok_callback(fileid);
     }.bind(this), function(error) {
-      err_callback('Error : error computing unique hash for file : ' + filename + '{error: ' + error + '}');
+      err_callback('Error : error computing unique hash for file : '
+                   + filename + '{error: ' + error + '}');
     }.bind(this));
   }.bind(this));
 }
@@ -1198,6 +1199,10 @@ _via_model.prototype.is_point_inside_these_regions = function(fileid, rid_list, 
   }
 }
 
+///
+/// metadata
+///
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // @file        _via_view.js
@@ -1235,6 +1240,13 @@ function _via_view() {
   this.nvertex = []; // array of _via_point
 
   this.now = {};
+  // these fileds are populated during runtime:
+  // this.now.fileid
+  // this.now.tform.{x,y,width,height,scale,content_width, content_height}
+  // this.now.{all_rid_list,polygon_rid_list,other_rid_list}
+  // this.now.meta_keypress.{shiftkey, ctrlkey, altkey}
+  // this.now.region_select.rid_list
+
   // User views a scaled version of original image (that fits in the web
   // browser display panel). The tform parameters are needed to convert
   // the user drawn regions in the web browser to coordinates in the
@@ -1264,8 +1276,8 @@ function _via_view() {
   this.now.meta_keypress.ctrlkey = false;
 
   this.settings = {};
-  this.settings.username = 'Default User';
-  this.settings.useremail= 'via_default_user@email.com';
+  this.settings.username = '_via_user_name';
+  this.settings.useremail= '_via_user_email';
   this.settings.REGION_SHAPE =  {RECT    :'rect',
                                  CIRCLE  :'circle',
                                  ELLIPSE :'ellipse',
@@ -1407,6 +1419,8 @@ _via_view.prototype.init = function( via_ctrl, view_panel, message_panel ) {
 
   this.init_local_file_selector();
   this.register_ui_action_handlers();
+
+  //this.init_metadata_io_panel_drag_handler();
 }
 
 _via_view.prototype.init_local_file_selector = function() {
@@ -1618,10 +1632,6 @@ _via_ctrl.prototype.load_file = function( fileid ) {
       this.v.set_state( this.v.state.IDLE );
       this.update_layers_size_for_nowfile();
 
-      this.load_layer_content();
-      this.load_layer_rshape();
-      this.load_layer_rattr();
-
       // maintain a list of regions for current file
       this.v.now.all_rid_list = [];
       this.v.now.polygin_rid_list = [];
@@ -1630,7 +1640,7 @@ _via_ctrl.prototype.load_file = function( fileid ) {
         if ( this.m.regions[fileid].hasOwnProperty(rid) ) {
           // maintain a list of regions for current file
           this.v.now.all_rid_list.push(rid);
-          switch(this.regions[fileid][rid].shape) {
+          switch(this.m.regions[fileid][rid].shape) {
           case this.v.settings.REGION_SHAPE.POLYGON:
           case this.v.settings.REGION_SHAPE.POLYLINE:
             // region shape requiring more than two points (polygon, polyline)
@@ -1643,6 +1653,10 @@ _via_ctrl.prototype.load_file = function( fileid ) {
           }
         }
       }
+      // load layer content, region shape and region attributes
+      this.load_layer_content();
+      this.load_layer_rshape();
+      this.load_layer_rattr();
     }.bind(this), function(error) {
       this.v.set_state( this.v.state.IDLE );
       var filename = decodeURIComponent(this.m.files.metadata[fileid].filename);
@@ -1815,8 +1829,8 @@ _via_ctrl.prototype.compute_view_panel_to_nowfile_tform = function() {
 
     /*  */
     // determine the position of content on content_layer
-    this.v.now.tform.x = Math.floor( (lw - txw)/2 ); // to align to center
-    //this.v.now.tform.x = 0; // to align to left
+    this.v.now.tform.x = Math.floor( (lw - txw)/2 ); // align to center
+    //this.v.now.tform.x = 0;
     this.v.now.tform.y = Math.floor( (lh - txh)/2 );
     this.v.now.tform.width  = Math.floor(txw);
     this.v.now.tform.height = Math.floor(txh);
@@ -1882,7 +1896,7 @@ _via_ctrl.prototype.load_layer_rshape = function() {
 }
 
 _via_ctrl.prototype.load_layer_rattr = function() {
-
+  //@todo
 }
 
 ///
@@ -2681,48 +2695,14 @@ _via_ctrl.prototype.set_now_file = function( fileid ) {
 ///
 _via_ctrl.prototype.file_hash = function(filename, filesize, frame, count) {
   var fileid_str = filename + (filesize || -1 ) + (frame || 0) + (count || 1);
+
+  // @@todo: fixme
+  // avoid crypto.subtle.digest() because it is not allowed over http:// connection by chrome
   //return this.hash( fileid_str );
 
   return new Promise( function(ok_callback, err_callback) {
     ok_callback(fileid_str);
   });
-}
-
-_via_ctrl.prototype.repo_name_hash = function(username, email, timestamp) {
-  var repo_name = username + email + timestamp;
-  //return this.hash( repo_name );
-
-  return new Promise( function(ok_callback, err_callback) {
-    ok_callback(repo_name);
-  });
-}
-
-_via_ctrl.prototype.hash = function( str ) {
-  // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
-  // bind(this) makes 'this' point to the current context inside callback functions
-  var buffer = new TextEncoder('utf-8').encode( str );
-  return crypto.subtle.digest('SHA-1', buffer).then( function(hash) {
-    return this.hex(hash);
-  }.bind(this));
-}
-
-_via_ctrl.prototype.hex = function(buffer) {
-  // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
-  var hexCodes = [];
-  var view = new DataView(buffer);
-  for (var i = 0; i < view.byteLength; i += 4) {
-    // Using getUint32 reduces the number of iterations needed (we process 4 bytes each time)
-    var value = view.getUint32(i)
-    // toString(16) will give the hex representation of the number without padding
-    var stringValue = value.toString(16)
-    // We use concatenation and slice for padding
-    var padding = '00000000'
-    var paddedValue = (padding + stringValue).slice(-padding.length)
-    hexCodes.push(paddedValue);
-  }
-
-  // Join all the hex strings into one
-  return hexCodes.join('');
 }
 
 _via_ctrl.prototype.url_filetype = function(url) {
