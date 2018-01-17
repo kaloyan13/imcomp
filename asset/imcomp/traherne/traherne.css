@@ -23,7 +23,7 @@ body {
 #page {
   position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   margin: 0;
   padding: 0.4%;
 }
@@ -124,15 +124,30 @@ body {
   display: inline-block;
   width: 100%;
   height: 70vh;
+  min-height: 70vh;
 }
-/* this affects all img (even the via zoom img)
-#left_content_container img {
-  max-width: 100%;
+#left_content_img_panel {
+    position: relative;
 }
-*/
+#left_content_image_top_panel {
+    position: absolute;
+    z-index: 1002;
+    width: 100%;
+    height: 100%;
+    top: 0;
+}
+#left_content_image_zoom_panel {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid red;
+}
+#left_content_image_zoom {
+    position: absolute;
+    z-index: 1001;
+}
 #left_content_image {
-  max-width: 100%;
-  overflow: hidden;
+    z-index: 1000;
+    top: 0;
 }
 
 /* comp panel */
@@ -146,15 +161,33 @@ body {
   display: inline-block;
   width: 100%;
   height: 70vh;
+  min-height: 70vh;
 }
-/*
-#right_content_container img {
-  max-width: 100%;
+#right_content_img_panel {
+    position: relative;
 }
-*/
 #right_content_image {
-  max-width: 100%;
-  overflow: hidden;
+    text-align: left;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+}
+#right_content_image_zoom_panel {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid red;
+}
+#right_content_image_zoom {
+    position: absolute;
+    z-index: 1001;
+}
+#right_content_image_top_panel {
+    position: absolute;
+    z-index: 1002;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
 }
 
 .img_label {
@@ -212,3 +245,23 @@ body {
   width: 99%;
   height: 2px;
 }
+
+/*
+#left_content_image {
+    position: absolute;
+    max-width: 100%;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+
+#left_content_image_zoom {
+    position: absolute;
+}
+
+#left_content_image_zoom {
+    position: absolute;
+    overflow: hidden;
+    z-index: 1001;
+}
+*/

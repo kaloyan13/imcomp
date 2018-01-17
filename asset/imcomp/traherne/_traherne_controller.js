@@ -1,11 +1,14 @@
+
 function _traherne_controller() {
   this.type_list = {'base':'left_content', 'comp':'right_content'};
   this.type_description = {'base':'Base', 'comp':'Comp.'};
 
   this.state = {};
+/*
   this.now = {};
   this.now.base = {};
   this.now.comp = {};
+*/
 
   this.config = {};
   this.config.upload = {};
@@ -40,6 +43,26 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
   this.disable_all_switches('_zoom');
 
   this.init_ref_line();
+
+  /*
+  // for debugging zoom feature
+  for( type in this.type_list ) {
+
+    var sid_suffix = 'image';
+    var via = document.getElementById( this.type_list[type] + '_via_panel' );
+    var img = document.getElementById( this.type_list[type] + '_img_panel' );
+    this.hide_element(via);
+    this.show_element(img);
+    this.clear_toggle( this.type_list[type] ); // clear any existing toggle
+    this.disable_all_switches('_toggle');
+    this.enable_switch(type, '_zoom'); // @todo: enable zoom for all images
+    var content_url = '/imcomp/traherne/test_image1.jpg';
+    var content_img = document.getElementById( this.type_list[type] + '_image' );
+    content_img.setAttribute('src', content_url);
+    this.content_selector_set_checked(type, sid_suffix);
+    this.v.now[type].sid_suffix = sid_suffix;
+  }
+*/
 }
 
 _traherne_controller.prototype.update_files = function(type, e) {
@@ -358,29 +381,45 @@ _traherne_controller.prototype.clear_content = function(type) {
   for( var i=0; i<n; i++ ) {
     this.hide_element(child[i]);
   }
+  this.disable_image_zoom(type);
 }
 
 _traherne_controller.prototype.set_content = function(type, sid_suffix) {
   var via = document.getElementById( this.type_list[type] + '_via_panel' );
-  var img = document.getElementById( this.type_list[type] + '_image' );
+  var img = document.getElementById( this.type_list[type] + '_img_panel' );
 
   if( sid_suffix.endsWith('_via') ) {
     this.hide_element(img);
     this.show_element(via);
     this.disable_all_switches('_toggle'); // toggle requires image content
-    this.enable_switch(type, '_zoom');
+
+    // reload zoom contents if zoom switch is selected
+    if( this.v.now[type].zoom.is_enabled ) {
+      this.disable_image_zoom(type);
+      this.v.now[type].zoom.is_enabled = true;
+      this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+      this.m.via[type].c.zoom_activate();
+    }
   } else {
     this.hide_element(via);
     this.show_element(img);
     this.clear_toggle( this.type_list[type] ); // clear any existing toggle
     this.enable_all_switches('_toggle');
-    this.disable_switch(type, '_zoom'); // @todo: enable zoom for all images
 
     var content_url = this.get_content_url(type, sid_suffix);
-    img.setAttribute('src', content_url);
-  }
+    var img_content = document.getElementById( this.type_list[type] + '_image' );
+    img_content.setAttribute('src', content_url);
 
+    // reload zoom contents if zoom switch is selected
+    if( this.v.now[type].zoom.is_enabled ) {
+      this.m.via[type].c.zoom_deactivate();
+      this.disable_image_zoom(type);
+      this.enable_image_zoom(type);
+    }
+  }
+  this.enable_switch(type, '_zoom');
   this.content_selector_set_checked(type, sid_suffix);
+  this.v.now[type].sid_suffix = sid_suffix;
 }
 
 _traherne_controller.prototype.get_content_url = function(type, sid_suffix) {
@@ -522,6 +561,12 @@ _traherne_controller.prototype.toggle_content = function(type, toggle_url_list) 
       next_index = 0;
     }
     img_elem.setAttribute('src', toggle_url_list[next_index]);
+
+    // if zoom is enabled, toggle the zoom image as well
+    if( this.v.now[type].zoom.is_enabled ) {
+      var zoom_img = document.getElementById( this.type_list[type] + '_image_zoom' );
+      zoom_img.setAttribute('src', toggle_url_list[next_index]);
+    }
   } else {
     console.log('_traherne_controller.prototype.toggle_content : error');
     console.log(img_elem_name);
@@ -654,21 +699,138 @@ _traherne_controller.prototype.init_ref_line = function() {
 _traherne_controller.prototype.zoom_event_handler = function(e) {
   var id = e.target.id;
   var type = this.get_container_type(id);
-  if( e.target.checked ) {
-    this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
-    this.m.via[type].c.zoom_activate();
+  if( this.v.now[type].sid_suffix.endsWith('_via') ) {
+    if( e.target.checked ) {
+      this.v.now[type].zoom.is_enabled = true;
+      this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+      this.m.via[type].c.zoom_activate();
+    } else {
+      this.v.now[type].zoom.is_enabled = false;
+      this.m.via[type].c.zoom_deactivate();
+    }
   } else {
-    this.m.via[type].c.zoom_deactivate();
+    if( e.target.checked ) {
+      // enable image zoom
+      this.enable_image_zoom(type);
+    } else {
+      this.disable_image_zoom(type);
+    }
   }
 }
+
 _traherne_controller.prototype.zoom_update_level = function() {
   for( var type in this.type_list ) {
     var switch_name = this.type_list[type] + '_zoom';
     var e = document.getElementById(switch_name);
-    if( e.checked ) {
-      this.m.via[type].c.zoom_deactivate();
-      this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
-      this.m.via[type].c.zoom_activate();
+
+    if( this.v.now[type].sid_suffix.endsWith('_via') ) {
+      if( e.target.checked ) {
+        this.v.now[type].zoom.is_enabled = false;
+        this.m.via[type].c.zoom_deactivate();
+        this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+        this.m.via[type].c.zoom_activate();
+        this.v.now[type].zoom.is_enabled = true;
+      }
+    } else {
+      if( e.target.checked ) {
+        this.v.now[type].zoom.is_enabled = false;
+        this.disable_image_zoom(type);
+        this.enable_image_zoom(type);
+        this.v.now[type].zoom.is_enabled = true;
+      }
     }
   }
+}
+
+
+_traherne_controller.prototype.disable_image_zoom = function(type) {
+  this.v.now[type].zoom.is_enabled = false;
+  this.v.now[type].zoom.is_frozen = false;
+
+  var top_panel = document.getElementById( this.type_list[type] + '_image_top_panel' );
+  top_panel.removeEventListener('mousemove', this.v.now[type].zoom.mousemove_el, false);
+  top_panel.removeEventListener('mouseout', this.v.now[type].zoom.mouseout_el, false);
+  top_panel.removeEventListener('mousedown', this.v.now[type].zoom.mousedown_el, false);
+
+  var zoom = document.getElementById( this.type_list[type] + '_image_zoom_panel' );
+  zoom.setAttribute('style', '');
+  zoom.innerHTML = '';
+  this.hide_element(zoom);
+  this.hide_element(top_panel);
+}
+
+_traherne_controller.prototype.enable_image_zoom = function(type) {
+  this.v.now[type].zoom.is_enabled = true;
+  this.v.now[type].zoom.is_frozen = false;
+  var img0 = document.getElementById( this.type_list[type] + '_image' );
+
+  var zoom_img = document.createElement('img');
+  zoom_img.setAttribute('id', this.type_list[type] + '_image_zoom')
+  zoom_img.setAttribute('src', img0.getAttribute('src'));
+  zoom_img.setAttribute('width', img0.width * this.v.theme.ZOOM_LEVEL + 'px');
+  zoom_img.setAttribute('height', img0.height * this.v.theme.ZOOM_LEVEL + 'px');
+  var zoom = document.getElementById( this.type_list[type] + '_image_zoom_panel' );
+  this.show_element(zoom);
+  zoom.setAttribute('style', '');
+  zoom.appendChild(zoom_img);
+
+  var top_panel = document.getElementById( this.type_list[type] + '_image_top_panel' );
+  this.show_element(top_panel);
+
+  // this is needed as bind() creates a new function reference
+  // see https://stackoverflow.com/a/22870717/7814484
+  this.v.now[type].zoom.mousemove_el = this.image_zoom_mousemove_handler.bind(this);
+  this.v.now[type].zoom.mouseout_el = this.image_zoom_mouseout_handler.bind(this);
+  this.v.now[type].zoom.mousedown_el = this.image_zoom_mousedown_handler.bind(this);
+  top_panel.addEventListener('mousemove', this.v.now[type].zoom.mousemove_el, false);
+  top_panel.addEventListener('mouseout', this.v.now[type].zoom.mouseout_el, false);
+  top_panel.addEventListener('mousedown', this.v.now[type].zoom.mousedown_el, false);
+}
+
+_traherne_controller.prototype.image_zoom_mousedown_handler = function(e) {
+  var type = this.get_container_type(e.currentTarget.id);
+  var top_panel = e.currentTarget;
+  if( this.v.now[type].zoom.is_frozen ) {
+    this.v.now[type].zoom.is_frozen = false;
+    this.v.now[type].zoom.mousemove_el = this.image_zoom_mousemove_handler.bind(this);
+    top_panel.addEventListener('mousemove', this.v.now[type].zoom.mousemove_el, false);
+  } else {
+    this.v.now[type].zoom.is_frozen = true;
+    top_panel.removeEventListener('mousemove', this.v.now[type].zoom.mousemove_el, false);
+  }
+}
+
+_traherne_controller.prototype.image_zoom_mouseout_handler = function(e) {
+  var type = this.get_container_type(e.currentTarget.id);
+  if( ! this.v.now[type].zoom.is_frozen ) {
+    var content_prefix = e.currentTarget.id.replace('_top_panel', '');
+    var zoom = document.getElementById( content_prefix + '_zoom_panel' );
+    zoom.setAttribute('style', 'width:0; height:0;');
+  }
+}
+
+_traherne_controller.prototype.image_zoom_mousemove_handler = function(e) {
+  var content_prefix = e.currentTarget.id.replace('_top_panel', '');
+  var px = e.offsetX;
+  var py = e.offsetY;
+  //console.log('content_prefix='+content_prefix+', x='+px+', y='+py);
+
+  // set zoomed image location
+  var img1_top = this.v.theme.ZOOM_WINDOW_SIZE_BY2 - ( py * this.v.theme.ZOOM_LEVEL);
+  var img1_left = this.v.theme.ZOOM_WINDOW_SIZE_BY2 - ( px * this.v.theme.ZOOM_LEVEL);
+  var img1_style = 'left:' + img1_left + 'px' + ';top:' + img1_top + 'px';
+  var img1 = document.getElementById( content_prefix + '_zoom' );
+  img1.setAttribute('style', img1_style);
+
+  // setup zoom panel (circular magnifying glass)
+  var zoom_panel_left = px - this.v.theme.ZOOM_WINDOW_SIZE_BY2;
+  var zoom_panel_top = py - this.v.theme.ZOOM_WINDOW_SIZE_BY2;
+  var zp_style = [];
+  zp_style.push('width: ' + this.v.theme.ZOOM_WINDOW_SIZE + 'px');
+  zp_style.push('height: ' + this.v.theme.ZOOM_WINDOW_SIZE + 'px');
+  zp_style.push('top: ' + zoom_panel_top + 'px');
+  zp_style.push('left: ' + zoom_panel_left + 'px');
+  zp_style.push('border-radius: ' + this.v.theme.ZOOM_WINDOW_SIZE_BY2 + 'px');
+  var zoom = document.getElementById( content_prefix + '_zoom_panel' );
+  zoom.setAttribute('style', zp_style.join(';'));
 }

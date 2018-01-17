@@ -1,8 +1,0 @@
-function _traherne_model() {
-
-  _imcomp_model.prototype.init = function( imcomp_ctrl ) {
-    //console.log("Initializing _imcomp_model ...");
-    this.c = imcomp_ctrl;
-    this.init_session();
-  }
-}

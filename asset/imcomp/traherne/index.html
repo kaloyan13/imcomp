@@ -6,6 +6,7 @@
   <meta name="author" content="Abhishek Dutta">
   <meta name="description" content="Web browser based user interface for traherne digital collator">
 
+  <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico"/>
   <link rel="stylesheet" type="text/css" href="./traherne.css" />
 </head>
 
@@ -24,12 +25,12 @@
       <span class="title">Commands</span>
 
       <span class="row">
-        <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare Base & Comp.</button>
+        <button id="base_load_images2" type="button">Load Base</button>
+        <button id="comp_load_images2" type="button">Load Comp</button>
       </span>
 
       <span class="row">
-        <button id="base_load_images2" type="button">Load Base</button>
-        <button id="comp_load_images2" type="button">Load Comp</button>
+        <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare Base & Comp.</button>
       </span>
     </div>
 
@@ -60,6 +61,14 @@
           <option value="3.0">Zoom:   3X (magnify)</option>
           <option value="4.0">Zoom:   4X (magnify)</option>
         </select>
+      </span>
+    </div>
+
+    <div class="control_block">
+      <span class="title">Debug</span>
+      <span class="row">
+        <button id="debug_zoom_on" type="button">Zoom on</button>
+        <button id="debug_zoom_off" type="button">Zoom of</button>
       </span>
     </div>
 
@@ -130,7 +139,15 @@
                * the parent should have "display: inline-block; position: relative"
             -->
           <div id="left_content_via_panel" class="content"></div>
-          <img id="left_content_image" src="" class="content">
+          <div id="left_content_img_panel" class="content">
+            <div id="left_content_image_top_panel"></div>
+            <div id="left_content_image_zoom_panel">
+              <!-- dymanically added when zoom is enabled
+                  <img id="left_content_image_zoom" src="">
+                  -->
+            </div>
+            <img id="left_content_image" src="">
+          </div>
         </div>
       </div>
       <div id="ref_line_container" class="vertical_img_separator_panel cell">
@@ -143,7 +160,17 @@
                * the parent should have "display: inline-block; position: relative"
             -->
           <div id="right_content_via_panel" class="content"></div>
-          <img id="right_content_image" src="" class="content">
+          <div id="right_content_img_panel" class="content">
+            <div id="right_content_image_top_panel"></div>
+            <div id="right_content_image_zoom_panel">
+              <!-- dymanically added when zoom is enabled
+                   <img id="right_content_image_zoom" src="">
+                   -->
+            </div>
+            <div>
+              <img id="right_content_image" src="">
+            </div>
+          </div>
         </div>
       </div>
     </div>

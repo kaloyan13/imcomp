@@ -1,5 +1,6 @@
 function _traherne_view() {
   this.now = {};
+  //this.now[{'base','comp'}].zoom = {is_enabled, is_frozen...}
 
   this.cpanel = document.getElementById('top_panel'); // global control panel
 
@@ -7,6 +8,7 @@ function _traherne_view() {
   this.theme.MSG_TIMEOUT_MS = 5000;
   this.theme.TOGGLE_SPEED = 300; // { 150, 300, 600 } ms
   this.theme.ZOOM_LEVEL = 2; // { 0.2, 0.5, 2, 3 } X
+  this.theme.ZOOM_WINDOW_SIZE = 300; // in pixels
 
   this.message_panel = document.getElementById('message_panel');
 
@@ -59,6 +61,7 @@ _traherne_view.prototype.init = function( traherne_controller ) {
 
   for( var type in this.c.type_list ) {
     this.now[type] = {};
+    this.now[type].zoom = {};
   }
 
   // set toggle speed to default value selection
@@ -78,6 +81,9 @@ _traherne_view.prototype.init = function( traherne_controller ) {
   }
 
   this.connect_ui_elements_to_traherne_view();
+
+  // precompute mostly used values
+  this.theme.ZOOM_WINDOW_SIZE_BY2 = this.theme.ZOOM_WINDOW_SIZE / 2;
 }
 
 _traherne_view.prototype.select_local_files = function(type) {
@@ -117,6 +123,14 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
   document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
 
   document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
+
+  document.getElementById( 'debug_zoom_on').addEventListener('click', function(e) {
+    this.c.enable_image_zoom('base');
+  }.bind(this), false);
+
+  document.getElementById( 'debug_zoom_off').addEventListener('click', function(e) {
+    this.c.disable_image_zoom('base');
+  }.bind(this), false);
 
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
