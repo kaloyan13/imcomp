@@ -19,14 +19,18 @@ _traherne_model.prototype.init = function( traherne_controller ) {
   this.c = traherne_controller;
 
   for( var type in this.c.type_list ) {
+    this.reset_model_state(type);
+  }
+
+  this.set_via_config();
+}
+
+_traherne_model.prototype.reset_model_state = function( type ) {
     var via_panel = document.getElementById( this.c.type_list[type] + '_via_panel' );
     this.via[type] = new _via();
     this.via[type].init(via_panel);
 
     this.file_count[type] = 0;
-  }
-
-  this.set_via_config();
 }
 
 _traherne_model.prototype.set_via_config = function() {
@@ -49,8 +53,8 @@ _traherne_model.prototype.set_via_config = function() {
   }.bind(this));
 }
 
-_traherne_model.prototype.add_images = function( type, files ) {
-  this.files[type] = Array.from(files);
+_traherne_model.prototype.clear_images = function( type ) {
+  this.files[type] = [];
 
   this.file_count[type] = 0;
   this.fid_to_index[type] = {};
@@ -61,6 +65,11 @@ _traherne_model.prototype.add_images = function( type, files ) {
   this.upload[type] = {};
   this.upload_status[type] = {};
   this.upload_scale[type] = {};
+}
+
+_traherne_model.prototype.add_images = function( type, files ) {
+  this.clear_images(type);
+  this.files[type] = Array.from(files);
 
   // sort files based on filename
   this.files[type].sort(

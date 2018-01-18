@@ -65,7 +65,18 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
 */
 }
 
+_traherne_controller.prototype.reset_controller_state = function(type) {
+  this.m.reset_model_state(type);
+  this.clear_content(type);
+
+  this.content_selector_group_set_state(type, false);
+  this.disable_switch(type, '_toggle');
+  this.disable_switch(type, '_zoom');
+}
+
 _traherne_controller.prototype.update_files = function(type, e) {
+  this.reset_controller_state(type);
+  //this.m.clear_images(type);
   this.m.add_images(type, e.target.files);
 }
 
@@ -105,8 +116,7 @@ _traherne_controller.prototype.move_to_prev_pair = function() {
 }
 
 _traherne_controller.prototype.on_filelist_update = function(type) {
-  var filelist = this.m.get_filelist(type);
-  this.update_view_filelist(type, filelist);
+  this.update_view_filelist(type);
   this.set_now(type, 0); // show first image
 
   var sid_suffix = type + '_via';
@@ -117,9 +127,11 @@ _traherne_controller.prototype.on_filelist_update = function(type) {
   this.enable_switch(type, '_zoom');
 }
 
-_traherne_controller.prototype.update_view_filelist = function(type, filelist) {
+_traherne_controller.prototype.update_view_filelist = function(type) {
   var list_name = type + '_img_filename_list';
   var list = document.getElementById(list_name);
+  list.innerText = null; // clear existing entries
+  var filelist = this.m.get_filelist(type);
   var n = filelist.length;
 
   for( var i=0; i<n; i++ ) {
@@ -149,8 +161,10 @@ _traherne_controller.prototype.on_now_update = function(type) {
   var now_findex = this.v.now[type].findex;
 
   if( list.options.length ) {
+    list.selectedIndex = now_findex;
+    /*
     for ( var i=0; i<list.options.length; i++ ) {
-      if ( list.options[i].value == now_findex ) {
+      if ( parseInt(list.options[i].value, 10) === now_findex ) {
         list.options[i].setAttribute('selected', 'selected');
       } else {
         if ( list.options[i].hasAttribute('selected') ) {
@@ -158,13 +172,14 @@ _traherne_controller.prototype.on_now_update = function(type) {
         }
       }
     }
+    */
   }
 
   this.update_now_file_status(type);
 }
 
 _traherne_controller.prototype.update_now = function(type, e) {
-  var findex = e.target.value;
+  var findex = parseInt(e.target.value, 10);
   this.set_now(type, findex);
 }
 
