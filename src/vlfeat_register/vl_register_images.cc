@@ -544,10 +544,10 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
       double diff_val2 = avg2 - avg1;
 
       if( diff_val1 > 0.3 ) {
-        diff.pixelColor(i, j, Magick::ColorRGB(0, 0.447, 0.698)); // blue color safe for the color blind 
+        diff.pixelColor(i, j, Magick::ColorRGB(0, 0.447, 0.698)); // blue color safe for the color blind (0,114,178) = #0072B2
       }
       if( diff_val2 > 0.3 ) {
-        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind 
+        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind (213,94,0) = #D55E00
       }
 
       // overlap

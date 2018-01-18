@@ -241,6 +241,11 @@ _traherne_controller.prototype.compare_base_comp = function() {
     return;
   }
 
+  if( this.compare.is_ongoing ) {
+    this.show_message('Please wait, compare process is <span class="blue">ongoing</span> ...');
+    return;
+  }
+
   var findex1 = this.v.now['base'].findex;
   var findex2 = this.v.now['comp'].findex;
   var c = new _traherne_compare_instance(findex1, findex2);
@@ -256,6 +261,7 @@ _traherne_controller.prototype.compare_base_comp = function() {
       c.scale2 = this.m.upload_scale['comp'][c.findex2];
       this.compare.is_ongoing = true;
       this.compare.promise = this.m.compare_img_pair(c);
+      this.show_message('<span class="blue">Comparing ...</span>')
     }.bind(this));
     // @todo: fixme
     // note: the err_callback() is defined in _traherne_model.prototype.add_images()
@@ -274,11 +280,15 @@ _traherne_controller.prototype.is_base_region_selected = function() {
 
 _traherne_controller.prototype.on_compare_start = function() {
   this.compare.start_time = new Date();
+  document.getElementById('compare_base_comp').disabled = true;
 }
 
 _traherne_controller.prototype.on_compare_end = function() {
   this.compare.end_time = new Date();
   this.compare.is_ongoing = false;
+
+  document.getElementById('compare_base_comp').disabled = false;
+
   this.compare.promise.then( function(c) {
     this.compare.result = c;
     if( c.response.status === 'OK' ) {
@@ -437,6 +447,10 @@ _traherne_controller.prototype.set_content = function(type, sid_suffix) {
       this.m.via[type].c.zoom_deactivate();
       this.disable_image_zoom(type);
       this.enable_image_zoom(type);
+    }
+
+    if( sid_suffix === 'base_comp_diff') {
+      this.show_message('In the difference image, color code is as follows: <span style="color: #0072b2">base image</span> and <span style="color: #d55e00">comp. image</span>');
     }
   }
   this.enable_switch(type, '_zoom');
