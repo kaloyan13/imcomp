@@ -26,11 +26,47 @@ _traherne_model.prototype.init = function( traherne_controller ) {
 }
 
 _traherne_model.prototype.reset_model_state = function( type ) {
-    var via_panel = document.getElementById( this.c.type_list[type] + '_via_panel' );
-    this.via[type] = new _via();
-    this.via[type].init(via_panel);
+  var via_panel = document.getElementById( this.c.type_list[type] + '_via_panel' );
+  this.via[type] = new _via();
+  this.via[type].init(via_panel);
+  this.init_via_hooks(type);
 
-    this.file_count[type] = 0;
+  this.file_count[type] = 0;
+}
+
+// ensures that only one region is present at any given time
+_traherne_model.prototype.init_via_hooks = function(type) {
+  // only 1 region can exist in base
+  if( type === 'base' ) {
+    this.via[type].c.add_hook(this.via[type].c.hook.id.REGION_ADDED, function(param) {
+      //console.log('hook: region added : fileid=' + param.fileid + ', rid=' + param.rid);
+
+      // delete old region from image1
+      if ( this.via[type].v.now.all_rid_list.length > 1 ) {
+        var old_region = [ this.via[type].v.now.all_rid_list[0] ];
+        this.via[type].c.region_delete(old_region);
+      }
+
+      if( this.file_count['base'] && this.file_count['comp'] ) {
+        this.c.show_message('Now click the <span class="blue">Compare Base & Comp.</span> button to compare the region selected in base image and the corresponding matching region in the comp image.');
+      }
+    }.bind(this));
+  }
+
+  // no regions can be drawn in comp
+  if( type === 'comp' ) {
+    this.via[type].c.add_hook(this.via[type].c.hook.id.REGION_ADDED, function(param) {
+      //console.log('hook: region added : fileid=' + param.fileid + ', rid=' + param.rid);
+
+      // delete all regions from image1
+      if ( this.via[type].v.now.all_rid_list.length ) {
+        var regions = this.via[type].v.now.all_rid_list.slice(0);
+        this.via[type].c.region_delete( regions );
+      }
+
+      this.c.show_message('Regions <span class="red">can only</span> be defined in the base image!');
+    }.bind(this));
+  }
 }
 
 _traherne_model.prototype.set_via_config = function() {
@@ -87,12 +123,16 @@ _traherne_model.prototype.add_images = function( type, files ) {
   var n = this.files[type].length;
   var promises = [];
   for (var i=0; i < n; i++) {
-    //console.log('Adding local file to ' + type + ' : ' + this.files[type][i].name);
+    //('[' + i + '] Adding local file to ' + type + ' : ' + this.files[type][i].name);
     promises.push( this.via[type].m.add_file_local(this.files[type][i]) );
   }
 
   Promise.all(promises).then( function(result) {
     var n = result.length;
+
+    // @todo: this can be avoided in Promise.all() can operate on this.upload[type]
+    //var upload_promises = [];
+
     for( var i=0; i<n; i++ ) {
       var fid = result[i];
       if ( !fid.startsWith("Error") ) {
@@ -105,9 +145,29 @@ _traherne_model.prototype.add_images = function( type, files ) {
         this.upload_status[type][i] = {};
         this.set_upload_status(type, i, '...', 'Queued for upload');
         this.upload[type][i] = this.upload_file(type, i);
+        //upload_promises.push( this.upload[type][i] ); // @todo: avoid
       }
     }
     this.c.on_filelist_update(type);
+    /*
+    // @todo: err_callback() is not being invoked correctly.
+    // I expect, error.length == 12, if err_callback() is invoked 12 times
+    // but this is not happening. @fixme
+
+    console.log(upload_promises.length);
+    Promise.all( upload_promises ).then( function(result) {
+      console.log('result count = ' + result.length + ', {' + result + '}');
+      if( result.length !== 0 ) {
+        this.c.append_message(' <span class="blue">[added ' + result.length + ' images]</span>');
+      }
+    }.bind(this), function(error) {
+      console.log(error.length);
+      if( error.length !== 0 ) {
+        this.c.append_message(' <span class="red">[failed to add ' + error.length + ' images]</span>');
+      }
+    }.bind(this));
+    */
+
   }.bind(this));
 }
 
@@ -187,13 +247,15 @@ _traherne_model.prototype.upload_file = function(type, findex) {
         this.set_upload_status(type, findex, '...', 'Uploading image');
         var uploader = new XMLHttpRequest();
         uploader.addEventListener('error', function(e) {
-          err_callback();
-          var msg = 'Upload error! [' + e + ']';
+          err_callback(findex);
+          var msg = 'Upload error!';
+          console.log('uploader.event() == error');
           this.set_upload_status(type, findex, 'ERR', msg);
         }.bind(this));
         uploader.addEventListener('abort', function(e) {
-          err_callback();
-          var msg = 'Upload abort! [' + e + ']';
+          err_callback("_ERROR_");
+          var msg = 'Upload abort!';
+          console.log('aborted');
           this.set_upload_status(type, findex, 'ERR', msg);
         }.bind(this));
 
@@ -204,7 +266,8 @@ _traherne_model.prototype.upload_file = function(type, findex) {
             if ( response_str === '' ) {
               var msg = 'Error uploading image! [empty server response]';
               this.set_upload_status(type, findex, 'ERR', msg);
-              err_callback();
+              err_callback(findex);
+              console.log(msg);
             } else {
               var response = JSON.parse(response_str);
               if(response.fid) {
@@ -215,14 +278,16 @@ _traherne_model.prototype.upload_file = function(type, findex) {
                 console.log('Error uploading image! [server response: ' + response_str + ']');
                 var msg = 'Error uploading image! [server response: ' + response_str + ']';
                 this.set_upload_status(type, findex, 'ERR', msg);
-                err_callback();
+                err_callback("_ERROR_");
+                console.log(msg);
               }
             }
           }
           catch(e) {
-            var msg = 'Error uploading image! [exception: ' + e + ']';
+            var msg = 'Error uploading image! [exception occured]';
+            console.log('error except');
             this.set_upload_status(type, findex, 'ERR', msg);
-            err_callback();
+            err_callback("_ERROR_");
           }
         }.bind(this));
 
@@ -257,7 +322,6 @@ _traherne_model.prototype.upload_file = function(type, findex) {
 
     filereader.addEventListener( 'error', err_callback);
     filereader.addEventListener( 'abort', err_callback);
-
     if ( file_source === 'local' ) {
       //filereader.readAsDataURL( file_content );
       filereader.readAsArrayBuffer( file_content );

@@ -124,14 +124,6 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
 
   document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
 
-  document.getElementById( 'debug_zoom_on').addEventListener('click', function(e) {
-    this.c.enable_image_zoom('base');
-  }.bind(this), false);
-
-  document.getElementById( 'debug_zoom_off').addEventListener('click', function(e) {
-    this.c.disable_image_zoom('base');
-  }.bind(this), false);
-
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
   }.bind(this), false);

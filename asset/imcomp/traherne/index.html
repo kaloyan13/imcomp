@@ -63,17 +63,9 @@
         </select>
       </span>
     </div>
-
-    <div class="control_block">
-      <span class="title">Debug</span>
-      <span class="row">
-        <button id="debug_zoom_on" type="button">Zoom on</button>
-        <button id="debug_zoom_off" type="button">Zoom of</button>
-      </span>
-    </div>
-
-    <div id="message_panel"></div>
   </div>
+
+  <div id="message_panel" title="Shows help messages, program log, etc"></div>
 
   <div id="middle_panel">
 
@@ -102,36 +94,47 @@
     <!-- Content choice: choose what is displayed in the content panel -->
     <div id="content_selector" class="row">
       <div id="left_content_selector" class="centered_text cell">
-        <input type="radio" name="left_content_option" id="left_content_base_via" class="content_selector">
-        <label for="left_content_base_via">Base (full image)</label>
-
-        <input type="radio" name="left_content_option" id="left_content_base_crop" class="content_selector">
-        <label for="left_content_base_crop">Base (cropped)</label>
-
-        <input type="radio" name="left_content_option" id="left_content_base_comp_overlap" class="content_selector">
-        <label for="left_content_base_comp_overlap">Overlap</label>
-
-        <input type="radio" name="left_content_option" id="left_content_comp_crop_tx" class="content_selector">
-        <label for="left_content_comp_crop_tx">Comp.</label>
-
-        <input type="radio" name="left_content_option" id="left_content_base_comp_diff" class="content_selector">
-        <label for="left_content_base_comp_diff">Diff</label>
+        <span class="nobreak">
+          <input type="radio" name="left_content_option" id="left_content_base_via" class="content_selector">
+          <label for="left_content_base_via">Base (full image)</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="left_content_option" id="left_content_base_crop" class="content_selector">
+          <label for="left_content_base_crop">Base (cropped)</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="left_content_option" id="left_content_base_comp_overlap" class="content_selector">
+          <label for="left_content_base_comp_overlap">Overlap</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="left_content_option" id="left_content_comp_crop_tx" class="content_selector">
+          <label for="left_content_comp_crop_tx">Comp.</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="left_content_option" id="left_content_base_comp_diff" class="content_selector">
+          <label for="left_content_base_comp_diff">Diff</label>
+        </span>
       </div>
 
       <div class="vertical_img_separator_panel cell"></div>
 
       <div id="right_content_selector" class="centered_text cell">
-        <input type="radio" name="right_content_option" id="right_content_comp_via" class="content_selector">
-        <label for="right_content_comp_via">Comp. (full image)</label>
-
-        <input type="radio" name="right_content_option" id="right_content_comp_crop_tx" class="content_selector">
-        <label for="right_content_comp_crop_tx">Comp. (cropped)</label>
-
-        <input type="radio" name="right_content_option" id="right_content_base_comp_overlap" class="content_selector">
-        <label for="right_content_base_comp_overlap">Overlap</label>
-
-        <input type="radio" name="right_content_option" id="right_content_base_crop" class="content_selector">
-        <label for="right_content_base_crop">Base (cropped)</label>
+        <span class="nobreak">
+          <input type="radio" name="right_content_option" id="right_content_comp_via" class="content_selector">
+          <label for="right_content_comp_via">Comp. (full image)</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="right_content_option" id="right_content_comp_crop_tx" class="content_selector">
+          <label for="right_content_comp_crop_tx">Comp. (cropped)</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="right_content_option" id="right_content_base_comp_overlap" class="content_selector">
+          <label for="right_content_base_comp_overlap">Overlap</label>
+        </span>
+        <span class="nobreak">
+          <input type="radio" name="right_content_option" id="right_content_base_crop" class="content_selector">
+          <label for="right_content_base_crop">Base (cropped)</label>
+        </span>
       </div>
     </div>
 
@@ -189,15 +192,11 @@
         <label for="left_content_toggle">Toggle</label>
         <span class="button_group_space1"></span>
 
-        <button id="base_move_to_prev" type="button">&lt;</button>
         <button id="base_load_images" type="button">Change Base Image Set</button>
-        <button id="base_move_to_next" type="button">&gt;</button>
       </div>
       <div class="vertical_separator_panel cell"></div>
       <div id="right_content_controls" class="img_control cell">
-        <button id="comp_move_to_prev" type="button">&lt;</button>
         <button id="comp_load_images" type="button">Change Comp. Image Set</button>
-        <button id="comp_move_to_next" type="button">&gt;</button>
 
         <span class="button_group_space1"></span>
         <input id="right_content_toggle" type="checkbox">

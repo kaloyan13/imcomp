@@ -360,8 +360,13 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
     cout << "[" << putative_matches[i].first << ":" << putative_matches[i].second << "], " << flush;
   }
 */
+  bestNInliners = putative_matches.size();
   cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
 
+  if( bestNInliners < 9 ) {
+    cout << "\nInsufficinet number of putative matches! Exiting." << flush;
+    return;
+  }
 
 /**/
   // initialize random number generator to randomly sample putative_matches

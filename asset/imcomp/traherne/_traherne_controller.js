@@ -44,6 +44,8 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
 
   this.init_ref_line();
 
+  this.show_message('To start collation, click <span class="blue">Load Base</span> and <span class="blue">Load Comp</span> buttons to load base and compare images.');
+
   /*
   // for debugging zoom feature
   for( type in this.type_list ) {
@@ -76,7 +78,6 @@ _traherne_controller.prototype.reset_controller_state = function(type) {
 
 _traherne_controller.prototype.update_files = function(type, e) {
   this.reset_controller_state(type);
-  //this.m.clear_images(type);
   this.m.add_images(type, e.target.files);
 }
 
@@ -125,6 +126,10 @@ _traherne_controller.prototype.on_filelist_update = function(type) {
   this.set_content(type, sid_suffix);
 
   this.enable_switch(type, '_zoom');
+
+  if( this.m.file_count['base'] && this.m.file_count['comp'] ) {
+    this.show_message('Now <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
+  }
 }
 
 _traherne_controller.prototype.update_view_filelist = function(type) {
@@ -174,8 +179,8 @@ _traherne_controller.prototype.on_now_update = function(type) {
     }
     */
   }
-
   this.update_now_file_status(type);
+  this.clear_message();
 }
 
 _traherne_controller.prototype.update_now = function(type, e) {
@@ -226,13 +231,13 @@ _traherne_controller.prototype.compare_base_comp = function() {
   for( type in this.type_list ) {
     if( this.m.file_count[type] === 0 ) {
       var type_name = this.type_list[type];
-      this.v.msg('Add ' + type + ' images by clicking "Load ' + type_name + ' Images" button');
+      this.show_message('You must load base and comp images before starting the comparison process. Click <span class="blue">Load Base</span> and <span class="blue">Load Comp</span> button to load base and comp images.');
       return;
     }
   }
 
   if( !this.is_base_region_selected() ) {
-    this.v.msg('To compare, you must define a region of interest in the base image. Keeping the right mouse button pressed on the base image, click and drag to draw a region of interest.');
+    this.show_message('To compare, you must <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
     return;
   }
 
@@ -252,7 +257,11 @@ _traherne_controller.prototype.compare_base_comp = function() {
       this.compare.is_ongoing = true;
       this.compare.promise = this.m.compare_img_pair(c);
     }.bind(this));
+    // @todo: fixme
+    // note: the err_callback() is defined in _traherne_model.prototype.add_images()
   }.bind(this));
+  // @todo: fixme
+  // note: the err_callback() is defined in _traherne_model.prototype.add_images()
 }
 
 _traherne_controller.prototype.is_base_region_selected = function() {
@@ -281,14 +290,13 @@ _traherne_controller.prototype.on_compare_end = function() {
 }
 
 _traherne_controller.prototype.on_compare_status_update = function() {
-  this.v.msg('Compare status: ' + this.m.compare_status.msg);
+  this.show_message('Compare status: ' + this.m.compare_status.msg);
 }
 
 _traherne_controller.prototype.on_compare_success = function() {
   // note: this.compare.result contains the result
   var time = this.compare.end_time - this.compare.start_time;
-  var msg = 'Comparison completed in ' + Math.round(time/1000) + ' sec.';
-  this.v.msg(msg);
+  this.show_message('Comparison <span class="blue">completed in ' + Math.round(time/1000) + ' sec.</span>');
 
   this.show_compare_result();
 
@@ -297,8 +305,7 @@ _traherne_controller.prototype.on_compare_success = function() {
 
 _traherne_controller.prototype.on_compare_failure = function() {
   var time = this.compare.end_time - this.compare.start_time;
-  var msg = 'Comparison failed';
-  this.v.msg(msg);
+  this.show_message('<span class="red">Comparison failed!</span');
 }
 
 _traherne_controller.prototype.show_compare_result = function(c) {
@@ -848,4 +855,19 @@ _traherne_controller.prototype.image_zoom_mousemove_handler = function(e) {
   zp_style.push('border-radius: ' + this.v.theme.ZOOM_WINDOW_SIZE_BY2 + 'px');
   var zoom = document.getElementById( content_prefix + '_zoom_panel' );
   zoom.setAttribute('style', zp_style.join(';'));
+}
+
+///
+/// messages
+///
+_traherne_controller.prototype.show_message = function(msg) {
+  document.getElementById('message_panel').innerHTML = msg;
+}
+
+_traherne_controller.prototype.clear_message = function() {
+  document.getElementById('message_panel').innerHTML = '&nbsp;';
+}
+
+_traherne_controller.prototype.append_message = function(msg) {
+  document.getElementById('message_panel').innerHTML += msg;
 }

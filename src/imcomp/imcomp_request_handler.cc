@@ -188,7 +188,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       eye.exportToDoubleArray( h );
 
       std::ostringstream json;
-      if ( best_inliers_count > 9 ) {
+      if ( best_inliers_count >= 9 ) {
         double file2_region[8];
         homography::affTransform(h, file1_region[0], file1_region[1], file2_region[0], file2_region[1]);
         homography::affTransform(h, file1_region[0], file1_region[3], file2_region[2], file2_region[3]);
@@ -214,7 +214,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       } else {
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"ERR\","
-             << "\"status_message\": \"Could not match sufficient feature points (best inliers count = "
+//             << "\"status_message\": \"Could not match sufficient feature points (best inliers count = "
+             << "\"status_message\": \"Could not match sufficient feature points (matched features = "
              << best_inliers_count << ")\","
              << "\"best_inliers_count\": \"" << best_inliers_count << "\","
              << "\"homography\": []";
