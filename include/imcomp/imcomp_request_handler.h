@@ -27,7 +27,7 @@
 #include "imcomp/imcomp_asset.h"
 
 #include "util/strutil.h"
-#include "../register_images.h" // @todo: fix this
+//#include "../register_images.h" // @todo: fix this
 #include "vl_register_images.h" // @todo: fix this
 
 using namespace std;
