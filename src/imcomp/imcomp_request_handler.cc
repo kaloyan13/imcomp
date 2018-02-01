@@ -71,7 +71,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     if(has_invalid_char(res)) {
       response.set_status(400);
     } else {
-      boost::filesystem::path fn("/home/tlm/dev/imcomp/asset/imcomp/traherne");
+      // @todo avoid static links
+      boost::filesystem::path fn("/data/adutta/vggdemo/traherne/imcomp/asset/imcomp/traherne");
       fn = fn / res;
       std::string file_contents;
       if( load_file_contents(fn, file_contents) ) {
@@ -84,6 +85,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     return;
   }
 
+/*
   if ( request.method_ == "GET" && util::begins_with(request.uri_, "/imcomp/") ) {
     // serve dynamic resource from result_dir_
     // @todo
@@ -112,6 +114,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     response.set_content_type_from_filename(asset_found->first);
     return;
   }
+*/
 
   if ( request.uri_ == "/imcomp/_upload" && request.method_ == "POST" ) {
     string fid;
@@ -131,17 +134,17 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
   if ( util::begins_with(request.uri_, "/imcomp/_compare") ) {
     map<string,string> uri_arg;
     bool success = request.parse_uri(uri_arg);
-    for( auto it=uri_arg.begin(); it!=uri_arg.end(); it++ ) {
-      cout << "\n" << it->first << ":" << it->second << flush;
-    }
+    //for( auto it=uri_arg.begin(); it!=uri_arg.end(); it++ ) {
+      //cout << "\n" << it->first << ":" << it->second << flush;
+    //}
     if(success) {
       string fid1 = uri_arg["file1"];
       string fid2 = uri_arg["file2"];
       string region1_str = uri_arg["region"];
 
-      cout << "\n  fid1=" << fid1 << flush;
-      cout << "\n  fid2=" << fid2 << flush;
-      cout << "\n  region1_str=" << region1_str << flush;
+      //cout << "\n  fid1=" << fid1 << flush;
+      //cout << "\n  fid2=" << fid2 << flush;
+      //cout << "\n  region1_str=" << region1_str << flush;
 
       unsigned int file1_region[4]; // x0, y0, x1, y1
       std::istringstream is(region1_str);
@@ -184,7 +187,6 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                          diff_fn.string().c_str(),
                                          overlap_fn.string().c_str()
                                          );
-
       eye.exportToDoubleArray( h );
 
       std::ostringstream json;
@@ -250,7 +252,7 @@ bool imcomp_request_handler::save_user_upload(const http_request& request, strin
       im.magick("JPEG");
       im.colorSpace(Magick::sRGBColorspace);
       im.write(fn.string());
-      std::clog << "\n  imcomp_request_handler::save_user_upload() : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
+      std::clog << " : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
       return true;
     } else {
       return false;

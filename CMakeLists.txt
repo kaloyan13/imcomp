@@ -87,6 +87,14 @@ ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
 #message("PNG_LIBRARIES: " ${PNG_LIBRARIES})
 #message("PNG_INCLUDE_DIRS: " ${PNG_INCLUDE_DIRS})
 
+# Eigen
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
+# VLFEAT
+# @todo: get rid of absolute path
+set(VLFEAT_LIBRARIES "/ssd/adutta/build_deps/tmp_libsrc/vlfeat-0.9.20/bin/glnxa64/libvl.so")
+
+
 message("Boost_LIBRARIES: " ${Boost_LIBRARIES})
 message("Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
 message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )

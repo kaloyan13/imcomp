@@ -306,7 +306,7 @@ string http_request::multipart_data_value(string name) const {
 bool http_request::parse_uri(map<string,string>& uri_arg) const {
   uri_arg.clear();
   size_t start = uri_.find("?");
-  cout << "\nparsing uri " << uri_ << ", start=" << start << flush;
+  //cout << "\nparsing uri " << uri_ << ", start=" << start << flush;
 
   if( start != string::npos ) {
     bool parsing_key = true;
@@ -322,7 +322,7 @@ bool http_request::parse_uri(map<string,string>& uri_arg) const {
       if( uri_.at(i) == '&' && !parsing_key) {
         value = uri_.substr(start, i - start);
         uri_arg.insert( pair<string,string>(key, value) );
-        cout << "\n  " << key << ":" << value << flush;
+        //cout << "\n  " << key << ":" << value << flush;
         start = i + 1;
         parsing_key = true;
       }

@@ -338,15 +338,15 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
   compute_sift_features(filename1.string().c_str(), keypoint_list1, descriptor_list1);
-  cout << "\nFilename = " << filename1 << flush;
-  cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
-  cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
+  //cout << "\nFilename = " << filename1 << flush;
+  //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
+  //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
   boost::filesystem::remove(filename1);
 
   compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2);
-  cout << "\nFilename = " << filename2 << flush;
-  cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
-  cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
+  //cout << "\nFilename = " << filename2 << flush;
+  //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
+  //cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
   boost::filesystem::remove(filename2);
 
   // use Lowe's 2nd nn test to find putative matches
@@ -361,7 +361,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   }
 */
   bestNInliners = putative_matches.size();
-  cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
+  //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
 
   if( bestNInliners < 9 ) {
     cout << "\nInsufficinet number of putative matches! Exiting." << flush;
@@ -467,7 +467,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   cout << "\n  bestV=\n" << bestV << flush;
 */
   max_score_H = max_score_H / max_score_H(2,2);
-  cout << "\nmax_score_H (norm) = \n" << max_score_H << flush;
+  //cout << "\nmax_score_H (norm) = \n" << max_score_H << flush;
 
   // im1 crop
   Magick::Image im1_crop(im1);
@@ -482,7 +482,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   // im2 crop and transform
   MatrixXd H = max_score_H;
   Magick::Image im2t_crop( im1_crop.size(), "white");
-  cout << "\nTransforming image ..." << flush;
+  //cout << "\nTransforming image ..." << flush;
   double x0,x1,y0,y1;
   double x, y, homogeneous_norm;
   double dx0, dx1, dy0, dy1;
@@ -563,6 +563,6 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   diff.write(diff_image);
   overlap.write(overlap_image);
   
-  cout << "\nWritten transformed images.\n" << flush;
+  //cout << "\nWritten transformed images.\n" << flush;
 }
 

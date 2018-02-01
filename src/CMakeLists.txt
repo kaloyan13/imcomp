@@ -5,6 +5,7 @@
 #include_directories( relja_register/external_lib/KMCode_relja/exec/detect_points )
 #include_directories( relja_register/external_lib/KMCode_relja/exec/compute_descriptors )
 
+include_directories( relja_register/det_ransac )
 include_directories( vlfeat_register/ )
 include_directories( vlfeat_register/external_lib/vlfeat )
 

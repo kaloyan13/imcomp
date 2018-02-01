@@ -261,7 +261,7 @@ _traherne_controller.prototype.compare_base_comp = function() {
       c.scale2 = this.m.upload_scale['comp'][c.findex2];
       this.compare.is_ongoing = true;
       this.compare.promise = this.m.compare_img_pair(c);
-      this.show_message('<span class="blue">Comparing ...</span>')
+      this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around 5 sec. to complete)')
     }.bind(this));
     // @todo: fixme
     // note: the err_callback() is defined in _traherne_model.prototype.add_images()
@@ -821,6 +821,8 @@ _traherne_controller.prototype.enable_image_zoom = function(type) {
   top_panel.addEventListener('mousemove', this.v.now[type].zoom.mousemove_el, false);
   top_panel.addEventListener('mouseout', this.v.now[type].zoom.mouseout_el, false);
   top_panel.addEventListener('mousedown', this.v.now[type].zoom.mousedown_el, false);
+
+  this.show_message('To <span class="blue">freeze the zoom region</span>, click the left mouse button when zoom is active. Click the left mouse button again to unfreeze the zoom region.');
 }
 
 _traherne_controller.prototype.image_zoom_mousedown_handler = function(e) {
