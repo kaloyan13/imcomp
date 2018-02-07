@@ -27,9 +27,7 @@ class http_server : private boost::noncopyable {
  public:
   http_server(const std::string& address,
               const std::string& port,
-              const std::size_t thread_pool_size,
-              const boost::filesystem::path upload_dir,
-              const boost::filesystem::path result_dir);
+              const std::size_t thread_pool_size);
   void start();
   void stop();
  private:
@@ -42,8 +40,5 @@ class http_server : private boost::noncopyable {
   boost::shared_ptr<connection> new_connection_;
 
   boost::asio::signal_set signals_;
-
-  boost::filesystem::path upload_dir_;
-  boost::filesystem::path result_dir_;
 };
 #endif

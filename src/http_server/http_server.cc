@@ -2,13 +2,9 @@
 
 http_server::http_server(const std::string& address,
                          const std::string& port,
-                         const std::size_t thread_pool_size,
-                         const boost::filesystem::path upload_dir,
-                         const boost::filesystem::path result_dir) : thread_pool_size_( thread_pool_size ),
-                                                                     acceptor_( io_service_ ),
-                                                                     signals_(io_service_),
-                                                                     upload_dir_(upload_dir),
-                                                                     result_dir_(result_dir)
+                         const std::size_t thread_pool_size) : thread_pool_size_( thread_pool_size ),
+                                                                    acceptor_( io_service_ ),
+                                                                    signals_(io_service_)
 {
   signals_.add(SIGINT);
   signals_.add(SIGTERM);
@@ -46,7 +42,7 @@ void http_server::start() {
 }
 
 void http_server::accept_new_connection() {
-  new_connection_.reset( new connection(io_service_, upload_dir_, result_dir_) );
+  new_connection_.reset( new connection(io_service_) );
   acceptor_.async_accept( new_connection_->socket(),
                           boost::bind(&http_server::handle_connection, this, boost::asio::placeholders::error) );
 }

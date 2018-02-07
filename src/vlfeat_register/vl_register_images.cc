@@ -304,7 +304,7 @@ void vl_register_images::get_putative_matches(vector< vector<vl_uint8> >& descri
 
 void vl_register_images::register_images(const char fullSizeFn1[], const char fullSizeFn2[],
                                 double xl, double xu, double yl, double yu,
-                                homography &Hinit, uint32_t& bestNInliners,
+                                MatrixXd& H, uint32_t& bestNInliners,
                                 const char outFn1[], const char outFn2[], const char outFn2t[],
                                 const char diff_image[],
                                 const char overlap_image[]) {
@@ -420,8 +420,8 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
     JacobiSVD<MatrixXd> svd(A, ComputeFullV);
 
     MatrixXd V = svd.matrixV().col(8);
-    MatrixXd H(V);
-    H.resize(3,3);
+    MatrixXd Hi(V);
+    Hi.resize(3,3);
 
     size_t score = 0;
     for( unsigned int k=0; k<putative_matches.size(); k++ ) {
@@ -433,7 +433,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
       //cout << "| kp1=" << kp1(0) << "," << kp1(1) << "," << kp1(2) << flush;
       //cout << "| kp2=" << kp2(0) << "," << kp2(1) << "," << kp2(2) << flush;
 
-      MatrixXd kp2_comp = H * kp1;
+      MatrixXd kp2_comp = Hi * kp1;
       //cout << "| kp2_comp=" << kp2_comp(0) << "," << kp2_comp(1) << "," << kp2_comp(2) << flush;
       double dx = (kp2_comp(0) / kp2_comp(2)) - (kp2(0) / kp2(2));
       double dy = (kp2_comp(1) / kp2_comp(2)) - (kp2(1) / kp2(2));
@@ -444,7 +444,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
     }
     if( score > max_score ) {
       max_score = score;
-      max_score_H = H;
+      max_score_H = Hi;
       best_singular_values = svd.singularValues();
       bestV = svd.matrixV();
       bestA = A;
@@ -480,7 +480,7 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   im2_crop.write( outFn2 );
 
   // im2 crop and transform
-  MatrixXd H = max_score_H;
+  H = max_score_H; // H is the reference variable passed to this method
   Magick::Image im2t_crop( im1_crop.size(), "white");
   //cout << "\nTransforming image ..." << flush;
   double x0,x1,y0,y1;
@@ -540,6 +540,8 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
       Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
       double avg1 = ((double)(c1.red() + c1.green() + c1.blue())) / (3.0f);
       double avg2 = (fxy_red + fxy_green + fxy_blue) / (3.0f);
+
+/*
       double diff_val1 = avg1 - avg2;
       double diff_val2 = avg2 - avg1;
 
@@ -549,6 +551,29 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
       if( diff_val2 > 0.3 ) {
         diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind (213,94,0) = #D55E00
       }
+*/
+      double del1 = avg1 - avg2;
+      double del2 = avg2 - avg1;
+
+      Magick::ColorRGB diff_pixel_color(0,0,0);
+      // if either of the images pixel is zero, then difference pixel is zero
+      if( avg1 == 0 || avg2 == 0 ) {
+        del1 = 0;
+        del2 = 0;
+      }
+      if( del1 > 0.3 ) {
+        if( del2 > 0.3 ) {
+          // color 1 and color 2
+          diff_pixel_color = Magick::ColorRGB(0.835, 0.815, 0.698);
+        } else {
+          // color 1
+          diff_pixel_color = Magick::ColorRGB(0, 0.447, 0.698);
+        }
+      } else {
+        // color 2
+        diff_pixel_color = Magick::ColorRGB(0.835, 0.368, 0);
+      }
+      diff.pixelColor(i, j, diff_pixel_color);
 
       // overlap
       double red_avg = (c1.red() + fxy_red) / (2.0f);

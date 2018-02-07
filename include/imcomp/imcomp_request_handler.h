@@ -22,20 +22,23 @@
 
 #include <Magick++.h>            // to transform images
 
+#include <Eigen/Dense>
+
 #include "http_server/http_request.h"
 #include "http_server/http_response.h"
 #include "imcomp/imcomp_asset.h"
 
 #include "util/strutil.h"
-//#include "../register_images.h" // @todo: fix this
-#include "vl_register_images.h" // @todo: fix this
+#include "vl_register_images.h"
 
 using namespace std;
+using namespace Eigen;
 
 // uses C++ singleton design pattern
 class imcomp_request_handler {
   boost::filesystem::path upload_dir_;
   boost::filesystem::path result_dir_;
+  boost::filesystem::path asset_dir_;
 
   imcomp_request_handler() { };
   imcomp_request_handler(const imcomp_request_handler& sh) { };
@@ -50,15 +53,18 @@ class imcomp_request_handler {
 
   // _compare
   void register_images();
-  
+
   // result
   bool has_invalid_char(const std::string s);
-  bool load_file_contents(const boost::filesystem::path fn, std::string& file_contents);
+  bool load_file_contents(const boost::filesystem::path fn,
+                          std::string& file_contents);
 
   public:
   static imcomp_request_handler* instance();
 
-  void init(const boost::filesystem::path upload_dir, const boost::filesystem::path result_dir);
+  void init(const boost::filesystem::path upload_dir,
+            const boost::filesystem::path result_dir,
+            const boost::filesystem::path asset_dir);
   void handle_http_request(const http_request& request, http_response& response);
 };
 #endif

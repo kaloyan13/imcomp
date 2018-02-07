@@ -9,17 +9,13 @@ const std::string connection::http_301 = "HTTP/1.1 301 Moved Permanently\r\n";
 const std::string connection::http_400 = "HTTP/1.1 400 Bad Request\r\n";
 const std::string connection::app_namespace = "vise";
 
-connection::connection(boost::asio::io_service& io_service,
-                       boost::filesystem::path upload_dir,
-                       boost::filesystem::path result_dir): strand_( io_service ),
-                                                            socket_( io_service ),
-                                                            upload_dir_( upload_dir ),
-                                                            result_dir_( result_dir )
+connection::connection(boost::asio::io_service& io_service): strand_( io_service ),
+                                                            socket_( io_service )
 {
   connection_id_ = boost::filesystem::unique_path("%%%%%%%%").string();
 }
-connection::~connection() {
 
+connection::~connection() {
 }
 
 boost::asio::ip::tcp::socket& connection::socket() {

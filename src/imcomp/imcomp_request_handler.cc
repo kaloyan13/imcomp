@@ -9,12 +9,17 @@ imcomp_request_handler* imcomp_request_handler::instance() {
   return imcomp_request_handler_;
 }
 
-void imcomp_request_handler::init(const boost::filesystem::path upload_dir, const boost::filesystem::path result_dir) {
+void imcomp_request_handler::init(const boost::filesystem::path upload_dir,
+                                  const boost::filesystem::path result_dir,
+                                  const boost::filesystem::path asset_dir) {
   upload_dir_ = upload_dir;
   result_dir_ = result_dir;
+  asset_dir_ = asset_dir;
+  cout << "\nImageMagick Magick++ quantum depth = " << MAGICKCORE_QUANTUM_DEPTH << flush;
   cout << "\nimcomp_request_handler::init() : initializing http request handler" << flush;
   cout << "\nimcomp_request_handler::init() : upload_dir=" << upload_dir_.string() << flush;
   cout << "\nimcomp_request_handler::init() : result_dir=" << result_dir_.string() << flush;
+  cout << "\nimcomp_request_handler::init() : asset_dir=" << asset_dir_.string() << flush;
 
   for( auto it=imcomp::asset::files_.begin(); it!=imcomp::asset::files_.end(); it++ ) {
     cout << "\n\t" << it->first << " : " << it->second.length() << flush;
@@ -24,97 +29,40 @@ void imcomp_request_handler::init(const boost::filesystem::path upload_dir, cons
 void imcomp_request_handler::handle_http_request(const http_request& request, http_response& response) {
   cout << "\n" << request.method_ << " [" << request.uri_ << "]" << flush;
   response.set_status(200);
-/*
-  if ( (request.uri_ == "/imcomp") || (request.uri_ == "/imcomp/")) {
-    std::string asset_fn("/imcomp/index.html");
-    auto asset_loc = imcomp::asset::files_.find(asset_fn);
-    response.set_payload(asset_loc->second);
-    response.set_field("Content-Type", "text/html");
-    return;
-  }
 
-  if ( (request.uri_ == "/imcomp/traherne") || (request.uri_ == "/imcomp/traherne/")) {
-    std::string asset_fn("/imcomp/traherne/index.html");
-    auto asset_loc = imcomp::asset::files_.find(asset_fn);
-    response.set_payload(asset_loc->second);
-    response.set_field("Content-Type", "text/html");
-    return;
-  }
-*/
-
-  if ( util::begins_with(request.uri_, "/imcomp/result/") ) {
-    // serve dynamic resource from result_dir_
-    // @todo
-    string prefix = "/imcomp/result/";
-    string res = request.uri_.substr(prefix.length());
-    if(has_invalid_char(res)) {
-      response.set_status(400);
+  if ( util::begins_with(request.uri_, "/imcomp/static/result/") && request.method_ == "GET") {
+    string prefix = "/imcomp/static/result/";
+    string static_res = request.uri_.substr(prefix.length());
+    boost::filesystem::path static_res_path( static_res );
+    static_res_path = static_res_path.lexically_normal();
+    boost::filesystem::path fn = result_dir_ / static_res_path;
+    std::string file_contents;
+    if( load_file_contents(fn, file_contents) ) {
+      response.set_payload(file_contents);
+      response.set_content_type_from_filename(fn.string());
     } else {
-      boost::filesystem::path fn = result_dir_ / res;
-      std::string file_contents;
-      if( load_file_contents(fn, file_contents) ) {
-        response.set_payload(file_contents);
-        response.set_content_type_from_filename(fn.string());
-      } else {
-        response.set_status(400);
-      }
-    }
-    return;
-  }
-
-  if ( util::begins_with(request.uri_, "/imcomp/traherne/") ) {
-    // serve dynamic resource from result_dir_
-    // @todo
-    string prefix = "/imcomp/traherne/";
-    string res = request.uri_.substr(prefix.length());
-    
-    if(has_invalid_char(res)) {
       response.set_status(400);
-    } else {
-      // @todo avoid static links
-      boost::filesystem::path fn("/data/adutta/vggdemo/traherne/imcomp/asset/imcomp/traherne");
-      fn = fn / res;
-      std::string file_contents;
-      if( load_file_contents(fn, file_contents) ) {
-        response.set_payload(file_contents);
-        response.set_content_type_from_filename(fn.string());
-      } else {
-        response.set_status(400);
-      }
     }
+
     return;
   }
 
-/*
-  if ( request.method_ == "GET" && util::begins_with(request.uri_, "/imcomp/") ) {
-    // serve dynamic resource from result_dir_
-    // @todo
+  if ( util::begins_with(request.uri_, "/imcomp/") && request.method_ == "GET") {
+    // serve application assets (css, html, js, etc)
     string prefix = "/imcomp/";
-    string res = request.uri_.substr(prefix.length());
-    
-    if(has_invalid_char(res)) {
-      response.set_status(400);
+    string static_res = request.uri_.substr(prefix.length());
+    boost::filesystem::path static_res_path( static_res );
+    static_res_path = static_res_path.lexically_normal();
+    boost::filesystem::path fn = asset_dir_ / static_res_path;
+    std::string file_contents;
+    if( load_file_contents(fn, file_contents) ) {
+      response.set_payload(file_contents);
+      response.set_content_type_from_filename(fn.string());
     } else {
-      boost::filesystem::path fn("/home/tlm/dev/imcomp/asset/imcomp");
-      fn = fn / res;
-      std::string file_contents;
-      if( load_file_contents(fn, file_contents) ) {
-        response.set_payload(file_contents);
-        response.set_content_type_from_filename(fn.string());
-      } else {
-        response.set_status(400);
-      }
+      response.set_status(400);
     }
     return;
   }
-
-  auto asset_found = imcomp::asset::files_.find(request.uri_);
-  if ( asset_found != imcomp::asset::files_.end() && request.method_ == "GET" ) {
-    response.set_payload( asset_found->second );
-    response.set_content_type_from_filename(asset_found->first);
-    return;
-  }
-*/
 
   if ( request.uri_ == "/imcomp/_upload" && request.method_ == "POST" ) {
     string fid;
@@ -131,7 +79,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     return;
   }
 
-  if ( util::begins_with(request.uri_, "/imcomp/_compare") ) {
+  if ( util::begins_with(request.uri_, "/imcomp/_compare") && request.method_ == "POST" ) {
     map<string,string> uri_arg;
     bool success = request.parse_uri(uri_arg);
     //for( auto it=uri_arg.begin(); it!=uri_arg.end(); it++ ) {
@@ -161,41 +109,23 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       boost::filesystem::path diff_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_diff.jpg");
       boost::filesystem::path overlap_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_overlap.jpg");
 
-      double h[9];
       uint32_t best_inliers_count = -1;
-      homography eye;
-/*
-      registerImages::registerFromGuess( im1_fn.string().c_str(),
-                                         im2_fn.string().c_str(),
-                                         file1_region[0], file1_region[2], file1_region[1], file1_region[3],
-                                         eye, best_inliers_count,
-                                         im1_out_fn.string().c_str(),
-                                         im2_out_fn.string().c_str(),
-                                         im2_tx_fn.string().c_str(),
-                                         diff_fn.string().c_str(),
-                                         overlap_fn.string().c_str()
-                                         );
-*/
+      MatrixXd H(3,3);
 
       vl_register_images::register_images( im1_fn.string().c_str(),
                                          im2_fn.string().c_str(),
                                          file1_region[0], file1_region[2], file1_region[1], file1_region[3],
-                                         eye, best_inliers_count,
+                                         H, best_inliers_count,
                                          im1_out_fn.string().c_str(),
                                          im2_out_fn.string().c_str(),
                                          im2_tx_fn.string().c_str(),
                                          diff_fn.string().c_str(),
                                          overlap_fn.string().c_str()
                                          );
-      eye.exportToDoubleArray( h );
+
 
       std::ostringstream json;
       if ( best_inliers_count >= 9 ) {
-        double file2_region[8];
-        homography::affTransform(h, file1_region[0], file1_region[1], file2_region[0], file2_region[1]);
-        homography::affTransform(h, file1_region[0], file1_region[3], file2_region[2], file2_region[3]);
-        homography::affTransform(h, file1_region[2], file1_region[3], file2_region[4], file2_region[5]);
-        homography::affTransform(h, file1_region[2], file1_region[1], file2_region[6], file2_region[7]);
         //std::cout << "\nfile2_region = " << file2_region[0] << "," << file2_region[1] << "," << file2_region[2] << "," << im2_region[3] << std::flush;
 
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
@@ -203,16 +133,14 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
              << "\"status_message\": \"\","
              << "\"best_inliers_count\": \"" << best_inliers_count << "\","
              << "\"homography\": ["
-             << h[0] << ", " << h[1] << ", " << h[2] << ", "
-             << h[3] << ", " << h[4] << ", " << h[5] << ", "
-             << h[6] << ", " << h[7] << ", " << h[8] << "],"
-             << "\"file2_region\": [" << file2_region[0] << "," << file2_region[1] << "," << file2_region[2] << "," << file2_region[3] << ","
-             << file2_region[4] << "," << file2_region[5] << "," << file2_region[6] << "," << file2_region[7] << "],"
-             << "\"file1_crop\":\"/imcomp/result/" + im1_out_fn.filename().string() << "\","
-             << "\"file2_crop\":\"/imcomp/result/" + im2_out_fn.filename().string() << "\","
-             << "\"file2_crop_tx\":\"/imcomp/result/" + im2_tx_fn.filename().string() << "\","
-             << "\"file1_file2_overlap\":\"/imcomp/result/" + overlap_fn.filename().string() << "\","
-             << "\"file1_file2_diff\":\"/imcomp/result/" + diff_fn.filename().string() << "\"";
+             << H(0,0) << ", " << H(0,1) << ", " << H(0,2) << ", "
+             << H(1,0) << ", " << H(1,1) << ", " << H(1,2) << ", "
+             << H(2,0) << ", " << H(2,1) << ", " << H(2,2) << "],"
+             << "\"file1_crop\":\"/imcomp/static/result/" + im1_out_fn.filename().string() << "\","
+             << "\"file2_crop\":\"/imcomp/static/result/" + im2_out_fn.filename().string() << "\","
+             << "\"file2_crop_tx\":\"/imcomp/static/result/" + im2_tx_fn.filename().string() << "\","
+             << "\"file1_file2_overlap\":\"/imcomp/static/result/" + overlap_fn.filename().string() << "\","
+             << "\"file1_file2_diff\":\"/imcomp/static/result/" + diff_fn.filename().string() << "\"";
       } else {
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"ERR\","
@@ -288,10 +216,14 @@ bool imcomp_request_handler::has_invalid_char(const std::string s) {
     return true;
   if ( s.find('?') != std::string::npos )
     return true;
-  if ( s.find('/') != std::string::npos )
+  if ( s.find('.') != std::string::npos )
+    return true;
+
+  /*  if ( s.find('/') != std::string::npos )
     return true;
   if ( s.find('\\') != std::string::npos )
     return true;
+  */
 
   return false;
 }

@@ -5,7 +5,7 @@
 ## 27 Nov. 2017
 ##
 
-cmake_minimum_required( VERSION 3.1 )
+cmake_minimum_required( VERSION 3.10 )
 project( imcomp_server )
 
 set( PROJECT_INCLUDE_DIR "include" )
@@ -34,10 +34,6 @@ configure_file (
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set( BUILD_SHARED_LIBS "OFF" )
 
-## needed by KMcode_relja
-#find_package( JPEG )
-#find_package( PNG )
-
 ## Boost
 if (NOT DEFINED     BOOST_ROOT        AND
     NOT DEFINED ENV{BOOST_ROOT}       AND
@@ -54,8 +50,7 @@ if (NOT DEFINED     BOOST_ROOT        AND
     endif()
 endif()
 
-find_package(Boost 1.48.0 COMPONENTS filesystem system thread atomic REQUIRED)
-#find_package(Boost 1.48.0 COMPONENTS REQUIRED)
+find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
 
@@ -73,45 +68,29 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 #    endif()
 #endif()
 
-find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
-#find_package( ImageMagick )
-include_directories( ${ImageMagick_INCLUDE_DIRS} )
-#ADD_DEFINITIONS(-DRR_MAGICK)
 ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
 ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
-
-#message("JPEG_LIBRARIES: " ${JPEG_LIBRARIES})
-#message("JPEG_INCLUDE_DIR: " ${JPEG_INCLUDE_DIR})
-#message("ZLIB_LIBRARIES: " ${ZLIB_LIBRARIES})
-#message("ZLIB_INCLUDE_DIRS: " ${ZLIB_INCLUDE_DIRS})
-#message("PNG_LIBRARIES: " ${PNG_LIBRARIES})
-#message("PNG_INCLUDE_DIRS: " ${PNG_INCLUDE_DIRS})
+find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
+# @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
+# and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
+set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so")
+include_directories( ${ImageMagick_INCLUDE_DIRS} )
 
 # Eigen
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 # VLFEAT
+# VLFEAT_LIB must be define during cmake
+# e.g. cmake -DVLFEAT_LIB=/data/mybin/vlfeat/vlfeat-0.9.20/bin/glnxa64/libvl.so -DVLFEAT_INCLUDE_DIR=/data/mybin/vlfeat/vlfeat-0.9.20/vl
 # @todo: get rid of absolute path
-set(VLFEAT_LIBRARIES "/ssd/adutta/build_deps/tmp_libsrc/vlfeat-0.9.20/bin/glnxa64/libvl.so")
-
+include_directories( ${VLFEAT_INCLUDE_DIR})
 
 message("Boost_LIBRARIES: " ${Boost_LIBRARIES})
 message("Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
 message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
 message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
-
-## pack static resources (html, css, js, etc) as compiled C++ asset
-#set(PACK_IMCOMP_ASSET_CMD "${CMAKE_CURRENT_SOURCE_DIR}/scripts/pack_imcomp_asset.sh")
-#set(ASSET_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/static/")
-#set(TARGET_CPP_ASSET_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/imcomp/imcomp_asset.cc")
-#message("ASSET_SRC_DIR: " ${ASSET_SRC_DIR})
-#message("TARGET_CPP_ASSET_FILE: " ${TARGET_CPP_ASSET_FILE})
-#message("PACK_IMCOMP_ASSET_CMD: " ${PACK_IMCOMP_ASSET_CMD})
-
-#execute_process( COMMAND ${PACK_IMCOMP_ASSET_CMD} ${ASSET_SRC_DIR} ${TARGET_CPP_ASSET_FILE}
-#  RESULT_VARIABLE CMD_ERR
-#  OUTPUT_VARIABLE CMD_OUTPUT)
-#MESSAGE( STATUS "Result of packing static resources : " ${CMD_OUTPUT})
+message("VLFEAT_LIB: " ${VLFEAT_LIB} )
+message("VLFEAT_INCLUDE_DIR: " ${VLFEAT_INCLUDE_DIR} )
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )

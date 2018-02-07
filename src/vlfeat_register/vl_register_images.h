@@ -23,8 +23,6 @@ extern "C" {
 
 #include <Magick++.h>
 
-#include "homography.h"
-
 using namespace Eigen;
 
 using namespace std;
@@ -33,7 +31,7 @@ class vl_register_images {
  public:
   static void register_images(const char image_fn1[], const char image_fn2[],
                               double xl, double xu, double yl, double yu,
-                              homography &Hinit, uint32_t& bestNInliners,
+                              MatrixXd& H, uint32_t& bestNInliners,
                               const char outFn1[], const char outFn2[], const char outFn2t[],
                               const char diff_image[],
                               const char overlap_image[]);

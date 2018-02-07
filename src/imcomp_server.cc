@@ -10,6 +10,7 @@
 #include <thread>
 
 #include <boost/filesystem.hpp>
+#include <Magick++.h>            // to transform images
 
 #include "imcomp_server_config.h"
 #include "http_server/http_server.h"
@@ -28,47 +29,51 @@ bool mkdir_p(boost::filesystem::path p, bool verbose=false) {
 }
 
 int main(int argc, char** argv) {
-  std::cout << IMCOMP_SERVER_NAME << " " 
+  Magick::InitializeMagick(*argv);
+
+  std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."
             << IMCOMP_SERVER_VERSION_MINOR << "."
             << IMCOMP_SERVER_VERSION_PATCH << flush;
-        
-  std::cout << "\nAuthor: " 
-            << IMCOMP_SERVER_AUTHOR_NAME << "<" 
+
+  std::cout << "\nAuthor: "
+            << IMCOMP_SERVER_AUTHOR_NAME << "<"
             << IMCOMP_SERVER_AUTHOR_EMAIL << ">, "
             << IMCOMP_SERVER_FIRST_RELEASE << flush;
 
-  if ( argc != 5 && argc != 6 ) {
-    std::cout << "\nUsage: " << argv[0] << " hostname port thread_count application_data_dir | [upload_dir result_dir]\n" << std::flush;
+  if ( argc != 6 && argc != 7 ) {
+    std::cout << "\nUsage: " << argv[0] << " hostname port thread_count asset_dir [application_data_dir | [upload_dir result_dir] ]\n" << std::flush;
     return 0;
   }
 
   std::string address = argv[1];
   std::string port    = argv[2];
+  boost::filesystem::path asset_dir(argv[4]);
 
   unsigned int thread_pool_size;
   std::stringstream s;
   s.clear(); s.str(argv[3]);
   s >> thread_pool_size;
 
+
   boost::filesystem::path upload_dir;
   boost::filesystem::path result_dir;
-  if ( argc == 5 ) {
-    boost::filesystem::path app_dir( argv[4] );
+  if ( argc == 6 ) {
+    boost::filesystem::path app_dir( argv[5] );
     upload_dir = app_dir / "upload";
     result_dir = app_dir / "result";
   }
-  if ( argc == 6 ) {
-    upload_dir = boost::filesystem::path(upload_dir);
-    result_dir = boost::filesystem::path(result_dir);
+  if ( argc == 7 ) {
+    upload_dir = boost::filesystem::path(argv[5]);
+    result_dir = boost::filesystem::path(argv[6]);
   }
 
   mkdir_p(upload_dir);
   mkdir_p(result_dir);
 
-  imcomp_request_handler::instance()->init(upload_dir, result_dir);
+  imcomp_request_handler::instance()->init(upload_dir, result_dir, asset_dir);
 
-  http_server server(address, port, thread_pool_size, upload_dir, result_dir);
+  http_server server(address, port, thread_pool_size);
   server.start();
 
   // cleanup

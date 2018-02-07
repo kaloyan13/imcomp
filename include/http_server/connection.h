@@ -30,9 +30,7 @@
 class connection : public boost::enable_shared_from_this<connection>, private boost::noncopyable
 {
  public:
-  connection(boost::asio::io_service& io_service,
-             boost::filesystem::path upload_dir_,
-             boost::filesystem::path result_dir_);
+  connection(boost::asio::io_service& io_service);
   ~connection();
 
   boost::asio::ip::tcp::socket& socket();
@@ -64,9 +62,6 @@ class connection : public boost::enable_shared_from_this<connection>, private bo
   boost::array<char, 2048> buffer_;
   boost::asio::streambuf response_buffer_;
   boost::asio::streambuf continue_response_buffer_;
-
-  boost::filesystem::path upload_dir_;
-  boost::filesystem::path result_dir_;
 
   http_request request_;
   http_response response_;

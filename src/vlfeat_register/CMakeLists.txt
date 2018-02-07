@@ -7,8 +7,6 @@ endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_subdirectory( external_lib )
-
 add_library( vl_register_images STATIC vl_register_images.cc )
-target_link_libraries( vl_register_images ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} ${VLFEAT_LIBRARIES} Eigen3::Eigen)
+target_link_libraries( vl_register_images ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} ${VLFEAT_LIB} Eigen3::Eigen)
 
