@@ -11,6 +11,18 @@ some code borrowed from: vlfeat-0.9.20/src/sift.c
 
 #include "vl_register_images.h"
 
+inline double clamp(double v, double min, double max) {
+  if( v > min ) {
+    if( v < max ) {
+      return v;
+    } else {
+      return max;
+    }
+  } else {
+    return min;
+  }
+}
+
 void vl_register_images::compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
   vl_bool  err    = VL_ERR_OK ;
   char     err_msg [1024] ;
@@ -489,9 +501,6 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   double fxy0, fxy1;
   double fxy_red, fxy_green, fxy_blue;
   double xi, yi;
-  Magick::Image diff1(im1_crop.size(), "black");
-  Magick::Image diff2(im1_crop.size(), "black");
-  Magick::Image diff(im1_crop.size(), "white");
   Magick::Image overlap(im1_crop.size(), "white");
 
   for(unsigned int j=0; j<im2t_crop.rows(); j++) {
@@ -536,46 +545,8 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
       Magick::ColorRGB fxy(fxy_red, fxy_green, fxy_blue);
       im2t_crop.pixelColor(i, j, fxy);
 
-      // compute difference image
-      Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
-      double avg1 = ((double)(c1.red() + c1.green() + c1.blue())) / (3.0f);
-      double avg2 = (fxy_red + fxy_green + fxy_blue) / (3.0f);
-
-/*
-      double diff_val1 = avg1 - avg2;
-      double diff_val2 = avg2 - avg1;
-
-      if( diff_val1 > 0.3 ) {
-        diff.pixelColor(i, j, Magick::ColorRGB(0, 0.447, 0.698)); // blue color safe for the color blind (0,114,178) = #0072B2
-      }
-      if( diff_val2 > 0.3 ) {
-        diff.pixelColor(i, j, Magick::ColorRGB(0.835, 0.368, 0)); // blue color safe for the color blind (213,94,0) = #D55E00
-      }
-*/
-      double del1 = avg1 - avg2;
-      double del2 = avg2 - avg1;
-
-      Magick::ColorRGB diff_pixel_color(0,0,0);
-      // if either of the images pixel is zero, then difference pixel is zero
-      if( avg1 == 0 || avg2 == 0 ) {
-        del1 = 0;
-        del2 = 0;
-      }
-      if( del1 > 0.3 ) {
-        if( del2 > 0.3 ) {
-          // color 1 and color 2
-          diff_pixel_color = Magick::ColorRGB(0.835, 0.815, 0.698);
-        } else {
-          // color 1
-          diff_pixel_color = Magick::ColorRGB(0, 0.447, 0.698);
-        }
-      } else {
-        // color 2
-        diff_pixel_color = Magick::ColorRGB(0.835, 0.368, 0);
-      }
-      diff.pixelColor(i, j, diff_pixel_color);
-
       // overlap
+      Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
       double red_avg = (c1.red() + fxy_red) / (2.0f);
       double green_avg = (c1.green() + fxy_green) / (2.0f);
       double blue_avg = (c1.blue() + fxy_blue) / (2.0f);
@@ -585,9 +556,67 @@ void vl_register_images::register_images(const char fullSizeFn1[], const char fu
   im2t_crop.write( outFn2t );
 
   // difference image
-  diff.write(diff_image);
+  // @todo: optimize code
+  Magick::Image im1g = im1_crop;
+  Magick::Image im2g = im2t_crop;
+  im1g.type(Magick::GrayscaleType);
+  im2g.type(Magick::GrayscaleType);
+
+  const vector<unsigned int> percentile = {5,25};
+  vector<double> im1_percentile_values = get_pixel_percentile(im1g, percentile);
+  vector<double> im2_percentile_values = get_pixel_percentile(im2g, percentile);
+
+  double px1, px2, sum;
+  double del1 = im1_percentile_values.at(0) - im1_percentile_values.at(1);
+  double del2 = im2_percentile_values.at(0) - im2_percentile_values.at(1);
+
+  Magick::Image cdiff(im1g.size(), "black");
+
+  //cout << "\nWriting diff image ... " << flush;
+  for(unsigned int j=0; j<im1g.rows(); j++) {
+    for(unsigned int i=0; i<im1g.columns(); i++) {
+      Magick::ColorGray c1 = im1g.pixelColor(i,j);
+      Magick::ColorGray c2 = im2g.pixelColor(i,j);
+      px1 = ( c1.shade() - im1_percentile_values.at(1) ) / del1;
+      px2 = ( c2.shade() - im2_percentile_values.at(1) ) / del2;
+
+      sum = clamp(px1 + px2, 0.0, 1.0);
+      px1 = clamp(px1, 0.0, 1.0);
+      px2 = clamp(px2, 0.0, 1.0);
+
+      cdiff.pixelColor(i, j, Magick::ColorRGB(1.0 - px1, 1.0 - sum, 1.0 - px2));
+    }
+  }
+  cdiff.write(diff_image);
+
+  // write overlap image
   overlap.write(overlap_image);
-  
+
   //cout << "\nWritten transformed images.\n" << flush;
 }
 
+
+vector<double> vl_register_images::get_pixel_percentile(Magick::Image& img, const vector<unsigned int> percentile) {
+  size_t npixel = img.rows() * img.columns();
+  vector<double> pixel_values;
+  pixel_values.reserve(npixel);
+  for(unsigned int j=0; j<img.rows(); j++) {
+    for(unsigned int i=0; i<img.columns(); i++) {
+      Magick::ColorGray c = img.pixelColor(i,j);
+      pixel_values.push_back(c.shade());
+    }
+  }
+
+  //sort(pixel_values.begin(), pixel_values.end());
+  vector<double> percentile_values;
+  percentile_values.reserve(percentile.size());
+  for( size_t i = 0; i < percentile.size(); i++ ) {
+    double k = percentile.at(i);
+    // source: https://stackoverflow.com/a/28548904
+    auto nth = pixel_values.begin() + (k * pixel_values.size())/100;
+    std::nth_element(pixel_values.begin(), nth, pixel_values.end());
+    percentile_values.push_back( *nth );
+  }
+
+  return percentile_values;
+}
