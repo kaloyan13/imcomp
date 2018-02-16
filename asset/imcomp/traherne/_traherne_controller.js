@@ -450,7 +450,8 @@ _traherne_controller.prototype.set_content = function(type, sid_suffix) {
     }
 
     if( sid_suffix === 'base_comp_diff') {
-      this.show_message('In the difference image, color code is as follows: <span style="color: #0072b2">base image</span> and <span style="color: #d55e00">comp. image</span>');
+      //this.show_message('In the difference image, color code is as follows: <span style="color: #0072b2">base image</span> and <span style="color: #d55e00">comp. image</span>');
+      this.show_message('In the difference image, color code is as follows: <span style="color: blue">base image</span> and <span style="color: red">comp. image</span>');
     }
   }
   this.enable_switch(type, '_zoom');

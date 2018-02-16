@@ -34,6 +34,10 @@ configure_file (
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set( BUILD_SHARED_LIBS "OFF" )
 
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  message("*** Debug Mode: test code will be compiled and built. ***")
+ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+
 ## Boost
 if (NOT DEFINED     BOOST_ROOT        AND
     NOT DEFINED ENV{BOOST_ROOT}       AND

@@ -257,3 +257,7 @@ body {
 .nobreak {
   white-space: nowrap;
 }
+
+.advanced_setting {
+  display: none;
+}

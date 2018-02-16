@@ -369,6 +369,8 @@ _traherne_model.prototype.compare_img_pair = function(c) {
       }
     }
     args.push('region=' + c.region1.join(','));
+    var algname = document.getElementById('algname');
+    args.push('algname=' + algname.options[ algname.selectedIndex ].value);
 
     var cr = new XMLHttpRequest();
     cr.addEventListener('timeout', function(e) {
@@ -390,13 +392,15 @@ _traherne_model.prototype.compare_img_pair = function(c) {
     cr.addEventListener('load', function() {
       var response_str = cr.responseText;
       try {
+        console.log(response_str);
         c.response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
+        console.log(c.response);
         if( c.response.status === 'OK' ) {
           var msg = 'finished comparison';
           this.set_compare_status('OK', msg);
           ok_callback(c);
         } else {
-          var msg = 'comparison failed [' + c.response + ']';
+          var msg = 'comparison failed [' + c.response.status_message + ']';
           this.set_compare_status('ERR', msg);
           err_callback();
         }

@@ -89,10 +89,15 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       string fid1 = uri_arg["file1"];
       string fid2 = uri_arg["file2"];
       string region1_str = uri_arg["region"];
+      string algname = "default";
+      if(uri_arg.count("algname")) {
+        algname = uri_arg["algname"];
+      }
 
       //cout << "\n  fid1=" << fid1 << flush;
       //cout << "\n  fid2=" << fid2 << flush;
       //cout << "\n  region1_str=" << region1_str << flush;
+      //cout << "\n  algname=" << algname << flush;
 
       unsigned int file1_region[4]; // x0, y0, x1, y1
       std::istringstream is(region1_str);
@@ -103,41 +108,55 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
 
       boost::filesystem::path im1_fn = upload_dir_ / (fid1 + ".jpg");
       boost::filesystem::path im2_fn = upload_dir_ / (fid2 + ".jpg");
-      boost::filesystem::path im1_out_fn = result_dir_ / (fid1 + "_" + compare_id + "_crop.jpg");
-      boost::filesystem::path im2_out_fn = result_dir_ / (fid2 + "_" + compare_id + + "_crop.jpg");
+      boost::filesystem::path im1_crop_fn = result_dir_ / (fid1 + "_" + compare_id + "_crop.jpg");
+      boost::filesystem::path im2_crop_fn = result_dir_ / (fid2 + "_" + compare_id + + "_crop.jpg");
       boost::filesystem::path im2_tx_fn  = result_dir_ / (fid2 + "_" + compare_id + + "_crop_tx.jpg");
       boost::filesystem::path diff_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_diff.jpg");
       boost::filesystem::path overlap_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_overlap.jpg");
 
-      uint32_t best_inliers_count = -1;
+      size_t fp_match_count = -1;
       MatrixXd H(3,3);
-
-      vl_register_images::register_images( im1_fn.string().c_str(),
-                                         im2_fn.string().c_str(),
-                                         file1_region[0], file1_region[2], file1_region[1], file1_region[3],
-                                         H, best_inliers_count,
-                                         im1_out_fn.string().c_str(),
-                                         im2_out_fn.string().c_str(),
-                                         im2_tx_fn.string().c_str(),
-                                         diff_fn.string().c_str(),
-                                         overlap_fn.string().c_str()
-                                         );
-
+      bool success = false;
+      if( algname == "robust_ransac_tps" ) {
+        imreg_sift::robust_ransac_tps(im1_fn.string().c_str(),
+                                      im2_fn.string().c_str(),
+                                      file1_region[0], file1_region[2], file1_region[1], file1_region[3],
+                                      H, 
+                                      fp_match_count,
+                                      im1_crop_fn.string().c_str(),
+                                      im2_crop_fn.string().c_str(),
+                                      im2_tx_fn.string().c_str(),
+                                      diff_fn.string().c_str(),
+                                      overlap_fn.string().c_str(),
+                                      success);
+      } else {
+        imreg_sift::ransac_dlt(im1_fn.string().c_str(),
+                                im2_fn.string().c_str(),
+                                file1_region[0], file1_region[2], file1_region[1], file1_region[3],
+                                H, 
+                                fp_match_count,
+                                im1_crop_fn.string().c_str(),
+                                im2_crop_fn.string().c_str(),
+                                im2_tx_fn.string().c_str(),
+                                diff_fn.string().c_str(),
+                                overlap_fn.string().c_str(),
+                                success);
+      }
 
       std::ostringstream json;
-      if ( best_inliers_count >= 9 ) {
+      if ( success ) {
         //std::cout << "\nfile2_region = " << file2_region[0] << "," << file2_region[1] << "," << file2_region[2] << "," << im2_region[3] << std::flush;
 
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"OK\","
              << "\"status_message\": \"\","
-             << "\"best_inliers_count\": \"" << best_inliers_count << "\","
+             << "\"fp_match_count\": \"" << fp_match_count << "\","
              << "\"homography\": ["
              << H(0,0) << ", " << H(0,1) << ", " << H(0,2) << ", "
              << H(1,0) << ", " << H(1,1) << ", " << H(1,2) << ", "
              << H(2,0) << ", " << H(2,1) << ", " << H(2,2) << "],"
-             << "\"file1_crop\":\"/imcomp/static/result/" + im1_out_fn.filename().string() << "\","
-             << "\"file2_crop\":\"/imcomp/static/result/" + im2_out_fn.filename().string() << "\","
+             << "\"file1_crop\":\"/imcomp/static/result/" + im1_crop_fn.filename().string() << "\","
+             << "\"file2_crop\":\"/imcomp/static/result/" + im2_crop_fn.filename().string() << "\","
              << "\"file2_crop_tx\":\"/imcomp/static/result/" + im2_tx_fn.filename().string() << "\","
              << "\"file1_file2_overlap\":\"/imcomp/static/result/" + overlap_fn.filename().string() << "\","
              << "\"file1_file2_diff\":\"/imcomp/static/result/" + diff_fn.filename().string() << "\"";
@@ -146,8 +165,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
              << "\"status\": \"ERR\","
 //             << "\"status_message\": \"Could not match sufficient feature points (best inliers count = "
              << "\"status_message\": \"Could not match sufficient feature points (matched features = "
-             << best_inliers_count << ")\","
-             << "\"best_inliers_count\": \"" << best_inliers_count << "\","
+             << fp_match_count << ")\","
+             << "\"fp_match_count\": \"" << fp_match_count << "\","
              << "\"homography\": []";
       }
       json << "}]}";

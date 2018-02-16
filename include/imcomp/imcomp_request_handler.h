@@ -29,7 +29,7 @@
 #include "imcomp/imcomp_asset.h"
 
 #include "util/strutil.h"
-#include "vl_register_images.h"
+#include "imreg_sift.h"
 
 using namespace std;
 using namespace Eigen;
