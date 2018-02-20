@@ -29,7 +29,7 @@ void http_request::parse(string request_chunk) {
 
   if ( parser_state_ == parser_state::HEADER_SEEN_WAITING_FOR_PAYLOAD ) {
     payload_ << request_chunk;
-    if ( payload_.tellp() == content_length_ ) {
+    if ( ((size_t) payload_.tellp()) == content_length_ ) {
       set_state_request_complete();
     }
     return;
@@ -104,7 +104,7 @@ void http_request::parse(string request_chunk) {
           s >> content_length_;
           payload_ << request_chunk.substr(i+1);
 
-          if ( payload_.tellp() == content_length_ ) {
+          if ( ((size_t) payload_.tellp()) == content_length_ ) {
             set_state_request_complete();
             return;
           } else {

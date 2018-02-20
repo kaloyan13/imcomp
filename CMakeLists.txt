@@ -75,9 +75,12 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
 ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
 find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
-# @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
-# and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
-set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so")
+
+if (Linux)
+  # @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
+  # and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
+  set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so") 
+endif()
 include_directories( ${ImageMagick_INCLUDE_DIRS} )
 
 # Eigen

@@ -126,10 +126,8 @@ void imreg_sift::compute_sift_features(const string filename, vector<VlSiftKeypo
   }
 
   /* allocate buffer */
-  data  = malloc(vl_pgm_get_npixels (&pim) *
-                 vl_pgm_get_bpp       (&pim) * sizeof (vl_uint8)   ) ;
-  fdata = malloc(vl_pgm_get_npixels (&pim) *
-                 vl_pgm_get_bpp       (&pim) * sizeof (vl_sift_pix)) ;
+  data  = (vl_uint8*) malloc( vl_pgm_get_npixels(&pim) * vl_pgm_get_bpp(&pim) * sizeof(vl_uint8) ) ;
+  fdata = (vl_sift_pix*) malloc( vl_pgm_get_npixels(&pim) * vl_pgm_get_bpp(&pim) * sizeof(vl_sift_pix) ) ;
 
   if (!data || !fdata) {
     err = VL_ERR_ALLOC ;

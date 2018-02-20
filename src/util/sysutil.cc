@@ -2,6 +2,7 @@
 
 // source: https://stackoverflow.com/a/478960/7814484
 std::string util::execute(std::string cmd) {
+#ifdef linux
   std::array<char, 128> buffer;
   std::ostringstream cmd_output;
 
@@ -25,4 +26,9 @@ std::string util::execute(std::string cmd) {
   } while( c!= EOF );
 */
   return cmd_output.str();
+#else
+  std::cerr << "\nPlaform not supported for util::execute()!" << std::flush;
+  return "";
+#endif
+
 }

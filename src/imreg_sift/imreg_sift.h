@@ -7,6 +7,7 @@ extern "C" {
 #include <vl/pgm.h>
 #include <vl/sift.h>
 #include <vl/getopt_long.h>
+
 }
 
 #include <iostream>
