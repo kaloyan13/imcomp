@@ -49,7 +49,7 @@ endif()
 
 
 ## Boost
-find_package(Boost 1.65.0 COMPONENTS filesystem system thread atomic REQUIRED)
+find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
   set( Boost_USE_DEBUG_RUNTIME OFF )

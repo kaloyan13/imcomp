@@ -68,9 +68,8 @@ double imreg_sift::clamp(double v, double min, double max) {
   }
 }
 
-void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
+void imreg_sift::compute_sift_features(const Magick::Image& img, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
   vl_bool  err    = VL_ERR_OK ;
-  char     err_msg [1024] ;
 
   // algorithm parameters based on vlfeat-0.9.20/toolbox/sift/vl_sift.c
   int                O     = - 1 ;
@@ -84,10 +83,7 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
   double             window_size = -1 ;
   int                ndescriptors = 0;
 
-  FILE            *in    = 0 ;
-  vl_uint8        *data  = 0 ;
   vl_sift_pix     *fdata = 0 ;
-  VlPgmImage       pim ;
   vl_size          q ;
   int              i ;
   vl_bool          first ;
@@ -97,20 +93,18 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
 
   // move image data to fdata for processing by vl_sift
   // @todo: optimize and avoid this overhead
-  vl_size imw = img.columns();
-  vl_size imh = img.rows();
-    
-  fdata = (vl_sift_pix*) malloc( imw * imh * sizeof(vl_sift_pix) ) ;
+
+  fdata = (vl_sift_pix *) malloc( img.rows() * img.columns() * sizeof(vl_sift_pix) ) ;
   if( fdata == NULL ) {
     cout << "\nfailed to allocated memory for vl_sift_pix array" << flush;
-    goto done;
+    return;
   }
   
-  vl_size flat_index = 0;
-  for( unsigned int i=0; i<imh; ++i ) {
-    for( unsigned int j=0; j<imw; ++j ) {
-      Magick::ColorGray c = img.pixelColor( i, j );
-      fdata [ flat_index ] = (vl_sift_pix) c.shade();
+  size_t flat_index = 0;
+  for( unsigned int i=0; i<img.rows(); ++i ) {
+    for( unsigned int j=0; j<img.columns(); ++j ) {
+      Magick::ColorGray c = img.pixelColor( j, i );
+      fdata[flat_index] = c.shade();
       ++flat_index;
     }
   }
@@ -118,7 +112,7 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
   // create filter
   VlSiftFilt *filt = 0 ;
 
-  filt = vl_sift_new (imw, imh, O, S, o_min) ;
+  filt = vl_sift_new (img.columns(), img.rows(), O, S, o_min) ;
 
   if (peak_thresh >= 0) vl_sift_set_peak_thresh (filt, peak_thresh) ;
   if (edge_thresh >= 0) vl_sift_set_edge_thresh (filt, edge_thresh) ;
@@ -127,21 +121,8 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
   if (window_size >= 0) vl_sift_set_window_size (filt, window_size) ;
 
   if (!filt) {
-    snprintf (err_msg, sizeof(err_msg),
-              "Could not create SIFT filter.") ;
-    err = VL_ERR_ALLOC ;
+    cout << "\nCould not create SIFT filter." << flush;
     goto done ;
-  }
-
-  if(verbose) {
-    cout << "\nvl_sift: filter settings:" << flush;
-    cout << "\nvl_sift:   octaves      (O)      = " << vl_sift_get_noctaves(filt);
-    cout << "\nvl_sift:   levels       (S)      = " << vl_sift_get_nlevels(filt);
-    cout << "\nvl_sift:   first octave (o_min)  = " << vl_sift_get_octave_first(filt);
-    cout << "\nvl_sift:   edge thresh           = " << vl_sift_get_edge_thresh(filt);
-    cout << "\nvl_sift:   peak thresh           = " << vl_sift_get_peak_thresh(filt);
-    cout << "\nvl_sift:   norm thresh           = " << vl_sift_get_norm_thresh(filt);
-    cout << "\nvl_sift:   window size           = " << vl_sift_get_window_size(filt);
   }
 
   /* ...............................................................
@@ -152,10 +133,6 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
   descriptor_list.clear();
   keypoint_list.clear();
   while (1) {
-    if(verbose) {
-      cout << "\n\n**** processing octave " << vl_sift_get_octave_index (filt) << flush;
-    }
-
     VlSiftKeypoint const *keys = 0 ;
     int                   nkeys ;
 
@@ -172,28 +149,11 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
       break ;
     }
 
-    if(verbose) {
-      cout << "\n\tvl_sift: GSS octave " << vl_sift_get_octave_index (filt) << " computed" << flush;
-    }
-
     /* run detector ............................................. */
     vl_sift_detect(filt) ;
     keys  = vl_sift_get_keypoints(filt) ;
     nkeys = vl_sift_get_nkeypoints(filt) ;
     i     = 0 ;
-
-    if(verbose) {
-      cout << "\n\tvl_sift: detected " << nkeys << " (unoriented) keypoints\n" << flush;
-    }
-
-    for (i=0; i < nkeys ; ++i) {
-      VlSiftKeypoint const *k ;
-      k = keys+i;
-      //printf ("keypoint[%d] : (x,y,sigma)=(%.2f,%.2f,%.5f)\n", i, k->x, k->y, k->sigma) ;
-      //printf ("%.2f,%.2f\n", k->x, k->y) ;
-      //printf ("%d,%d\n", (int) k->x, (int) k->y) ;
-    }
-    i = 0;
 
     /* for each keypoint ........................................ */
     for (; i < nkeys ; ++i) {
@@ -207,7 +167,6 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
       VlSiftKeypoint key_data = *k;
 
       nangles = vl_sift_calc_keypoint_orientations(filt, angles, k) ;
-      //cout << "\nnangles=" << nangles << ", k->s=" << (k->s) << ", k->o=" << (k->o) << ", vl_sift_get_octave_index (filt)=" << vl_sift_get_octave_index (filt) << endl<<flush;
 
       vl_uint8 d[128]; // added by @adutta
       /* for each orientation ................................... */
@@ -229,15 +188,8 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
         ++ndescriptors;
 
         keypoint_list.push_back(key_data); // add corresponding keypoint
-
-        if(verbose) {
-          printf ("  - k(%.2f,%.2f) angle[%d]=%.2f | descriptor=[%d,%d,%d,%d,%d, ..., %d,%d,%d,%d]\n",k->x, k->y, (int)q, angles[q], d[0], d[1], d[2], d[3], d[4], d[124], d[125], d[126], d[127]) ;
-        }
       }
     }
-  }
-  if(verbose) {
-    cout << "\n\tvl_sift: found " << ndescriptors << " keypoints" << flush;
   }
 
   done :
@@ -251,27 +203,6 @@ void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint
     if (fdata) {
       free (fdata) ;
       fdata = 0 ;
-    }
-
-    /* release image data */
-    if (data) {
-      free (data) ;
-      data = 0 ;
-    }
-
-    /* close files */
-    if (in) {
-      fclose (in) ;
-      in = 0 ;
-    }
-
-    /* if bad print error message */
-    if (err) {
-      fprintf
-        (stderr,
-         "sift: err: %s (%d)\n",
-         err_msg,
-         err) ;
     }
 }
 
@@ -331,26 +262,26 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
   im2.type(Magick::TrueColorType);
 
   Magick::Image im1_g = im1;
-  im1_g.magick("pgm");
+  //im1_g.magick("pgm");
   im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
 
   Magick::Image im2_g = im2;
-  im2_g.magick("pgm");
+  //im2_g.magick("pgm");
 
   vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
   //compute_sift_features(filename1.string().c_str(), keypoint_list1, descriptor_list1, true);
   compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
-  cout << "\nFilename = " << im1_fn << flush;
-  cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
-  cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
+  //cout << "\nFilename = " << im1_fn << flush;
+  //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
+  //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
 
   //compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2, true);
   compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
-  cout << "\nFilename = " << im2_fn << flush;
-  cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
-  cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
+  //cout << "\nFilename = " << im2_fn << flush;
+  //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
+  //cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
 
   // use Lowe's 2nd nn test to find putative matches
   float threshold = 1.5f;
@@ -366,7 +297,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
   size_t n_match = putative_matches.size();
   fp_match_count = n_match;
-  cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
+  //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
 
   if( n_match < 9 ) {
     //cout << "\nInsufficiet number of putative matches! Exiting." << flush;
@@ -389,7 +320,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     im2_match_kp(2, i) = 1.0;
   }
 
-  cout << "\nNormalizing keypoints" << flush;
+  //cout << "\nNormalizing keypoints" << flush;
   Matrix<double,3,3> im1_match_kp_tform, im2_match_kp_tform;
   get_norm_matrix(im1_match_kp, im1_match_kp_tform);
   get_norm_matrix(im2_match_kp, im2_match_kp_tform);
@@ -654,11 +585,9 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   im2.type(Magick::TrueColorType);
 
   Magick::Image im1_g = im1;
-  im1_g.magick("pgm");
   im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
   
   Magick::Image im2_g = im2;
-  im2_g.magick("pgm");
   
   vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;

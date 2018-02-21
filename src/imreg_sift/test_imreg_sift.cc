@@ -39,13 +39,13 @@ void test_diff_image() {
 void test_projective_reg() {
   string compare_id = "test";
 
-  boost::filesystem::path upload_dir_("/home/tlm/exp/imcomp/images/traherne_book/set4/");
-  boost::filesystem::path result_dir_("/home/tlm/exp/imcomp/images/traherne_book/set4/result_proj/");
+  boost::filesystem::path upload_dir_("/home/tlm/exp/imcomp/images/traherne_book/set3/");
+  boost::filesystem::path result_dir_("/home/tlm/exp/imcomp/images/traherne_book/set3/result_proj/");
 
   //unsigned int file1_region[4] = {0, 0, 741, 1023}; // x0, y0, x1, y1 : set 1
   //unsigned int file1_region[4] = {0, 0, 551, 482}; // x0, y0, x1, y1 : set 2
-  //unsigned int file1_region[4] = {0, 0, 347, 239}; // x0, y0, x1, y1 : set 3
-  unsigned int file1_region[4] = {0, 0, 577, 1023}; // x0, y0, x1, y1 : set 3
+  unsigned int file1_region[4] = {0, 0, 347, 239}; // x0, y0, x1, y1 : set 3
+  //unsigned int file1_region[4] = {0, 0, 577, 1023}; // x0, y0, x1, y1 : set 3
 
 
 /*
