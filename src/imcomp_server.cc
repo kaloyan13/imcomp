@@ -17,7 +17,8 @@
 #include "imcomp/imcomp_request_handler.h"
 
 int main(int argc, char** argv) {
-  Magick::InitializeMagick(*argv);
+  Magick::InitializeMagick(argv[0]);
+  std::cout << "\nMagick::InitializeMagick(*argv) : argv[0] = [" << argv[0] << std::endl;
 
   std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."

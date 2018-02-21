@@ -68,7 +68,7 @@ double imreg_sift::clamp(double v, double min, double max) {
   }
 }
 
-void imreg_sift::compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
+void imreg_sift::compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
   vl_bool  err    = VL_ERR_OK ;
   char     err_msg [1024] ;
 
@@ -95,71 +95,30 @@ void imreg_sift::compute_sift_features(const string filename, vector<VlSiftKeypo
   double           *ikeys = 0 ;
   int              nikeys = 0, ikeys_size = 0 ;
 
+  // move image data to fdata for processing by vl_sift
+  // @todo: optimize and avoid this overhead
+  vl_size imw = img.columns();
+  vl_size imh = img.rows();
+    
+  fdata = (vl_sift_pix*) malloc( imw * imh * sizeof(vl_sift_pix) ) ;
+  if( fdata == NULL ) {
+    cout << "\nfailed to allocated memory for vl_sift_pix array" << flush;
+    goto done;
+  }
+  
+  vl_size flat_index = 0;
+  for( unsigned int i=0; i<imh; ++i ) {
+    for( unsigned int j=0; j<imw; ++j ) {
+      Magick::ColorGray c = img.pixelColor( i, j );
+      fdata [ flat_index ] = (vl_sift_pix) c.shade();
+      ++flat_index;
+    }
+  }
+
   // create filter
   VlSiftFilt *filt = 0 ;
 
-  // load pgm image
-  const char* name = filename.c_str();
-  in = fopen (filename.c_str(), "rb") ;
-  if (!in) {
-    err = VL_ERR_IO ;
-    snprintf(err_msg, sizeof(err_msg),
-             "Could not open '%s' for reading.", name) ;
-    goto done ;
-  }
-
-  err = vl_pgm_extract_head (in, &pim) ;
-  if (err) {
-    switch (vl_get_last_error()) {
-    case  VL_ERR_PGM_IO :
-      snprintf(err_msg, sizeof(err_msg),
-               "Cannot read from '%s'.", name) ;
-      err = VL_ERR_IO ;
-      break ;
-
-    case VL_ERR_PGM_INV_HEAD :
-      snprintf(err_msg, sizeof(err_msg),
-               "'%s' contains a malformed PGM header.", name) ;
-      err = VL_ERR_IO ;
-      goto done ;
-    }
-  }
-
-  /* allocate buffer */
-  data  = (vl_uint8*) malloc( vl_pgm_get_npixels(&pim) * vl_pgm_get_bpp(&pim) * sizeof(vl_uint8) ) ;
-  fdata = (vl_sift_pix*) malloc( vl_pgm_get_npixels(&pim) * vl_pgm_get_bpp(&pim) * sizeof(vl_sift_pix) ) ;
-
-  if (!data || !fdata) {
-    err = VL_ERR_ALLOC ;
-    snprintf(err_msg, sizeof(err_msg),
-             "Could not allocate enough memory.") ;
-    goto done ;
-  }
-
-  /* read PGM body */
-  err  = vl_pgm_extract_data (in, &pim, data) ;
-
-  if (err) {
-    snprintf(err_msg, sizeof(err_msg), "PGM body malformed.") ;
-    err = VL_ERR_IO ;
-    goto done ;
-  }
-
-  /* convert data type */
-  for (q = 0 ; q < (unsigned) (pim.width * pim.height) ; ++q) {
-    fdata [q] = data [q] ;
-  }
-
-  if(verbose) {
-    cout << "\nimage dimension = " << pim.width << " x " << pim.height << flush;
-    cout << "\nimage data = " << flush;
-    for (q = 0 ; q < 10 ; ++q) {
-      fdata [q] = data [q] ;
-      cout << (int) data[q] << ", " << flush;
-    }
-  }
-
-  filt = vl_sift_new (pim.width, pim.height, O, S, o_min) ;
+  filt = vl_sift_new (imw, imh, O, S, o_min) ;
 
   if (peak_thresh >= 0) vl_sift_set_peak_thresh (filt, peak_thresh) ;
   if (edge_thresh >= 0) vl_sift_set_edge_thresh (filt, edge_thresh) ;
@@ -364,7 +323,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                                 const char diff_image_fn[],
                                 const char overlap_image_fn[], 
                                 bool& success) {
-
   Magick::Image im1; im1.read( im1_fn );
   Magick::Image im2; im2.read( im2_fn );
 
@@ -372,37 +330,27 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
   im1.type(Magick::TrueColorType);
   im2.type(Magick::TrueColorType);
 
-  // temp image file where transformed image is written in each iteration
-  boost::filesystem::path tmp_dir = boost::filesystem::temp_directory_path() / "imcomp";
-  tmp_dir = tmp_dir / "tmp";
-  if( !boost::filesystem::exists(tmp_dir) ) {
-    boost::filesystem::create_directories(tmp_dir);
-  }
-
-  boost::filesystem::path filename1 = tmp_dir / boost::filesystem::unique_path("file1_grayscale_%%%%-%%%%-%%%%-%%%%.pgm");
-  boost::filesystem::path filename2 = tmp_dir / boost::filesystem::unique_path("file2_grayscale_%%%%-%%%%-%%%%-%%%%.pgm");
   Magick::Image im1_g = im1;
   im1_g.magick("pgm");
   im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
-  im1_g.write(filename1.string().c_str());
+
   Magick::Image im2_g = im2;
   im2_g.magick("pgm");
-  im2_g.write(filename2.string().c_str());
 
   vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
-  compute_sift_features(filename1.string().c_str(), keypoint_list1, descriptor_list1);
-  //cout << "\nFilename = " << filename1 << flush;
-  //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
-  //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
-  boost::filesystem::remove(filename1);
+  //compute_sift_features(filename1.string().c_str(), keypoint_list1, descriptor_list1, true);
+  compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
+  cout << "\nFilename = " << im1_fn << flush;
+  cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
+  cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
 
-  compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2);
-  //cout << "\nFilename = " << filename2 << flush;
-  //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
-  //cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
-  boost::filesystem::remove(filename2);
+  //compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2, true);
+  compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
+  cout << "\nFilename = " << im2_fn << flush;
+  cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
+  cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
 
   // use Lowe's 2nd nn test to find putative matches
   float threshold = 1.5f;
@@ -418,7 +366,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
   size_t n_match = putative_matches.size();
   fp_match_count = n_match;
-  //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
+  cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
 
   if( n_match < 9 ) {
     //cout << "\nInsufficiet number of putative matches! Exiting." << flush;
@@ -441,7 +389,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     im2_match_kp(2, i) = 1.0;
   }
 
-  //cout << "\nNormalizing keypoints" << flush;
+  cout << "\nNormalizing keypoints" << flush;
   Matrix<double,3,3> im1_match_kp_tform, im2_match_kp_tform;
   get_norm_matrix(im1_match_kp, im1_match_kp_tform);
   get_norm_matrix(im2_match_kp, im2_match_kp_tform);
@@ -705,39 +653,27 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   im1.type(Magick::TrueColorType);
   im2.type(Magick::TrueColorType);
 
-  // temp image file where transformed image is written in each iteration
-  boost::filesystem::path tmp_dir = boost::filesystem::temp_directory_path() / "imcomp";
-  tmp_dir = tmp_dir / "tmp";
-  if( !boost::filesystem::exists(tmp_dir) ) {
-    boost::filesystem::create_directories(tmp_dir);
-  }
-
-  boost::filesystem::path filename1 = tmp_dir / boost::filesystem::unique_path("file1_grayscale_%%%%-%%%%-%%%%-%%%%.pgm");
-  boost::filesystem::path filename2 = tmp_dir / boost::filesystem::unique_path("file2_grayscale_%%%%-%%%%-%%%%-%%%%.pgm");
   Magick::Image im1_g = im1;
   im1_g.magick("pgm");
   im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
-  im1_g.write(filename1.string().c_str());
+  
   Magick::Image im2_g = im2;
   im2_g.magick("pgm");
-  im2_g.write(filename2.string().c_str());
-
+  
   vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
   vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
   //cout << "\nComputing SIFT features for im1 ..." << flush;
-  compute_sift_features(filename1.string().c_str(), keypoint_list1, descriptor_list1);
+  compute_sift_features(im1_g, keypoint_list1, descriptor_list1);
   //cout << "\nFilename = " << filename1 << flush;
   //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
   //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
-  boost::filesystem::remove(filename1);
 
   //cout << "\nComputing SIFT features for im2 ..." << flush;
-  compute_sift_features(filename2.string().c_str(), keypoint_list2, descriptor_list2);
+  compute_sift_features(im2_g, keypoint_list2, descriptor_list2);
   //cout << "\nFilename = " << filename2 << flush;
   //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
   //cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
-  boost::filesystem::remove(filename2);
 
   // use Lowe's 2nd nn test to find putative matches
   float threshold = 1.5f;

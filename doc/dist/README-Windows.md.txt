@@ -1,11 +1,11 @@
 # Compiling IMCOMP in Windows
 
 ## Compile Dependencies
-* install git for windows from https://git-scm.com/download/win
+ * references
+   - http://cpprocks.com/using-cmake-to-build-a-cross-platform-project-with-a-boost-dependency/
+ * install git for windows from https://git-scm.com/download/win
+ * git clone git@gitlab.com:vgg/imcomp.git
 
-* git clone git@gitlab.com:vgg/imcomp.git
-
-* Install dependencies
  * install boost library
 	- https://sourceforge.net/projects/boost/files/boost-binaries/1.65.1/boost_1_65_1-msvc-14.1-64.exe/download
   - Update imcomp/CMakeLists.txt file to point to boost install location
@@ -41,6 +41,18 @@ msbuild ALL_BUILD.vcxproj -m:8 -v:minimal -p:PreferredToolArchitecture=x64 /nolo
 
 ## Executing IMCOMP
 ```
+set MAGICK_HOME="C:\Users\tlm\dev\imcomp\bin\Release"
+set MAGICK_CONFIGURE_PATH="C:\Users\tlm\dev\imcomp\bin\Release"
+set MAGICK_DEBUG=True
+set MAGICK_CODER_MODULE_PATH="C:\Users\tlm\dev\imcomp\bin\Release"
+set MAGICK_CODER_FILTER_PATH="C:\Users\tlm\dev\imcomp\bin\Release"
+
+set MAGICK_HOME="C:\Users\tlm\deps\imagemagick\"
+set MAGICK_CONFIGURE_PATH="C:\Users\tlm\deps\imagemagick\"
+set MAGICK_DEBUG=All
+set MAGICK_CODER_MODULE_PATH="C:\Users\tlm\deps\imagemagick\modules\coders"
+set MAGICK_CODER_FILTER_PATH="C:\Users\tlm\deps\imagemagick\modules\filters"
+
 "C:\Users\tlm\dev\imcomp\bin\Release\imcomp_server.exe" 0.0.0.0 9973 4 "C:\Users\tlm\dev\imcomp\asset\imcomp" "C:\Users\tlm\tmp\imcomp"
 ```
 
@@ -114,3 +126,7 @@ C:\Users\tlm\deps\lib\lib\vl.dll : fatal error LNK1107: invalid or corrupt file:
 ## Packaging Application
  * https://docs.microsoft.com/en-us/windows/uwp/porting/desktop-to-uwp-root
  * https://docs.microsoft.com/en-gb/cpp/windows/windows-desktop-applications-cpp
+ * https://docs.microsoft.com/en-gb/cpp/ide/understanding-the-dependencies-of-a-visual-cpp-application
+ * ImageMagick
+   - https://www.imagemagick.org/discourse-server/viewtopic.php?t=26856
+   - http://www.imagemagick.org/script/resources.php

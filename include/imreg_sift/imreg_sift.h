@@ -64,7 +64,8 @@ class imreg_sift {
   static void dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H);
 
   // use vlfeat to compute SIFT keypoint and descriptors
-  static void compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false);
+  //static void compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false);
+  static void compute_sift_features(Magick::Image& img, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false);
 
   // get putative matches based on Lowe's algorithm
   static void get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1, vector< vector<vl_uint8> >& descriptor_list2, std::vector< std::pair<uint32_t, uint32_t> > &putative_matches, float threshold);
