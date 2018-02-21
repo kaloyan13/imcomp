@@ -1,5 +1,3 @@
-include_directories( imreg_sift )
-
 add_subdirectory( http_server )
 add_subdirectory( imcomp )
 add_subdirectory( util )

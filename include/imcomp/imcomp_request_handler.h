@@ -26,10 +26,9 @@
 
 #include "http_server/http_request.h"
 #include "http_server/http_response.h"
-#include "imcomp/imcomp_asset.h"
 
 #include "util/strutil.h"
-#include "imreg_sift.h"
+#include "imreg_sift/imreg_sift.h"
 
 using namespace std;
 using namespace Eigen;

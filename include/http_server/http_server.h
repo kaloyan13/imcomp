@@ -18,7 +18,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/filesystem.hpp>
+//#include <boost/filesystem.hpp>
 
 #include "http_server/connection.h"
 #include "http_server/http_request_handler.h"

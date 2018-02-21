@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "imreg_sift.h"
+#include "imreg_sift/imreg_sift.h"
 
 void test_diff_image() {
   string compare_id = "test_vl_register_images";

@@ -22,10 +22,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set (IMCOMP_SERVER_NAME "imcomp server")
 set (IMCOMP_SERVER_VERSION_MAJOR "2")
 set (IMCOMP_SERVER_VERSION_MINOR "0")
-set (IMCOMP_SERVER_VERSION_PATCH "2")
+set (IMCOMP_SERVER_VERSION_PATCH "3")
 set (IMCOMP_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (IMCOMP_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
-set (IMCOMP_SERVER_FIRST_RELEASE "Nov. 2017")
+set (IMCOMP_SERVER_FIRST_RELEASE_DATE "Nov. 2017")
+set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "26 Feb. 2018")
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/imcomp_server_config.h.in" 
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_INCLUDE_DIR}/imcomp_server_config.h"
@@ -38,23 +39,27 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("*** Debug Mode: test code will be compiled and built. ***")
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
-## Boost
-if (NOT DEFINED     BOOST_ROOT        AND
-    NOT DEFINED ENV{BOOST_ROOT}       AND
-    NOT DEFINED     BOOST_INCLUDEDIR  AND
-    NOT DEFINED ENV{BOOST_INCLUDEDIR} AND
-    NOT DEFINED     BOOST_LIBRARYDIR  AND
-    NOT DEFINED ENV{BOOST_LIBRARYDIR})
-    if (APPLE)
-        set(BOOST_ROOT "@todo")
-    elseif (WIN32)
-        set(BOOST_ROOT "C:/Users/tlm/deps/boost_1_65_1")
-		set(BOOST_INCLUDEDIR "C:/Users/tlm/deps/boost_1_65_1")
-        set(BOOST_LIBRARYDIR "C:/Users/tlm/deps/boost_1_65_1/lib64-msvc-14.1")
-    endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+	set(CMAKE_CXX_FLAGS "-fpermissive")
+endif()
+  
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	ADD_DEFINITIONS(-D_WIN32_WINDOWS)
 endif()
 
-find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
+
+## Boost
+find_package(Boost 1.65.0 COMPONENTS filesystem system thread atomic REQUIRED)
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	set( Boost_USE_MULTITHREADED ON )
+  set( Boost_USE_DEBUG_RUNTIME OFF )
+  set( Boost_USE_STATIC_RUNTIME OFF )
+  set( Boost_USE_STATIC_LIBS OFF )
+  set( BOOST_ALL_DYN_LINK ON)
+  set( Boost_DEBUG OFF )
+  add_definitions(-DBOOST_ALL_NO_LIB)
+  add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+endif()
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
 
@@ -76,7 +81,7 @@ ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
 ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
 find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
 
-if (Linux)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   # @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
   # and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
   set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so") 

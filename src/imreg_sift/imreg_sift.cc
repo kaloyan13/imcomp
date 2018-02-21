@@ -9,7 +9,7 @@ some code borrowed from: vlfeat-0.9.20/src/sift.c
 
 */
 
-#include "imreg_sift.h"
+#include "imreg_sift/imreg_sift.h"
 
 // normalize input points such that their centroid is the coordinate origin (0, 0)
 // and their average distance from the origin is sqrt(2).

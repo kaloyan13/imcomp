@@ -1,9 +1,4 @@
 set(BUILD_SHARED_LIBS "ON" )
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-	set(CMAKE_CXX_FLAGS "--std=c++11 -fpermissive")
-else()
-	ADD_DEFINITIONS(-D_WIN32_WINDOWS)
-endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

@@ -20,10 +20,6 @@ void imcomp_request_handler::init(const boost::filesystem::path upload_dir,
   cout << "\nimcomp_request_handler::init() : upload_dir=" << upload_dir_.string() << flush;
   cout << "\nimcomp_request_handler::init() : result_dir=" << result_dir_.string() << flush;
   cout << "\nimcomp_request_handler::init() : asset_dir=" << asset_dir_.string() << flush;
-
-  for( auto it=imcomp::asset::files_.begin(); it!=imcomp::asset::files_.end(); it++ ) {
-    cout << "\n\t" << it->first << " : " << it->second.length() << flush;
-  }
 }
 
 void imcomp_request_handler::handle_http_request(const http_request& request, http_response& response) {

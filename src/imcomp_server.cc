@@ -16,18 +16,6 @@
 #include "http_server/http_server.h"
 #include "imcomp/imcomp_request_handler.h"
 
-// create dir if not exists
-bool mkdir_p(boost::filesystem::path p, bool verbose=false) {
-  if ( !boost::filesystem::exists(p) ) {
-    boost::filesystem::create_directories(p);
-    if ( verbose ) {
-      std::cout << "\nCreated directory : " << p.string() << std::flush;
-    }
-    return true;
-  }
-  return false;
-}
-
 int main(int argc, char** argv) {
   Magick::InitializeMagick(*argv);
 
@@ -39,7 +27,7 @@ int main(int argc, char** argv) {
   std::cout << "\nAuthor: "
             << IMCOMP_SERVER_AUTHOR_NAME << "<"
             << IMCOMP_SERVER_AUTHOR_EMAIL << ">, "
-            << IMCOMP_SERVER_FIRST_RELEASE << flush;
+            << IMCOMP_SERVER_CURRENT_RELEASE_DATE << flush;
 
   if ( argc != 6 && argc != 7 ) {
     std::cout << "\nUsage: " << argv[0] << " hostname port thread_count asset_dir [application_data_dir | [upload_dir result_dir] ]\n" << std::flush;
@@ -68,8 +56,12 @@ int main(int argc, char** argv) {
     result_dir = boost::filesystem::path(argv[6]);
   }
 
-  mkdir_p(upload_dir);
-  mkdir_p(result_dir);
+  if ( !boost::filesystem::exists(upload_dir) ) {
+    boost::filesystem::create_directories(upload_dir);
+  }
+  if ( !boost::filesystem::exists(result_dir) ) {
+    boost::filesystem::create_directories(result_dir);
+  }
 
   imcomp_request_handler::instance()->init(upload_dir, result_dir, asset_dir);
 
