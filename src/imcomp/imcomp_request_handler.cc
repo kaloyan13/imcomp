@@ -42,7 +42,21 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
 
     return;
   }
+  
+  if ( (request.uri_ == "/imcomp/traherne/" || request.uri_ == "/imcomp/traherne") && request.method_ == "GET") {
+    // forward to imcomp/traherne/index.html
+    response.set_status(303);
+    response.set_field("Location", "/imcomp/traherne/index.html");
+    return;
+  }
 
+  if ( (request.uri_ == "/imcomp/" || request.uri_ == "/imcomp") && request.method_ == "GET") {
+    // forward to imcomp/index.html
+    response.set_status(303);
+    response.set_field("Location", "/imcomp/index.html");
+    return;
+  }
+  
   if ( util::begins_with(request.uri_, "/imcomp/") && request.method_ == "GET") {
     // serve application assets (css, html, js, etc)
     string prefix = "/imcomp/";
@@ -179,38 +193,23 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
 }
 
 bool imcomp_request_handler::save_user_upload(const http_request& request, string& fid) {
-  cout << "\nA" << flush;
-
   try {
-    cout << "\nB" << flush;
     const std::string img_data = request.payload_.str();
-    cout << "\nimg_data = {" << img_data.substr(0,10) << "}" << flush;
-
     Magick::Blob blob(img_data.c_str(), img_data.length());
-    cout << "\nD" << flush;
 
     if ( blob.length() ) {
-      cout << "\nE" << flush;
       Magick::Image im(blob);
-      
-      cout << "\nF" << flush;
 
       // to ensure thread safety, we initialize it every time
       boost::uuids::random_generator uuid_generator;
       boost::uuids::uuid request_uuid = uuid_generator();
       fid = boost::uuids::to_string(request_uuid);
       
-      cout << "\nF1" << flush;
       boost::filesystem::path fn = upload_dir_ / ( fid + ".jpg");
-      cout << "\nF2" << flush;
-      //im.magick("JPEG");
-      cout << "\nF3" << flush;
+      im.magick("JPEG");
       im.colorSpace(Magick::sRGBColorspace);
-      cout << "\nG" << flush;
       im.write(fn.string());
-      cout << "\nH" << flush;
       std::clog << " : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
-      cout << "\nfid = " << fid << flush;
       return true;
     } else {
       return false;

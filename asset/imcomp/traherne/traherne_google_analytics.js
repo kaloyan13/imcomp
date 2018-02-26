@@ -4,5 +4,5 @@
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
       ga('create', 'UA-20555581-3', 'auto');
-      ga('set', 'page', '/imcomp/traherne-2.0.x');
+      ga('set', 'page', '/imcomp/traherne/traherne-2.0.x');
       ga('send', 'pageview');
