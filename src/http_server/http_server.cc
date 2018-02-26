@@ -2,15 +2,24 @@
 
 http_server::http_server(const std::string& address,
                          const std::string& port,
-                         const std::size_t thread_pool_size) : thread_pool_size_( thread_pool_size ),
-                                                                    acceptor_( io_service_ ),
-                                                                    signals_(io_service_)
+                         const std::size_t thread_pool_size) :  thread_pool_size_( thread_pool_size ),
+                                                                io_service_(),
+                                                                acceptor_( io_service_ ),
+                                                                signals_(io_service_)
 {
   signals_.add(SIGINT);
   signals_.add(SIGTERM);
+  signals_.add(SIGSEGV);
+  signals_.add(SIGILL);
+  signals_.add(SIGFPE);
+  signals_.add(SIGABRT);
+#if defined(SIGBREAK)
+  signals_.add(SIGBREAK);
+#endif
 #if defined(SIGQUIT)
   signals_.add(SIGQUIT);
-#endif // defined(SIGQUIT)
+#endif
+
   signals_.async_wait(boost::bind(&http_server::stop, this));
 
   boost::asio::ip::tcp::resolver resolver( io_service_ );
@@ -55,5 +64,7 @@ void http_server::handle_connection(const boost::system::error_code& e) {
 }
 
 void http_server::stop() {
+  std::cout << "\nStopping http server ..." << std::flush;
   io_service_.stop();
+  std::cout << " [done]" << std::flush;
 }

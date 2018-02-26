@@ -166,3 +166,10 @@ C:\Users\tlm\deps\lib\lib\vl.dll : fatal error LNK1107: invalid or corrupt file:
  * ImageMagick
    - https://www.imagemagick.org/discourse-server/viewtopic.php?t=26856
    - http://www.imagemagick.org/script/resources.php
+   
+```
+"c:\Program Files\CMake\bin\cpack.exe"
+"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DEIGEN_DIR="C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb\build" -DVLFEAT_LIB="C:\Users\tlm\deps\win_x64\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\win_x64\lib\include" -DBOOST_ROOT="C:\Users\tlm\deps\win_x64\boost\boost_1_65_1"
+msbuild PACKAGE.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
+
+```
