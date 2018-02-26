@@ -179,23 +179,38 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
 }
 
 bool imcomp_request_handler::save_user_upload(const http_request& request, string& fid) {
+  cout << "\nA" << flush;
+
   try {
+    cout << "\nB" << flush;
     const std::string img_data = request.payload_.str();
+    cout << "\nimg_data = {" << img_data.substr(0,10) << "}" << flush;
+
     Magick::Blob blob(img_data.c_str(), img_data.length());
+    cout << "\nD" << flush;
 
     if ( blob.length() ) {
+      cout << "\nE" << flush;
       Magick::Image im(blob);
+      
+      cout << "\nF" << flush;
 
       // to ensure thread safety, we initialize it every time
       boost::uuids::random_generator uuid_generator;
       boost::uuids::uuid request_uuid = uuid_generator();
       fid = boost::uuids::to_string(request_uuid);
-
+      
+      cout << "\nF1" << flush;
       boost::filesystem::path fn = upload_dir_ / ( fid + ".jpg");
-      im.magick("JPEG");
+      cout << "\nF2" << flush;
+      //im.magick("JPEG");
+      cout << "\nF3" << flush;
       im.colorSpace(Magick::sRGBColorspace);
+      cout << "\nG" << flush;
       im.write(fn.string());
+      cout << "\nH" << flush;
       std::clog << " : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
+      cout << "\nfid = " << fid << flush;
       return true;
     } else {
       return false;

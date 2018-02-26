@@ -12,7 +12,7 @@
 
 <body>
 <div id="page">
-  <div id="horizontal_line" class="horizontal_ref_line display-none"></div>
+  <div id="horizontal_line" class="horizontal_ref_line display-none" title="Click on the line to hide this reference line"></div>
   <div id="top_panel">
     <!--
       <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -44,7 +44,7 @@
 <!--      <div class="row allcaps"><span style="color: #bc2b18">T</span>raherne</div>-->
       <div class="row allcaps">&nbsp;&nbsp;Digital</div>
       <div class="row allcaps">&nbsp;&nbsp;Collator</div>
-      <div class="row small lh2">ver. 2.0.1 | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/UserGuide.html">help</a></div>
+      <div class="row small lh2">ver. 2.0.3 | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/UserGuide.html">help</a></div>
     </div>
 
     <!--
@@ -108,19 +108,22 @@
           <option value="2.0">Zoom:   2X (magnify)</option>
           <option value="3.0">Zoom:   3X (magnify)</option>
           <option value="4.0">Zoom:   4X (magnify)</option>
+          <option value="8.0">Zoom:   8X (magnify)</option>
         </select>
       </span>
 
     </div>
 
     <div class="control_block">
-      <span class="title">Advanced Settings</span>
+      <span class="title">Image Characteristics</span>
 
-      <span class="row advanced_setting">
-        <select name="algname" id="algname">
-          <option value="ransac_dlt">RANSAC + DLT (Default)</option>
-          <option value="robust_ransac_tps">Robust RANSAC + TPS</option>
-        </select>
+      <span class="row">
+        <input name="algorithm_choice" value="ransac_dlt" type="radio" checked="checked">
+        <label for="ransac_dlt">Flat book pages</label>
+      </span>
+      <span class="row">
+        <input name="algorithm_choice" value="robust_ransac_tps" type="radio">
+        <label for="robust_ransac_tps">Curled book pages</label>
       </span>
     </div>
 
@@ -129,7 +132,6 @@
   <div id="message_panel" title="Shows help messages, program log, etc"></div>
 
   <div id="middle_panel">
-
     <!-- Content name, description and status -->
     <div id="content_label" class="row">
       <div class="img_label cell">
@@ -219,9 +221,7 @@
           </div>
         </div>
       </div>
-      <div id="ref_line_container" class="vertical_img_separator_panel cell">
-        <canvas id="ref_line_canvas" title="Click to show or hide a horizontal reference line"></canvas>
-      </div>
+      <div id="ref_line_container" class="vertical_img_separator_panel cell" title="Click to show or hide a horizontal reference line">&nbsp;</div>
       <div id="right_content" class="cell">
         <div id="right_content_container">
           <!-- Note:

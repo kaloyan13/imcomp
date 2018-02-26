@@ -213,11 +213,8 @@ body {
 
 /* horizontal reference line */
 #ref_line_container {
-  background-color: #e6e6e6;
   padding: 0 !important;
   margin: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
 }
 
 #ref_line_container:hover {
@@ -226,12 +223,15 @@ body {
 
 .horizontal_ref_line {
   z-index: 1000;
-  content: " ";
-  border-top: 1px solid white;
-  border-bottom: 1px solid black;
+  padding: 0;
+  border-top: 2px solid white;
+  border-bottom: 2px solid black;
   position: fixed;
   width: 99%;
-  height: 2px;
+  height: 4px;
+}
+.horizontal_ref_line:hover {
+  cursor: pointer;
 }
 
 /* message panel */
@@ -256,8 +256,4 @@ body {
 /* misc. */
 .nobreak {
   white-space: nowrap;
-}
-
-.advanced_setting {
-  display: none;
 }

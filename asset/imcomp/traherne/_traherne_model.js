@@ -275,8 +275,8 @@ _traherne_model.prototype.upload_file = function(type, findex) {
                 this.set_upload_status(type, findex, 'OK', msg);
                 ok_callback(response.fid);
               } else {
-                console.log('Error uploading image! [server response: ' + response_str + ']');
-                var msg = 'Error uploading image! [server response: ' + response_str + ']';
+                console.log('Error uploading image!');
+                var msg = 'Error uploading image!';
                 this.set_upload_status(type, findex, 'ERR', msg);
                 err_callback("_ERROR_");
                 console.log(msg);
@@ -369,8 +369,8 @@ _traherne_model.prototype.compare_img_pair = function(c) {
       }
     }
     args.push('region=' + c.region1.join(','));
-    var algname = document.getElementById('algname');
-    args.push('algname=' + algname.options[ algname.selectedIndex ].value);
+    var algname = document.querySelector('input[name="algorithm_choice"]:checked').value;
+    args.push('algname=' + algname);
 
     var cr = new XMLHttpRequest();
     cr.addEventListener('timeout', function(e) {
@@ -392,9 +392,7 @@ _traherne_model.prototype.compare_img_pair = function(c) {
     cr.addEventListener('load', function() {
       var response_str = cr.responseText;
       try {
-        console.log(response_str);
         c.response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
-        console.log(c.response);
         if( c.response.status === 'OK' ) {
           var msg = 'finished comparison';
           this.set_compare_status('OK', msg);

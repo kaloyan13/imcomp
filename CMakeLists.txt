@@ -34,6 +34,11 @@ configure_file (
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set( BUILD_SHARED_LIBS "OFF" )
+IF(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ELSE(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+ENDIF(WIN32)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("*** Debug Mode: test code will be compiled and built. ***")
@@ -76,19 +81,30 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 #		set(ImageMagick_INCLUDE_DIRS "C:/Program Files/ImageMagick-6.9.9-Q8/include")
 #    endif()
 #endif()
-
 ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
 ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
-find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  #set(ImageMagick_INCLUDE_DIRS "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick;C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick\\Magick++\\lib;C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick\\Magick++\\lib\\Magick++")
+  #set(ImageMagick_LIBRARY_DIRS "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\VisualMagick\\lib")
+  #set(ImageMagick_LIBRARIES "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\VisualMagick\\lib\\CORE_DB_Magick++_.lib")
+  #include_directories( ${ImageMagick_INCLUDE_DIRS} )
+  #link_directories( ${ImageMagick_LIBRARY_DIRS} )
+  
+  find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
+  include_directories( ${ImageMagick_INCLUDE_DIRS} )
+endif()
+  
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   # @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
   # and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
   set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so") 
+  include_directories( ${ImageMagick_INCLUDE_DIRS} )
 endif()
-include_directories( ${ImageMagick_INCLUDE_DIRS} )
 
 # Eigen
+# requires EIGEN_DIR to be set to the location where Eigen3 is built using cmake
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 # VLFEAT

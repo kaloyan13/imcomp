@@ -18,8 +18,27 @@
 
 int main(int argc, char** argv) {
   Magick::InitializeMagick(argv[0]);
-  std::cout << "\nMagick::InitializeMagick(*argv) : argv[0] = [" << argv[0] << std::endl;
+  //std::cout << "\nMagick::InitializeMagick(*argv) : argv[0] = [" << argv[0] << "]" << std::endl;
+  
+  /*
+  Magick::InitializeMagick("C:\\Users\\tlm\\dev\\imcomp\\bin\\Release");
 
+  // for debug
+  cout << "\nWriting test image ..." << flush;
+  try {
+    Magick::Image im( "100x100", "red");
+    std::string format("JPEG");
+    //std::string filename("C:\\Users\\tlm\\dev\\imcomp\\bin\\Release\\test.jpg");
+    im.magick(format);
+    //im.write(filename);
+  } catch( std::exception &e ) {
+    std::cout << "\n New Exception has occured! " << endl;
+    std::cout << e.what() << std::flush;
+  }
+  cout << "\ndone" << flush;
+  
+  return 0;
+  */
   std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."
             << IMCOMP_SERVER_VERSION_MINOR << "."

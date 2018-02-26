@@ -6,20 +6,46 @@
  * install git for windows from https://git-scm.com/download/win
  * git clone git@gitlab.com:vgg/imcomp.git
 
+ * compile imagemagick
+  - see https://www.imagemagick.org/script/advanced-windows-installation.php
+  - download https://www.imagemagick.org/download/windows/ImageMagick-6.9.9-35.zip
+  - build without X11 support
+  - using Visual Studio 2017, open "C:\Users\tlm\deps\imagemagick\ImageMagick-6.9.9-35\ImageMagick-6.9.9-35\VisualMagick\configure\configure.sln"
+  - install the required VS2017 components
+  - right click solution and click "Retarget solution" to make it usable in VS2017
+  - build to produce configure.exe
+  - create VisualDynamicMT.sln by running "C:\Users\tlm\deps\imagemagick\ImageMagick-6.9.9-35\ImageMagick-6.9.9-35\VisualMagick\configure\configure.exe"
+    * 64 bit
+    * no OpenCL
+    * YES OpenMP
+    * Q8
+    * DLL Multi-threaded
+    * NO zero config
+    * NO registry or hard coded
+  - For the 64-bit build, you will also need to disable X11 support. Edit magick-config.h and undefine the MAGICKCORE_X11_DELEGATE define.
+    * update "C:\Users\tlm\deps\win_x64\imagemagick\ImageMagick-6.9.9-35\ImageMagick\magick\magick-config.h"
+```
+#undef MAGICKCORE_X11_DELEGATE
+#define ProvideDllMain
+```
+
+  - using Visual Studio 2017, open "C:\Users\tlm\deps\imagemagick\ImageMagick-6.9.9-35\ImageMagick-6.9.9-35\VisualMagick\VisualDynamicMT.sln"
+    * Clean , Build
+
  * install boost library
 	- https://sourceforge.net/projects/boost/files/boost-binaries/1.65.1/boost_1_65_1-msvc-14.1-64.exe/download
   - Update imcomp/CMakeLists.txt file to point to boost install location
   - compile only the optimized version of library (not the debug).
- * install imagemagick library
-	- only 32 bit library is found by cmake : ImageMagick-6.9.9-33-Q16-x86-dll.exe and ImageMagick-6.9.9-33-Q8-x86-dll.exe
-	- why?
+ 
  * install vlfeat
-  - http://www.vlfeat.org/download/vlfeat-0.9.20-bin.tar.gz
-  - update "C:\Users\tlm\deps\vlfeat\vlfeat-0.9.20\make\nmake_helper.mak"
+  - http://www.vlfeat.org/download/vlfeat-0.9.21-bin.tar.gz
+  - only win_x64 version of precompiled library is available
+  - how to get win_x86?
+  
  * compile eigen3
   - download from http://bitbucket.org/eigen/eigen/get/3.3.4.zip
   - mkdir build, cd build
-  - "c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\deps\eigen\eigen-eigen-5a0156e40feb\eigen-eigen-5a0156e40feb" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release 
+  - "c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release 
 
 * Download and install cmake from https://cmake.org/download/ and run cmake-gui tool
 	- help
@@ -32,11 +58,17 @@
 
 ## Compile IMCOMP
 ```
+## 64 bit
 cd Users\tlm\dev\imcomp\build\win_x64 
-"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Users\tlm\deps\lib\include\eigen3" -DVLFEAT_LIB="C:\Users\tlm\deps\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\lib\include" -DBOOST_ROOT="C:/Users/tlm/deps/boost_1_65_1"
+"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DEIGEN_DIR="C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb\build" -DVLFEAT_LIB="C:\Users\tlm\deps\win_x64\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\win_x64\lib\include" -DBOOST_ROOT="C:\Users\tlm\deps\win_x64\boost\boost_1_65_1"
 cls&msbuild ALL_BUILD.vcxproj /p:configuration=Release
-msbuild ALL_BUILD.vcxproj -m:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /verbosity:quiet 
-msbuild ALL_BUILD.vcxproj -m:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
+msbuild ALL_BUILD.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /verbosity:quiet 
+msbuild ALL_BUILD.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
+
+## 32 bit
+"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x86 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Users\tlm\deps\lib\include\eigen3" -DVLFEAT_LIB="C:\Users\tlm\deps\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\lib\include" -DBOOST_ROOT="C:/Users/tlm/deps/boost_1_65_1"
+cls&msbuild ALL_BUILD.vcxproj /p:configuration=Release
+
 ```
 
 ## Executing IMCOMP
@@ -47,13 +79,17 @@ set MAGICK_DEBUG=True
 set MAGICK_CODER_MODULE_PATH="C:\Users\tlm\dev\imcomp\bin\Release"
 set MAGICK_CODER_FILTER_PATH="C:\Users\tlm\dev\imcomp\bin\Release"
 
-set MAGICK_HOME="C:\Users\tlm\deps\imagemagick\"
-set MAGICK_CONFIGURE_PATH="C:\Users\tlm\deps\imagemagick\"
+set MAGICK_HOME="C:\Users\tlm\deps\win_x64\imagemagick\ImageMagick-6.9.9-35\VisualMagick"
+set MAGICK_CONFIGURE_PATH="C:\Users\tlm\deps\win_x64\imagemagick\ImageMagick-6.9.9-35\VisualMagick"
 set MAGICK_DEBUG=All
-set MAGICK_CODER_MODULE_PATH="C:\Users\tlm\deps\imagemagick\modules\coders"
-set MAGICK_CODER_FILTER_PATH="C:\Users\tlm\deps\imagemagick\modules\filters"
+set MAGICK_DEBUG=None
+set MAGICK_CODER_MODULE_PATH="C:\Users\tlm\deps\win_x64\imagemagick\ImageMagick-6.9.9-35\VisualMagick\coders"
+set MAGICK_CODER_FILTER_PATH="C:\Users\tlm\deps\win_x64\imagemagick\ImageMagick-6.9.9-35\VisualMagick\filters"
+
+"C:\Users\tlm\dev\imcomp\doc\dist\copy_imagemagick_dll.bat"
 
 "C:\Users\tlm\dev\imcomp\bin\Release\imcomp_server.exe" 0.0.0.0 9973 4 "C:\Users\tlm\dev\imcomp\asset\imcomp" "C:\Users\tlm\tmp\imcomp"
+"C:\Users\tlm\deps\imagemagick\ImageMagick-6.9.9-35\ImageMagick-6.9.9-35\VisualMagick\bin\convert.exe" "G:\dataset\traherne\copy1\Oxford_Balliol_College_480a13_1B01r.JPG" -resize 20% "G:\dataset\traherne\small.jpg"
 ```
 
 ## Code Updates

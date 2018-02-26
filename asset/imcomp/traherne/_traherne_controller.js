@@ -657,76 +657,39 @@ _traherne_controller.prototype.enable_all_switches = function(switch_suffix) {
 ///
 /// horizontal reference line
 ///
-
-_traherne_controller.prototype.ref_line_clear = function() {
-  this.ref_line.ctx.clearRect(0, 0, this.ref_line.c.width, this.ref_line.c.height);
-}
-
-_traherne_controller.prototype.ref_line_marker_draw = function(y) {
-  this.ref_line.ctx.fillRect(0,
-                             y - this.ref_line.LINE_HEIGHT,
-                             this.ref_line.c.width,
-                             2*this.ref_line.LINE_HEIGHT);
-  this.ref_line.current_y = y;
-}
-
 _traherne_controller.prototype.ref_line_position = function(y) {
   var st = document.documentElement.scrollTop;
   var ot = document.getElementById('ref_line_container').offsetTop;
+  //console.log('y=' + y + ', st=' + st + ', ot=' + ot + ', (ot + y - st)=' + (ot + y - st));
   this.ref_line.hline.style.top = (ot + y - st) + 'px';
-}
-
-_traherne_controller.prototype.ref_line_resize_canvas = function() {
-  // update the dim. of canvas to match the content
-  var parent = document.getElementById('ref_line_container');
-  this.ref_line.c.width = Math.floor(parent.clientWidth);
-  this.ref_line.c.height = Math.floor(parent.clientHeight) - 4;
+  this.ref_line.current_y = y;
 }
 
 _traherne_controller.prototype.init_ref_line = function() {
   this.ref_line.hline = document.getElementById('horizontal_line');
   this.hide_element(this.ref_line.hline);
-
-  this.ref_line.c = document.getElementById('ref_line_canvas');
-  this.ref_line.ctx = this.ref_line.c.getContext('2d');
-  this.ref_line.current_y = 0;
-  this.ref_line.LINE_HEIGHT = 4;
-  this.ref_line_resize_canvas();
-  /*
-  this.ref_line.c.addEventListener('mousedown', function(e) {
-    var c = document.getElementById('ref_line_container');
-    var cot = c.offsetTop;
-    var cst = c.scrollTop;
-    var cct = c.clientTop;
-    var pst = document.documentElement.scrollTop;
-    var ltop = this.ref_line.hline.style.top;
-
-    console.log('ref_line container: clientTop='+cct+', offsetTop='+cot+', scrollTop='+cst+', page.scrollTop='+pst+', line.top='+ltop);
-  }.bind(this));
-  */
+  this.ref_line.current_y = -1;
 
   window.addEventListener('scroll', function(e) {
     if( this.ref_line.hline.classList.contains('display-inline-block') ) {
       // update the ref_line
       this.ref_line_position(this.ref_line.current_y);
     }
-  }.bind(this));
-
-  this.ref_line.c.addEventListener('mouseup', function(e) {
-    this.ref_line_resize_canvas();
-
+  }.bind(this), false);
+  
+  var parent = document.getElementById('ref_line_container');
+  parent.addEventListener('mouseup', function(e) {
     var y = e.offsetY;
-    this.ref_line_clear();
-
-    if( Math.abs(y - this.ref_line.current_y) <= this.ref_line.LINE_HEIGHT ) {
-      this.hide_element(this.ref_line.hline);
-      return;
-    }
-
-    this.ref_line_marker_draw(y);
+   
     this.ref_line_position(y);
     this.show_element(this.ref_line.hline);
-  }.bind(this));
+  }.bind(this), false);
+  
+  var hline = document.getElementById('horizontal_line');
+  hline.addEventListener('mouseup', function(e) {
+    this.hide_element(this.ref_line.hline);
+    this.ref_line.current_y = -1;
+  }.bind(this), false);
 }
 
 
