@@ -40,7 +40,34 @@
  * install vlfeat
   - http://www.vlfeat.org/download/vlfeat-0.9.21-bin.tar.gz
   - only win_x64 version of precompiled library is available
-  - how to get win_x86?
+  - Building 32 bit library for vlfeat
+    * download Windows 7 x86 virtual box image
+    * install visual studio 2012
+    * update vlfeat Makefile.mak as follows and execute nmake /f Makefile.mak:
+```
+VER = 0.9.21
+ARCH = win32
+DEBUG = no
+BRANCH = v$(VER)-$(ARCH)
+MSVSVER = 110
+MSVCROOT = 
+WINSDKROOT = 
+GIT = git
+
+!if "$(MSVCROOT)" == ""
+MSVCROOT = C:\Program Files\Microsoft Visual Studio 11.0\VC
+!endif
+
+!if "$(WINSDKROOT)" == ""
+WINSDKROOT = C:\Program Files\Microsoft SDKs\Windows\v7.1A
+!endif
+
+VL_MSVC = 11.0
+VL_MSVS = 110
+VL_MSC = 1700
+MSVSYEAR = 2012
+#!include make/nmake_helper.mak
+```
   
  * compile eigen3
   - download from http://bitbucket.org/eigen/eigen/get/3.3.4.zip
@@ -62,12 +89,16 @@
 cd Users\tlm\dev\imcomp\build\win_x64 
 "c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DEIGEN_DIR="C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb\build" -DVLFEAT_LIB="C:\Users\tlm\deps\win_x64\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\win_x64\lib\include" -DBOOST_ROOT="C:\Users\tlm\deps\win_x64\boost\boost_1_65_1"
 cls&msbuild ALL_BUILD.vcxproj /p:configuration=Release
-msbuild ALL_BUILD.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /verbosity:quiet 
+
 msbuild ALL_BUILD.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
+msbuild PACKAGE.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
 
 ## 32 bit
-"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x86 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Users\tlm\deps\lib\include\eigen3" -DVLFEAT_LIB="C:\Users\tlm\deps\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\lib\include" -DBOOST_ROOT="C:/Users/tlm/deps/boost_1_65_1"
-cls&msbuild ALL_BUILD.vcxproj /p:configuration=Release
+"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Users\tlm\deps\win_x86\lib\include\eigen" -DVLFEAT_LIB="C:\Users\tlm\deps\win_x86\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\win_x86\lib\include" -DBOOST_ROOT="C:\Users\tlm\deps\win_x86\boost_1_65_1"
+
+msbuild ALL_BUILD.vcxproj /maxcpucount:8 -p:PreferredToolArchitecture=x86 /nologo /p:configuration=Release
+
+msbuild PACKAGE.vcxproj /maxcpucount:8 -p:PreferredToolArchitecture=x86 /nologo /p:configuration=Release
 
 ```
 
@@ -171,5 +202,6 @@ C:\Users\tlm\deps\lib\lib\vl.dll : fatal error LNK1107: invalid or corrupt file:
 "c:\Program Files\CMake\bin\cpack.exe"
 "c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DEIGEN_DIR="C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb\build" -DVLFEAT_LIB="C:\Users\tlm\deps\win_x64\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\win_x64\lib\include" -DBOOST_ROOT="C:\Users\tlm\deps\win_x64\boost\boost_1_65_1"
 msbuild PACKAGE.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
+
 
 ```

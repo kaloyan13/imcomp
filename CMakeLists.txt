@@ -35,11 +35,6 @@ configure_file (
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 set( BUILD_SHARED_LIBS "OFF" )
-IF(WIN32)
-  SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-ELSE(WIN32)
-  SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-ENDIF(WIN32)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("*** Debug Mode: test code will be compiled and built. ***")
@@ -50,11 +45,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
   
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	ADD_DEFINITIONS(-D_WIN32_WINDOWS)
+	#ADD_DEFINITIONS(-D_WIN32_WINDOWS)
 endif()
 
 
 ## Boost
+#set(BOOST_LIBRARYDIR "C:\\Users\\tlm\\deps\\win_x86\\boost_1_65_1\\lib32-msvc-14.1")
 find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
@@ -88,12 +84,23 @@ ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   #set(ImageMagick_INCLUDE_DIRS "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick;C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick\\Magick++\\lib;C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick\\Magick++\\lib\\Magick++")
   #set(ImageMagick_LIBRARY_DIRS "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\VisualMagick\\lib")
-  #set(ImageMagick_LIBRARIES "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\VisualMagick\\lib\\CORE_DB_Magick++_.lib")
-  #include_directories( ${ImageMagick_INCLUDE_DIRS} )
-  #link_directories( ${ImageMagick_LIBRARY_DIRS} )
-  
-  find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
+
+#  set(ImageMagick_INCLUDE_DIRS "\
+#C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-35\\ImageMagick;\
+#C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-35\\ImageMagick\\Magick++\\lib;\
+#C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-35\\ImageMagick\\Magick++\\lib\\Magick++\
+#")
+
+  set(ImageMagick_INCLUDE_DIRS "\
+C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\ImageMagick;\
+C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;\
+")
+
+  #set(ImageMagick_Magick++_LIBRARY "C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\VisualMagick\\lib\\CORE_DB_Magick++_.lib")
+  #find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
+  SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
+  link_directories("C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
 endif()
   
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -141,15 +148,27 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   SET(CPACK_PACKAGE_VERSION_MINOR ${IMCOMP_SERVER_VERSION_MINOR})
   SET(CPACK_PACKAGE_VERSION_PATCH ${IMCOMP_SERVER_VERSION_PATCH})
   SET(CPACK_PACKAGE_INSTALL_DIRECTORY "Traherne Digital Collator")
-  SET(CPACK_PACKAGE_EXECUTABLES "Traherne" "Traherne Digital Collator")
-  SET(CPACK_SYSTEM_NAME "Win64")
+  
+  if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
+    SET(CPACK_PACKAGE_EXECUTABLES "Traherne" "Traherne Digital Collator (64 bit)")
+    SET(CPACK_NSIS_DISPLAY_NAME "Traherne Digital Collator (64 bit)")
+    SET(CPACK_SYSTEM_NAME "Win64")
+    
+    INSTALL(DIRECTORY "C:\\\\Users\\\\tlm\\\\deps\\\\win_x64\\\\cpack_libs\\\\" DESTINATION "bin")
+  else()
+    SET(CPACK_PACKAGE_EXECUTABLES "Traherne" "Traherne Digital Collator (32 bit)")
+    SET(CPACK_NSIS_DISPLAY_NAME "Traherne Digital Collator (32 bit)")
+    SET(CPACK_SYSTEM_NAME "Win32")
+    
+    INSTALL(DIRECTORY "C:\\\\Users\\\\tlm\\\\deps\\\\win_x86\\\\cpack_libs\\\\" DESTINATION "bin")
+  endif()
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
   SET(CPACK_CREATE_DESKTOP_LINKS "bin\\\\Traherne.exe")
   #SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/asset/images/traherne/traherne_48x48.ico")
 
   SET(CPACK_NSIS_CONTACT "Abhishek Dutta <adutta@robots.ox.ac.uk>")
   #SET(CPACK_NSIS_CREATE_ICONS_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/asset/images/traherne/traherne_48x48.ico")
-  SET(CPACK_NSIS_DISPLAY_NAME "Traherne Digital Collator")
+  
   SET(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\Traherne.exe")
   SET(CPACK_NSIS_HELP_LINK "http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/")
@@ -159,7 +178,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   
   # @todo avoid hard coded paths
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset" DESTINATION "bin")
-  INSTALL(DIRECTORY "C:\\\\Users\\\\tlm\\\\deps\\\\win_x64\\\\cpack_libs\\\\" DESTINATION "bin")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG" DESTINATION ".")
