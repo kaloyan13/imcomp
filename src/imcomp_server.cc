@@ -23,27 +23,6 @@
 
 int main(int argc, char** argv) {
   Magick::InitializeMagick(argv[0]);
-  //std::cout << "\nMagick::InitializeMagick(*argv) : argv[0] = [" << argv[0] << "]" << std::endl;
-  
-  /*
-  Magick::InitializeMagick("C:\\Users\\tlm\\dev\\imcomp\\bin\\Release");
-
-  // for debug
-  cout << "\nWriting test image ..." << flush;
-  try {
-    Magick::Image im( "100x100", "red");
-    std::string format("JPEG");
-    //std::string filename("C:\\Users\\tlm\\dev\\imcomp\\bin\\Release\\test.jpg");
-    im.magick(format);
-    //im.write(filename);
-  } catch( std::exception &e ) {
-    std::cout << "\n New Exception has occured! " << endl;
-    std::cout << e.what() << std::flush;
-  }
-  cout << "\ndone" << flush;
-  
-  return 0;
-  */
   std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."
             << IMCOMP_SERVER_VERSION_MINOR << "."
@@ -67,7 +46,7 @@ int main(int argc, char** argv) {
   
   boost::filesystem::path asset_dir( exec_dir.parent_path() / "asset");
   asset_dir = asset_dir / "imcomp";
-  unsigned int thread_pool_size = 8;
+  unsigned int thread_pool_size = 3;
   
   boost::filesystem::path temp_dir( boost::filesystem::temp_directory_path() / "imcomp" );
   boost::filesystem::path upload_dir = temp_dir / "upload";
@@ -109,11 +88,12 @@ int main(int argc, char** argv) {
   http_server server(address, port, thread_pool_size);
   std::cout << "\n\nNotes:";
   std::cout << "\n  - To use the application, visit http://localhost:9972/imcomp/traherne in a web browser";
-  std::cout << "\n  - To quit this application, close this console windows." << std::flush;
 
 #if defined(_WIN32) || defined(WIN32)
+  std::cout << "\n  - To quit this application, close this console windows." << std::flush;
+
   std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
-  ShellExecute(NULL, NULL, "http://localhost:9972/imcomp/traherne", 0, 0, SW_SHOW);
+  ShellExecute(NULL, NULL, "http://localhost:9972/imcomp/traherne/index.html", 0, 0, SW_SHOW);
 #endif
   server.start();
 
