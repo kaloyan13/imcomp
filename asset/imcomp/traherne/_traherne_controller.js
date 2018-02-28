@@ -307,7 +307,7 @@ _traherne_controller.prototype.compare_base_comp = function() {
           exp_comp_time = 10;
           break;
       }
-      this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around ' + exp_comp_time + ' sec. to complete)')
+      this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around ' + exp_comp_time + ' sec. to complete, larger regions may take longer to complete)')
     }.bind(this));
     // @todo: fixme
     // note: the err_callback() is defined in _traherne_model.prototype.add_images()

@@ -78,26 +78,16 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 #		set(ImageMagick_INCLUDE_DIRS "C:/Program Files/ImageMagick-6.9.9-Q8/include")
 #    endif()
 #endif()
-ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
-ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
+
+  ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
+  ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  #set(ImageMagick_INCLUDE_DIRS "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick;C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick\\Magick++\\lib;C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\ImageMagick\\Magick++\\lib\\Magick++")
-  #set(ImageMagick_LIBRARY_DIRS "C:\\Users\\tlm\\deps\\win_x64\\imagemagick\\ImageMagick-6.9.8-10\\VisualMagick\\lib")
-
-#  set(ImageMagick_INCLUDE_DIRS "\
-#C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-35\\ImageMagick;\
-#C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-35\\ImageMagick\\Magick++\\lib;\
-#C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-35\\ImageMagick\\Magick++\\lib\\Magick++\
-#")
-
   set(ImageMagick_INCLUDE_DIRS "\
 C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\ImageMagick;\
 C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;\
 ")
 
-  #set(ImageMagick_Magick++_LIBRARY "C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\VisualMagick\\lib\\CORE_DB_Magick++_.lib")
-  #find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
   SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
   link_directories("C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
@@ -107,7 +97,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   # @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
   # and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
-  set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so") 
+  set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so")
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
 endif()
 

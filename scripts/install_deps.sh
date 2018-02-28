@@ -67,5 +67,3 @@ else
     make install
 fi
 
-
--DCMAKE_INSTALL_PREFIX=

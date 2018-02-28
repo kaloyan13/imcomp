@@ -86,11 +86,11 @@ void test_projective_reg() {
 
 void test_tps_reg() {
   string compare_id = "tps";
-  boost::filesystem::path upload_dir_("/home/tlm/exp/imcomp/images/cpp_book2/set1/");
-  boost::filesystem::path result_dir_("/home/tlm/exp/imcomp/images/cpp_book2/set1/result_tps/");
+  boost::filesystem::path upload_dir_("/home/tlm/exp/imcomp/images/traherne_demo/set1/");
+  boost::filesystem::path result_dir_("/home/tlm/exp/imcomp/images/traherne_demo/set1/result_tps/");
 
   //unsigned int file1_region[4] = {0, 0, 741, 1023}; // x0, y0, x1, y1 : set 1
-  unsigned int file1_region[4] = {0, 0, 799, 257}; // x0, y0, x1, y1 : set 2
+  unsigned int file1_region[4] = {0, 0, 1121, 1559}; // x0, y0, x1, y1 : set 2
   //unsigned int file1_region[4] = {0, 0, 347, 239}; // x0, y0, x1, y1 : set 3
 
   string fid1 = "im1";
@@ -103,8 +103,8 @@ void test_tps_reg() {
   boost::filesystem::path im2_out_fn = result_dir_ / (fid2 + "_" + compare_id + + "_crop.jpg");
   boost::filesystem::path im2_tx_fn  = result_dir_ / (fid2 + "_" + compare_id + + "_crop_tx.jpg");
   boost::filesystem::path diff_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_diff.jpg");
-  //boost::filesystem::path overlap_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_overlap.jpg");
-  boost::filesystem::path overlap_fn    = result_dir_;
+  boost::filesystem::path overlap_fn    = result_dir_ / (fid1 + "_" + fid2 + "_" + compare_id + "_overlap.jpg");
+  //boost::filesystem::path overlap_fn    = result_dir_;
 
   size_t fp_match_count = -1;
   MatrixXd H(3,3);

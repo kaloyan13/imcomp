@@ -93,11 +93,10 @@ int main(int argc, char** argv) {
 
   http_server server(address, port, thread_pool_size);
   std::cout << "\n\nNotes:";
-  std::cout << "\n  - To use the application, visit http://localhost:9972/imcomp/traherne in a web browser";
+  std::cout << "\n  - To use the application, visit http://localhost:9972/imcomp/traherne in a web browser" << flush;
 
 #if defined(_WIN32) || defined(WIN32)
-  std::cout << "\n  - To quit this application, close this console window." << std::flush;
-
+  std::cout << "\n  - To quit this application, close this console window.";
   std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
   ShellExecute(NULL, NULL, "http://localhost:9972/imcomp/traherne/index.html", 0, 0, SW_SHOW);
 #endif

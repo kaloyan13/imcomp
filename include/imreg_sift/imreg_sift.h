@@ -18,6 +18,7 @@ extern "C" {
 #include <random>
 #include <algorithm>
 #include <fstream>
+#include <chrono>  // for high_resolution_clock
 
 #include <cmath>
 

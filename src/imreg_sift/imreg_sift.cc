@@ -577,6 +577,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
                                 const char diff_image_fn[],
                                 const char overlap_image_fn[], 
                                 bool& success) {
+  auto start = std::chrono::high_resolution_clock::now();
+
   Magick::Image im1; im1.read( im1_fn );
   Magick::Image im2; im2.read( im2_fn );
 
@@ -659,9 +661,10 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   double residual;
 
   vector<size_t> best_robust_match_idx;
-  double robust_ransac_threshold = 0.05;
+  // @todo: tune this threshold for better generalization
+  double robust_ransac_threshold = 0.09;
   size_t RANSAC_ITER_COUNT = (size_t) ((double) n_lowe_match * 0.6);
-  cout << "\nRANSAC_ITER_COUNT = " << RANSAC_ITER_COUNT << flush;
+  //cout << "\nRANSAC_ITER_COUNT = " << RANSAC_ITER_COUNT << flush;
   for( int i=0; i<RANSAC_ITER_COUNT; ++i ) {
     S.col(0) = S_all.col( dist(generator) ); // randomly select a match from S_all
     S.col(1) = S_all.col( dist(generator) );
@@ -694,27 +697,28 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     }
   }
   fp_match_count = best_robust_match_idx.size();
+  //cout << "\nrobust match pairs = " << fp_match_count << flush;
 
   // bin each correspondence pair into cells dividing the original image into KxK cells
   unsigned int POINTS_PER_CELL = 1; // a single point in each cell ensures that no two control points are very close
   unsigned int n_cell_w, n_cell_h;
 
   if( im1.rows() > 500 ) {
-    n_cell_h = 5;
+    n_cell_h = 9;
   } else {
     n_cell_h = 5;
   }
   unsigned int ch = (unsigned int) (im1.rows() / n_cell_h);
 
   if( im1.columns() > 500 ) {
-    n_cell_w = 5;
+    n_cell_w = 9;
   } else {
     n_cell_w = 5;
   }
   unsigned int cw = (unsigned int) (im1.columns() / n_cell_w);
 
-  printf("\nn_cell_w=%d, n_cell_h=%d, cw=%d, ch=%d", n_cell_w, n_cell_h, cw, ch);
-  printf("\nimage size = %ld x %ld", im1.columns(), im1.rows());
+  //printf("\nn_cell_w=%d, n_cell_h=%d, cw=%d, ch=%d", n_cell_w, n_cell_h, cw, ch);
+  //printf("\nimage size = %ld x %ld", im1.columns(), im1.rows());
   vector<size_t> sel_best_robust_match_idx;
   for( unsigned int i=0; i<n_cell_w; ++i ) {
     for( unsigned int j=0; j<n_cell_h; ++j ) {
@@ -730,8 +734,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
         yh = im1.rows() - 1;
       }
 
-      printf("\ncell(%d,%d) = (%d,%d) to (%d,%d)", i, j, xl, yl, xh, yh);
-      cout << flush;
+      //printf("\ncell(%d,%d) = (%d,%d) to (%d,%d)", i, j, xl, yl, xh, yh);
+      //cout << flush;
 
       vector< size_t > cell_pts;
       for( unsigned int k=0; k<best_robust_match_idx.size(); ++k ) {
@@ -750,7 +754,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
           sel_best_robust_match_idx.push_back( cell_pts.at(cell_pts_idx) );
         }
       }
-      printf(" has points=%ld", cell_pts.size());
+      //printf(" has points=%ld", cell_pts.size());
     }
   }    
 
@@ -758,18 +762,25 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   MatrixXd cp1(2,n_cp);
   MatrixXd cp2(2,n_cp);
 
+  // write to file for debug
+  //std::ofstream cpf("/home/tlm/cp.csv");
+
   for( size_t i=0; i<n_cp; ++i ) {
     unsigned long match_idx = sel_best_robust_match_idx.at(i);
 
     cp1(0,i) = pts1(0, match_idx ); cp1(1,i) = pts1(1, match_idx );
     cp2(0,i) = pts2(0, match_idx ); cp2(1,i) = pts2(1, match_idx );
+    //cpf << pts1(0, match_idx) << "," << pts1(1, match_idx) << "," << pts2(0, match_idx) << "," << pts2(1, match_idx) << endl;
   }
-  cout << "\nUsing " << n_cp << " control points for TPS" << flush;
+  //cpf.close();
+  //cout << "\nUsing " << n_cp << " control points for TPS" << flush;
 
   // im1 crop
   Magick::Image im1_crop(im1);
   Magick::Geometry cropRect1(xu-xl, yu-yl, xl, yl);
   im1_crop.crop( cropRect1 );
+  im1_crop.magick("JPEG");
+  //cout << "\nWriting to " << im1_crop_fn << flush;
   im1_crop.write( im1_crop_fn );
 
   Magick::Image im2_crop(im2);
@@ -851,6 +862,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   double x_affine_terms, y_affine_terms;
   Magick::Image overlap(im1_crop.size(), "white");
 
+  // for debug
+  //im2.read( "/home/tlm/dev/imcomp/test/data/checkerboard_1024x1024.jpg" );
   for(unsigned int j=0; j<im1_crop.rows(); j++) {
     for(unsigned int i=0; i<im1_crop.columns(); i++) {
       //cout << "\n(" << i << "," << j << ") :" << flush;
@@ -915,12 +928,20 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
       overlap.pixelColor(i, j, Magick::ColorRGB(red_avg, green_avg, blue_avg));
     }
   }
+  //cout << "\nWriting to " << im2_tx_fn << flush;
   im2t_crop.write( im2_tx_fn );
+  //cout << "\nWriting to " << overlap_image_fn << flush;
   overlap.write(overlap_image_fn);
+
+  //auto finish = std::chrono::high_resolution_clock::now();
+  //std::chrono::duration<double> elapsed = finish - start;
+  //std::cout << "\ntps registration completed in " << elapsed.count() << " s" << flush;
 
   // difference image
   Magick::Image cdiff(im1_crop.size(), "black");
   get_diff_image(im1_crop, im2t_crop, cdiff);
+  //cout << "\nWriting to " << diff_image_fn << flush;
+  cdiff.magick("JPEG");
   cdiff.write(diff_image_fn);
 
   success = true;
