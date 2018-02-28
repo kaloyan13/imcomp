@@ -47,13 +47,14 @@ int main(int argc, char** argv) {
   std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."
             << IMCOMP_SERVER_VERSION_MINOR << "."
-            << IMCOMP_SERVER_VERSION_PATCH << flush;
+            << IMCOMP_SERVER_VERSION_PATCH
+            << " [" << IMCOMP_SERVER_URL << "]";
 
   std::cout << "\nAuthor: "
             << IMCOMP_SERVER_AUTHOR_NAME << "<"
-            << IMCOMP_SERVER_AUTHOR_EMAIL << ">, "
-            << IMCOMP_SERVER_CURRENT_RELEASE_DATE << flush;
-
+            << IMCOMP_SERVER_AUTHOR_EMAIL << ">"
+            << "\nRelease: " << IMCOMP_SERVER_CURRENT_RELEASE_DATE
+            << std::endl;
 
   if ( argc != 6 && argc != 7 && argc != 1) {
     std::cout << "\nUsage: " << argv[0] << " hostname port thread_count asset_dir [application_data_dir | [upload_dir result_dir] ]\n" << std::flush;
@@ -66,26 +67,21 @@ int main(int argc, char** argv) {
   boost::filesystem::path exec_dir( argv[0] );
   
   boost::filesystem::path asset_dir( exec_dir.parent_path() / "asset");
-  asset_dir = asset_dir / "imcomp";
-  unsigned int thread_pool_size = 8;
+  unsigned int thread_pool_size = 3;
   
   boost::filesystem::path temp_dir( boost::filesystem::temp_directory_path() / "imcomp" );
   boost::filesystem::path upload_dir = temp_dir / "upload";
   boost::filesystem::path result_dir = temp_dir / "result";
   
   if( argc == 6 || argc == 7 ) {
-    std::string address = argv[1];
-    std::string port    = argv[2];
-    boost::filesystem::path asset_dir(argv[4]);
+    address = argv[1];
+    port    = argv[2];
+    asset_dir = boost::filesystem::path(argv[4]);
 
-    unsigned int thread_pool_size;
     std::stringstream s;
     s.clear(); s.str(argv[3]);
     s >> thread_pool_size;
 
-
-    boost::filesystem::path upload_dir;
-    boost::filesystem::path result_dir;
     if ( argc == 6 ) {
       boost::filesystem::path app_dir( argv[5] );
       upload_dir = app_dir / "upload";
@@ -95,12 +91,22 @@ int main(int argc, char** argv) {
       upload_dir = boost::filesystem::path(argv[5]);
       result_dir = boost::filesystem::path(argv[6]);
     }
+  } else {
+    cout << "\nUsing default settings";
   }
   
   if ( !boost::filesystem::exists(upload_dir) ) {
     boost::filesystem::create_directories(upload_dir);
+  } else {
+    // cleanup
+    boost::filesystem::remove_all( upload_dir );
+    boost::filesystem::create_directories(upload_dir);
   }
   if ( !boost::filesystem::exists(result_dir) ) {
+    boost::filesystem::create_directories(result_dir);
+  } else {
+    // cleanup
+    boost::filesystem::remove_all( result_dir );
     boost::filesystem::create_directories(result_dir);
   }
   
@@ -109,7 +115,7 @@ int main(int argc, char** argv) {
   http_server server(address, port, thread_pool_size);
   std::cout << "\n\nNotes:";
   std::cout << "\n  - To use the application, visit http://localhost:9972/imcomp/traherne in a web browser";
-  std::cout << "\n  - To quit this application, close this console windows." << std::flush;
+  std::cout << "\n  - To quit this application, close this console window." << std::flush;
 
 #if defined(_WIN32) || defined(WIN32)
   std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
@@ -117,8 +123,5 @@ int main(int argc, char** argv) {
 #endif
   server.start();
 
-  // cleanup
-  //boost::filesystem::remove_all( upload_dir );
-  //boost::filesystem::remove_all( result_dir );
   return 0;
 }

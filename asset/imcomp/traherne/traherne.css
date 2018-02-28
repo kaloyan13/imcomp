@@ -1,3 +1,14 @@
+/*
+////////////////////////////////////////////////////////////////////////////////
+//
+// @file        traherne.css
+// @description Traherne Digital Collator user interface styles
+// @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
+// @date        Nov 2017
+//
+////////////////////////////////////////////////////////////////////////////////
+*/
+
 body {
   font-family: "Roboto", Helvetica, Arial, sans-serif; font-size: medium;
   margin: 0;
@@ -135,6 +146,7 @@ body {
 #left_content_image {
     z-index: 1000;
     top: 0;
+    width: 100%;
 }
 
 /* comp panel */
@@ -158,6 +170,7 @@ body {
     z-index: 1000;
     top: 0;
     left: 0;
+    width: 100%;
 }
 #right_content_image_zoom_panel {
     position: absolute;

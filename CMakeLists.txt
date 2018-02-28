@@ -23,10 +23,11 @@ set (IMCOMP_SERVER_NAME "imcomp server")
 set (IMCOMP_SERVER_VERSION_MAJOR "2")
 set (IMCOMP_SERVER_VERSION_MINOR "0")
 set (IMCOMP_SERVER_VERSION_PATCH "3")
+set (IMCOMP_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/imcomp/")
 set (IMCOMP_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (IMCOMP_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
 set (IMCOMP_SERVER_FIRST_RELEASE_DATE "Nov. 2017")
-set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "26 Feb. 2018")
+set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "02 Mar. 2018")
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/imcomp_server_config.h.in" 
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_INCLUDE_DIR}/imcomp_server_config.h"

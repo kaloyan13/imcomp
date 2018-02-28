@@ -18,6 +18,7 @@ cd "${curdir}/build"
 make -j 8
 
 #rm -fr /tmp/imcomp
-#"${curdir}/bin/imcomp_server" 0.0.0.0 9973 4 /home/tlm/dev/imcomp/asset/imcomp /tmp/imcomp
+#"${curdir}/bin/imcomp_server" 0.0.0.0 9972 4 /home/tlm/dev/imcomp/asset /tmp/imcomp
+
 
 

@@ -2,8 +2,8 @@
 
 Register an image pair based on SIFT features
 
-Abhishek Dutta <adutta@robots.ox.ac.uk>
-3 Jan. 2018
+Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
+Date: 3 Jan. 2018
 
 some code borrowed from: vlfeat-0.9.20/src/sift.c
 
@@ -349,7 +349,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
   // in the original image 2 domain, error = sqrt(5.99) * 1 ~ 3 (for SD of 1 pixel error)
   // in the normalized image 2 domain, we have to transform this 3 pixel to normalized coordinates
   double geom_err_threshold_norm = im2_match_kp_tform(0,0) * 3;
-  size_t RANSAC_ITER_COUNT = (size_t) ((double) n_match * 0.1);
+  size_t RANSAC_ITER_COUNT = (size_t) ((double) n_match * 0.6);
   for( unsigned int iter=0; iter<RANSAC_ITER_COUNT; iter++ ) {
     //cout << "\n==========================[ iter=" << iter << " ]==============================" << flush;
 
@@ -651,9 +651,6 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   S_all.row(2) = pts2_norm.row(0);
   S_all.row(3) = pts2_norm.row(1);
 
-  size_t RANSAC_ITER_COUNT = (size_t) ((double) n_lowe_match * 0.1);
-  double robust_ransac_threshold = 0.05;
-
   // initialize random number generator to randomly sample putative_matches
   mt19937 generator(9973);
   uniform_int_distribution<> dist(0, n_lowe_match-1);
@@ -662,6 +659,9 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   double residual;
 
   vector<size_t> best_robust_match_idx;
+  double robust_ransac_threshold = 0.05;
+  size_t RANSAC_ITER_COUNT = (size_t) ((double) n_lowe_match * 0.6);
+  cout << "\nRANSAC_ITER_COUNT = " << RANSAC_ITER_COUNT << flush;
   for( int i=0; i<RANSAC_ITER_COUNT; ++i ) {
     S.col(0) = S_all.col( dist(generator) ); // randomly select a match from S_all
     S.col(1) = S_all.col( dist(generator) );
@@ -702,7 +702,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   if( im1.rows() > 500 ) {
     n_cell_h = 5;
   } else {
-    n_cell_h = 3;
+    n_cell_h = 5;
   }
   unsigned int ch = (unsigned int) (im1.rows() / n_cell_h);
 
@@ -713,8 +713,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
   }
   unsigned int cw = (unsigned int) (im1.columns() / n_cell_w);
 
-  //printf("\nn_cell_w=%d, n_cell_h=%d, cw=%d, ch=%d", n_cell_w, n_cell_h, cw, ch);
-  //printf("\nimage size = %ld x %ld", im1.columns(), im1.rows());
+  printf("\nn_cell_w=%d, n_cell_h=%d, cw=%d, ch=%d", n_cell_w, n_cell_h, cw, ch);
+  printf("\nimage size = %ld x %ld", im1.columns(), im1.rows());
   vector<size_t> sel_best_robust_match_idx;
   for( unsigned int i=0; i<n_cell_w; ++i ) {
     for( unsigned int j=0; j<n_cell_h; ++j ) {
@@ -730,7 +730,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
         yh = im1.rows() - 1;
       }
 
-      //printf("\ncell(%d,%d) = (%d,%d) to (%d,%d)", i, j, xl, yl, xh, yh);
+      printf("\ncell(%d,%d) = (%d,%d) to (%d,%d)", i, j, xl, yl, xh, yh);
       cout << flush;
 
       vector< size_t > cell_pts;
@@ -750,7 +750,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
           sel_best_robust_match_idx.push_back( cell_pts.at(cell_pts_idx) );
         }
       }
-      //printf(" has points=%ld", cell_pts.size());
+      printf(" has points=%ld", cell_pts.size());
     }
   }    
 
@@ -764,7 +764,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     cp1(0,i) = pts1(0, match_idx ); cp1(1,i) = pts1(1, match_idx );
     cp2(0,i) = pts2(0, match_idx ); cp2(1,i) = pts2(1, match_idx );
   }
-  //cout << "\nUsing " << n_cp << " control points for TPS" << flush;
+  cout << "\nUsing " << n_cp << " control points for TPS" << flush;
 
   // im1 crop
   Magick::Image im1_crop(im1);

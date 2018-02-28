@@ -85,12 +85,12 @@ void test_projective_reg() {
 }
 
 void test_tps_reg() {
-  string compare_id = "test";
-  boost::filesystem::path upload_dir_("/home/tlm/exp/imcomp/images/traherne_book/set2/");
-  boost::filesystem::path result_dir_("/home/tlm/exp/imcomp/images/traherne_book/set2/result_tps/");
+  string compare_id = "tps";
+  boost::filesystem::path upload_dir_("/home/tlm/exp/imcomp/images/cpp_book2/set1/");
+  boost::filesystem::path result_dir_("/home/tlm/exp/imcomp/images/cpp_book2/set1/result_tps/");
 
   //unsigned int file1_region[4] = {0, 0, 741, 1023}; // x0, y0, x1, y1 : set 1
-  unsigned int file1_region[4] = {0, 0, 551, 482}; // x0, y0, x1, y1 : set 2
+  unsigned int file1_region[4] = {0, 0, 799, 257}; // x0, y0, x1, y1 : set 2
   //unsigned int file1_region[4] = {0, 0, 347, 239}; // x0, y0, x1, y1 : set 3
 
   string fid1 = "im1";
@@ -110,7 +110,7 @@ void test_tps_reg() {
   MatrixXd H(3,3);
   bool success;
 
-  imreg_sift::ransac_dlt( im1_fn.string().c_str(),
+  imreg_sift::robust_ransac_tps( im1_fn.string().c_str(),
                            im2_fn.string().c_str(),
                            file1_region[0], file1_region[2], file1_region[1], file1_region[3],
                            H, fp_match_count,
@@ -127,8 +127,8 @@ int main(int argc, char** argv) {
   Magick::InitializeMagick(*argv);
 
   //test_diff_image();
-  //test_tps_reg();
-  test_projective_reg();
+  test_tps_reg();
+  //test_projective_reg();
 
   return 0;
 }

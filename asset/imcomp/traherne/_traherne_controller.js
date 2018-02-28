@@ -1,3 +1,39 @@
+/*
+  Image Comparator (IMCOMP)
+  www.robots.ox.ac.uk/~vgg/software/imcomp/
+
+  Copyright (c) 2017-2018, Abhishek Dutta, Visual Geometry Group, Oxford University.
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+  Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// @file        _traherne_controller.js
+// @description Controller of the MVC design for user interface javascript
+// @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
+// @date        Nov 2017
+//
+////////////////////////////////////////////////////////////////////////////////
 
 function _traherne_controller() {
   this.type_list = {'base':'left_content', 'comp':'right_content'};
@@ -261,7 +297,17 @@ _traherne_controller.prototype.compare_base_comp = function() {
       c.scale2 = this.m.upload_scale['comp'][c.findex2];
       this.compare.is_ongoing = true;
       this.compare.promise = this.m.compare_img_pair(c);
-      this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around 5 sec. to complete)')
+      var exp_comp_time;
+      var algname = document.querySelector('input[name="algorithm_choice"]:checked').value;
+      switch(algname) {
+        case 'ransac_dlt':
+          exp_comp_time = 5;
+          break;
+        case 'robust_ransac_tps':
+          exp_comp_time = 10;
+          break;
+      }
+      this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around ' + exp_comp_time + ' sec. to complete)')
     }.bind(this));
     // @todo: fixme
     // note: the err_callback() is defined in _traherne_model.prototype.add_images()

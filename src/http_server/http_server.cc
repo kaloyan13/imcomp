@@ -64,7 +64,7 @@ void http_server::handle_connection(const boost::system::error_code& e) {
 }
 
 void http_server::stop() {
-  std::cout << "\nStopping http server ..." << std::flush;
+  std::cout << "\nStopping server ..." << std::flush;
   io_service_.stop();
-  std::cout << " [done]" << std::flush;
+  std::cout << " [done]" << std::endl;
 }
