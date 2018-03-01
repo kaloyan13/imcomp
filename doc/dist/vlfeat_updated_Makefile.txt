@@ -1,0 +1,23 @@
+
+VER = 0.9.21
+ARCH = win32
+DEBUG = no
+BRANCH = v$(VER)-$(ARCH)
+MSVSVER = 110
+MSVCROOT = 
+WINSDKROOT = 
+GIT = git
+
+!if "$(MSVCROOT)" == ""
+MSVCROOT = C:\Program Files\Microsoft Visual Studio 11.0\VC
+!endif
+
+!if "$(WINSDKROOT)" == ""
+WINSDKROOT = C:\Program Files\Microsoft SDKs\Windows\v7.1A
+!endif
+
+VL_MSVC = 11.0
+VL_MSVS = 110
+VL_MSC = 1700
+MSVSYEAR = 2012
+#!include make/nmake_helper.mak

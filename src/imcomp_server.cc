@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
             << " [" << IMCOMP_SERVER_URL << "]";
 
   std::cout << "\nAuthor: "
-            << IMCOMP_SERVER_AUTHOR_NAME << "<"
+            << IMCOMP_SERVER_AUTHOR_NAME << " <"
             << IMCOMP_SERVER_AUTHOR_EMAIL << ">"
             << "\nRelease: " << IMCOMP_SERVER_CURRENT_RELEASE_DATE
             << std::endl;
