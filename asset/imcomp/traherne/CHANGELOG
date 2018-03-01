@@ -1,0 +1,16 @@
+Note: version A.B.C corresponds to:
+  A : the major version number of imcomp server
+  B : the minor version number of imcomp server
+  C : the version number for client user interfaces of imcomp and traherne
+
+## [traherne-2.0.3] - Not Released Yet
+ * web browser based interface for Traherne project
+ * support for zoom and frozen zoom (for comparison)
+ * support for toggle (with multiple speed)
+ * all features that existed in [Traherne v1.3](http://www.robots.ox.ac.uk/~vgg/software/traherne/)
+ 
+## [traherne-2.0.2] - Not Released
+ * used for internal test by Traherne project
+ 
+## [traherne-2.0.1] - Not Released
+ * used for internal test by Traherne project

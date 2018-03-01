@@ -19,10 +19,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 ## export version number in configure header file
-set (IMCOMP_SERVER_NAME "imcomp server")
+set (IMCOMP_SERVER_NAME "imcomp_server")
 set (IMCOMP_SERVER_VERSION_MAJOR "2")
 set (IMCOMP_SERVER_VERSION_MINOR "0")
-set (IMCOMP_SERVER_VERSION_PATCH "3")
+#set (IMCOMP_SERVER_VERSION_PATCH "x") # traherne or imcomp user interface version to be set by user
 set (IMCOMP_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/imcomp/")
 set (IMCOMP_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (IMCOMP_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
@@ -44,13 +44,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	set(CMAKE_CXX_FLAGS "-fpermissive")
 endif()
   
+##
+## Define compiler flags
+##
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	#ADD_DEFINITIONS(-D_WIN32_WINDOWS)
+  set(CMAKE_CXX_FLAGS_RELEASE "-Ox")
 endif()
 
 
 ## Boost
-#set(BOOST_LIBRARYDIR "C:\\Users\\tlm\\deps\\win_x86\\boost_1_65_1\\lib32-msvc-14.1")
 find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set( Boost_USE_MULTITHREADED ON )
@@ -65,32 +67,18 @@ endif()
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
 
-## Magick++
-#if (NOT DEFINED     ImageMagick_LIBRARIES        AND
-#    NOT DEFINED ENV{ImageMagick_LIBRARIES}       AND
-#    NOT DEFINED     ImageMagick_INCLUDE_DIRS  AND
-#    NOT DEFINED ENV{ImageMagick_INCLUDE_DIRS})
-#    if (APPLE)
-#        set(ImageMagick_LIBRARIES "@todo")
-#		set(ImageMagick_INCLUDE_DIRS "@todo")
-#    elseif (WIN32)
-#		set(ImageMagick_LIBRARIES "C:/Program Files/ImageMagick-6.9.9-Q8/lib;C:/Program Files/ImageMagick-6.9.9-Q8")
-#		set(ImageMagick_INCLUDE_DIRS "C:/Program Files/ImageMagick-6.9.9-Q8/include")
-#    endif()
-#endif()
-
-  ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
-  ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
+ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
+ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(ImageMagick_INCLUDE_DIRS "\
-C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\ImageMagick;\
-C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;\
+${IMCOMP_DEPS_BASEDIR}\\ImageMagick-6.9.9-36\\ImageMagick;\
+${IMCOMP_DEPS_BASEDIR}\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;\
 ")
 
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
   SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
-  link_directories("C:\\Users\\tlm\\deps\\win_x86\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
+  link_directories("${IMCOMP_DEPS_BASEDIR}\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
 endif()
   
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -130,40 +118,41 @@ add_subdirectory("${PROJECT_TEST_DIR}" )
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_GENERATOR "NSIS")
-  SET(CPACK_PACKAGE_NAME "Traherne")
+  SET(CPACK_PACKAGE_NAME "${RELEASE_PACKAGE_NAME}")
   SET(CPACK_PACKAGE_VENDOR "Abhishek Dutta <adutta@robots.ox.ac.uk>")
-  SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Traherne Digital Collator")
+  SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${RELEASE_PACKAGE_DESCRIPTION}")
   SET(CPACK_PACKAGE_VERSION "${IMCOMP_SERVER_VERSION_MAJOR}.${IMCOMP_SERVER_VERSION_MINOR}.${IMCOMP_SERVER_VERSION_PATCH}")
   SET(CPACK_PACKAGE_VERSION_MAJOR ${IMCOMP_SERVER_VERSION_MAJOR})
   SET(CPACK_PACKAGE_VERSION_MINOR ${IMCOMP_SERVER_VERSION_MINOR})
   SET(CPACK_PACKAGE_VERSION_PATCH ${IMCOMP_SERVER_VERSION_PATCH})
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "Traherne Digital Collator")
+  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${RELEASE_PACKAGE_DESCRIPTION}")
   
+  STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_4SLASH ${IMCOMP_DEPS_BASEDIR})
   if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
-    SET(CPACK_PACKAGE_EXECUTABLES "Traherne" "Traherne Digital Collator (64 bit)")
-    SET(CPACK_NSIS_DISPLAY_NAME "Traherne Digital Collator (64 bit)")
+    SET(CPACK_PACKAGE_EXECUTABLES "${RELEASE_PACKAGE_NAME}" "${RELEASE_PACKAGE_DESCRIPTION}")
+    SET(CPACK_NSIS_DISPLAY_NAME "${RELEASE_PACKAGE_DESCRIPTION}")
     SET(CPACK_SYSTEM_NAME "Win64")
     
-    INSTALL(DIRECTORY "C:\\\\Users\\\\tlm\\\\deps\\\\win_x64\\\\cpack_libs\\\\" DESTINATION "bin")
+    INSTALL(DIRECTORY "${IMCOMP_DEPS_BASEDIR_4SLASH}\\\\cpack_win_deps_dll\\\\" DESTINATION "bin")
   else()
-    SET(CPACK_PACKAGE_EXECUTABLES "Traherne" "Traherne Digital Collator (32 bit)")
-    SET(CPACK_NSIS_DISPLAY_NAME "Traherne Digital Collator (32 bit)")
+    SET(CPACK_PACKAGE_EXECUTABLES "${RELEASE_PACKAGE_NAME}" "${RELEASE_PACKAGE_DESCRIPTION} (32 bit)")
+    SET(CPACK_NSIS_DISPLAY_NAME "${RELEASE_PACKAGE_DESCRIPTION} (32 bit)")
     SET(CPACK_SYSTEM_NAME "Win32")
     
-    INSTALL(DIRECTORY "C:\\\\Users\\\\tlm\\\\deps\\\\win_x86\\\\cpack_libs\\\\" DESTINATION "bin")
+    INSTALL(DIRECTORY "${IMCOMP_DEPS_BASEDIR_4SLASH}\\\\cpack_win_deps_dll\\\\" DESTINATION "bin")
   endif()
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-  SET(CPACK_CREATE_DESKTOP_LINKS "bin\\\\Traherne.exe")
+  SET(CPACK_CREATE_DESKTOP_LINKS "bin\\\\${RELEASE_PACKAGE_NAME}.exe")
   #SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/asset/images/traherne/traherne_48x48.ico")
 
   SET(CPACK_NSIS_CONTACT "Abhishek Dutta <adutta@robots.ox.ac.uk>")
   #SET(CPACK_NSIS_CREATE_ICONS_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/asset/images/traherne/traherne_48x48.ico")
   
   SET(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\Traherne.exe")
+  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${RELEASE_PACKAGE_NAME}.exe")
   SET(CPACK_NSIS_HELP_LINK "http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/")
   SET(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/asset/imcomp/traherne/images/traherne/traherne_48x48.ico")
-  SET(CPACK_NSIS_PACKAGE_NAME "Traherne Digital Collator")
+  SET(CPACK_NSIS_PACKAGE_NAME "${RELEASE_PACKAGE_DESCRIPTION}")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/")
   
   # @todo avoid hard coded paths

@@ -1,0 +1,8 @@
+Note: version A.B.C corresponds to:
+  A : the major version number of imcomp server
+  B : the minor version number of imcomp server
+  C : the version number for client user interfaces of imcomp and traherne
+
+## [imcomp-2.0.1] - Not Released Yet
+ * generic image compator
+ 
