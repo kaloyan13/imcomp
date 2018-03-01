@@ -1,5 +1,5 @@
 ##
-## http_server
+## imcomp_server
 ##
 ## Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
 ## 27 Nov. 2017
@@ -43,14 +43,33 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	set(CMAKE_CXX_FLAGS "-fpermissive")
 endif()
-  
+
 ##
-## Define compiler flags
+## Define variables for Windows build
+## @todo avoid hard coded paths
 ##
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_CXX_FLAGS_RELEASE "-Ox")
+  if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
+    SET (VLFEAT_LIB "C:\\Users\\tlm\\build\\imcomp\\deps\\x64\\vlfeat\\vlfeat-0.9.21\\bin\\win64\\vl.lib")
+    SET (VLFEAT_INCLUDE_DIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x64\\vlfeat\\vlfeat-0.9.21")
+    SET (IMCOMP_DEPS_BASEDIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x64")
+    SET (BOOST_ROOT "C:\\Users\\tlm\\build\\imcomp\\deps\\x64\\boost_1_65_1")
+    SET (Eigen3_DIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x64\\eigen-eigen-5a0156e40feb\\build")
+  else()
+    SET (VLFEAT_LIB "C:\\Users\\tlm\\build\\imcomp\\deps\\x86\\vlfeat\\vlfeat-0.9.21\\bin\\win32\\vl.lib")
+    SET (VLFEAT_INCLUDE_DIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x86\\vlfeat\\vlfeat-0.9.21")
+    SET (IMCOMP_DEPS_BASEDIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x86")
+    SET (BOOST_ROOT "C:\\Users\\tlm\\build\\imcomp\\deps\\x86\\boost_1_65_1")
+    SET (Eigen3_DIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x86\\eigen-eigen-5a0156e40feb\\build")
+  endif()
+  STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_2SLASH ${IMCOMP_DEPS_BASEDIR})
+  STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_4SLASH ${IMCOMP_DEPS_BASEDIR_2SLASH})
+  #message("IMCOMP_DEPS_BASEDIR: " ${IMCOMP_DEPS_BASEDIR})
+  #message("IMCOMP_DEPS_BASEDIR_2SLASH: " ${IMCOMP_DEPS_BASEDIR_2SLASH})
+  #message("IMCOMP_DEPS_BASEDIR_4SLASH: " ${IMCOMP_DEPS_BASEDIR_4SLASH})
+  ADD_DEFINITIONS(-D_WIN32_WINDOWS)
 endif()
-
 
 ## Boost
 find_package(Boost 1.64.0 COMPONENTS filesystem system thread atomic REQUIRED)
@@ -67,20 +86,18 @@ endif()
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
 
+## ImageMagick
 ADD_DEFINITIONS(-DMAGICKCORE_HDRI_ENABLE=0)
 ADD_DEFINITIONS(-DMAGICKCORE_QUANTUM_DEPTH=8)
-
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(ImageMagick_INCLUDE_DIRS "\
-${IMCOMP_DEPS_BASEDIR}\\ImageMagick-6.9.9-36\\ImageMagick;\
-${IMCOMP_DEPS_BASEDIR}\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;\
+${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\ImageMagick;\
+${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;\
 ")
-
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
   SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
-  link_directories("${IMCOMP_DEPS_BASEDIR}\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
+  link_directories("${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
 endif()
-  
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   # @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
@@ -127,7 +144,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   SET(CPACK_PACKAGE_VERSION_PATCH ${IMCOMP_SERVER_VERSION_PATCH})
   SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${RELEASE_PACKAGE_DESCRIPTION}")
   
-  STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_4SLASH ${IMCOMP_DEPS_BASEDIR})
   if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
     SET(CPACK_PACKAGE_EXECUTABLES "${RELEASE_PACKAGE_NAME}" "${RELEASE_PACKAGE_DESCRIPTION}")
     SET(CPACK_NSIS_DISPLAY_NAME "${RELEASE_PACKAGE_DESCRIPTION}")

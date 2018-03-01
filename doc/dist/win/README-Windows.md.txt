@@ -1,5 +1,27 @@
 # Compiling IMCOMP in Windows
 
+
+ 
+## Packaging Application
+ * https://docs.microsoft.com/en-us/windows/uwp/porting/desktop-to-uwp-root
+ * https://docs.microsoft.com/en-gb/cpp/windows/windows-desktop-applications-cpp
+ * https://docs.microsoft.com/en-gb/cpp/ide/understanding-the-dependencies-of-a-visual-cpp-application
+ * ImageMagick
+   - https://www.imagemagick.org/discourse-server/viewtopic.php?t=26856
+   - http://www.imagemagick.org/script/resources.php
+
+```
+"C:\Users\tlm\build\imcomp\src\imcomp\scripts\dist\build_win_release.cmd"
+
+```
+
+## Signing the executable
+```
+cd "C:\Program Files (x86)\Windows Kits\10\bin\10.0.16299.0\x86"
+makecert.exe ??
+
+```
+
 ## Compile Dependencies
  * references
    - http://cpprocks.com/using-cmake-to-build-a-cross-platform-project-with-a-boost-dependency/
@@ -71,8 +93,13 @@ MSVSYEAR = 2012
   
  * compile eigen3
   - download from http://bitbucket.org/eigen/eigen/get/3.3.4.zip
-  - mkdir build, cd build
-  - "c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release 
+```
+mkdir build, cd build
+## 32 bit
+"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\build\imcomp\deps\x86\eigen-eigen-5a0156e40feb" -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT="C:\Users\tlm\build\imcomp\deps\x86\boost_1_65_1"
+## 64 bit
+"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\build\imcomp\deps\x64\eigen-eigen-5a0156e40feb" -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x64 -DBOOST_ROOT="C:\Users\tlm\build\imcomp\deps\x64\boost_1_65_1"
+```
 
 * Download and install cmake from https://cmake.org/download/ and run cmake-gui tool
 	- help
@@ -188,20 +215,3 @@ C:\Users\tlm\deps\lib\lib\vl.dll : fatal error LNK1107: invalid or corrupt file:
   set( Boost_DEBUG OFF )
   add_definitions(-DBOOST_ALL_NO_LIB)
  ```
-
- 
-## Packaging Application
- * https://docs.microsoft.com/en-us/windows/uwp/porting/desktop-to-uwp-root
- * https://docs.microsoft.com/en-gb/cpp/windows/windows-desktop-applications-cpp
- * https://docs.microsoft.com/en-gb/cpp/ide/understanding-the-dependencies-of-a-visual-cpp-application
- * ImageMagick
-   - https://www.imagemagick.org/discourse-server/viewtopic.php?t=26856
-   - http://www.imagemagick.org/script/resources.php
-   
-```
-"c:\Program Files\CMake\bin\cpack.exe"
-"c:\Program Files\CMake\bin\cmake.exe" -G "Visual Studio 15 2017" "C:\Users\tlm\dev\imcomp" -DCMAKE_GENERATOR_PLATFORM=x64 -DCMAKE_BUILD_TYPE=Release -DEIGEN_DIR="C:\Users\tlm\deps\win_x64\eigen\eigen-eigen-5a0156e40feb\build" -DVLFEAT_LIB="C:\Users\tlm\deps\win_x64\lib\lib\vl.lib" -DVLFEAT_INCLUDE_DIR="C:\Users\tlm\deps\win_x64\lib\include" -DBOOST_ROOT="C:\Users\tlm\deps\win_x64\boost\boost_1_65_1"
-msbuild PACKAGE.vcxproj /maxcpucount:8 -v:minimal -p:PreferredToolArchitecture=x64 /nologo /p:configuration=Release
-
-
-```

@@ -1,7 +1,7 @@
 #ifndef _IMCOMP_SERVER_CONFIG_H_
 #define _IMCOMP_SERVER_CONFIG_H_
 
-#define IMCOMP_SERVER_NAME "imcomp server"
+#define IMCOMP_SERVER_NAME "imcomp_server"
 
 #define IMCOMP_SERVER_VERSION_MAJOR "2"
 #define IMCOMP_SERVER_VERSION_MINOR "0"
