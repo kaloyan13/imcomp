@@ -5,6 +5,9 @@
  *  @date   29 Nov. 2017
  */
 
+#include <cstdio>
+#include <csignal>
+
 #include <iostream>
 #include <string>
 #include <thread>
@@ -21,8 +24,7 @@
   #include <ShellAPI.h>
 #endif
 
-int main(int argc, char** argv) {
-  Magick::InitializeMagick(argv[0]);
+int main(int argc, char** argv) {  
   std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."
             << IMCOMP_SERVER_VERSION_MINOR << "."
@@ -44,6 +46,9 @@ int main(int argc, char** argv) {
   std::string address("0.0.0.0");
   std::string port("9972");
   boost::filesystem::path exec_dir( argv[0] );
+  
+  Magick::InitializeMagick(exec_dir.parent_path().string().c_str());
+  //std::cout << "\nMagick::InitializeMagick = " << exec_dir.parent_path().string().c_str() << std::endl;
   
   boost::filesystem::path asset_dir( exec_dir.parent_path() / "asset");
   unsigned int thread_pool_size = 3;
@@ -100,7 +105,7 @@ int main(int argc, char** argv) {
   std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
   ShellExecute(NULL, NULL, "http://localhost:9972/imcomp/traherne/index.html", 0, 0, SW_SHOW);
 #endif
-  server.start();
 
+  server.start();
   return 0;
 }

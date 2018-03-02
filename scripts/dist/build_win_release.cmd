@@ -22,7 +22,7 @@ SET IMCOMP_SOURCE_PATH="C:\Users\tlm\build\imcomp\src\imcomp"
 :: Build release for Windows 32 bit
 ::
 SET BUILD_BASE_FOLDER_WIN32=%BUILD_BASE_FOLDER%\Win32
-::IF NOT EXIST %BUILD_BASE_FOLDER_WIN32% (
+IF NOT EXIST %BUILD_BASE_FOLDER_WIN32% (
   mkdir %BUILD_BASE_FOLDER_WIN32%
   cd /d %BUILD_BASE_FOLDER_WIN32%
   %CMAKE_EXEC% ^
@@ -34,7 +34,7 @@ SET BUILD_BASE_FOLDER_WIN32=%BUILD_BASE_FOLDER%\Win32
    -DIMCOMP_SERVER_VERSION_PATCH="3" ^
    %IMCOMP_SOURCE_PATH%
   msbuild PACKAGE.vcxproj /maxcpucount:8 -p:PreferredToolArchitecture=x86 /nologo /p:configuration=Release
-::)
+)
 
 ::
 :: Build release for Windows 64 bit

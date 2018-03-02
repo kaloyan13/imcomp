@@ -9,13 +9,11 @@ http_server::http_server(const std::string& address,
 {
   signals_.add(SIGINT);
   signals_.add(SIGTERM);
+  signals_.add(SIGBREAK);
   signals_.add(SIGSEGV);
   signals_.add(SIGILL);
   signals_.add(SIGFPE);
   signals_.add(SIGABRT);
-#if defined(SIGBREAK)
-  signals_.add(SIGBREAK);
-#endif
 #if defined(SIGQUIT)
   signals_.add(SIGQUIT);
 #endif

@@ -20,7 +20,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/noncopyable.hpp>
-
+#include <boost/asio/signal_set.hpp>
 
 #include "http_server/connection.h"
 #include "http_server/http_request_handler.h"

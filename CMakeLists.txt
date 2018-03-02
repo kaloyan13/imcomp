@@ -49,7 +49,7 @@ endif()
 ## @todo avoid hard coded paths
 ##
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS_RELEASE "-Ox")
+  #set(CMAKE_CXX_FLAGS_RELEASE "-Ox")
   SET(WINDOWS_RESOURCE_FILENAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/imcomp_server_win_res.rc")
   
   if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
@@ -70,7 +70,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   #message("IMCOMP_DEPS_BASEDIR: " ${IMCOMP_DEPS_BASEDIR})
   #message("IMCOMP_DEPS_BASEDIR_2SLASH: " ${IMCOMP_DEPS_BASEDIR_2SLASH})
   #message("IMCOMP_DEPS_BASEDIR_4SLASH: " ${IMCOMP_DEPS_BASEDIR_4SLASH})
-  ADD_DEFINITIONS(-D_WIN32_WINDOWS)
+  #ADD_DEFINITIONS(-D_WIN32_WINDOWS) # this prevents graceful exit from console application
 endif()
 
 ## Boost
@@ -170,26 +170,21 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   #SET(CPACK_NSIS_MODIFY_PATH "ON")
   
   if(RELEASE_PACKAGE_NAME MATCHES "Traherne")
-    #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
-    #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${RELEASE_PACKAGE_NAME}.exe")
-    SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
-    SET(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
-    SET(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
-    #set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\${RELEASE_PACKAGE_NAME}.lnk' '$INSTDIR\\\\bin\\${RELEASE_PACKAGE_NAME}.exe' ''")
-    #set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '$SMPROGRAMS\\\\$START_MENU\\\\${RELEASE_PACKAGE_NAME}'")
-    
+    SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\resources\\\\win\\\\traherne_icon.ico")
+    SET(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\resources\\\\win\\\\traherne_icon.ico")
+    SET(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\resources\\\\win\\\\traherne_icon.ico")
+  
     SET(CPACK_NSIS_HELP_LINK "http://www.robots.ox.ac.uk/~vgg/software/traherne/")
     SET(CPACK_NSIS_URL_INFO_ABOUT "http://www.robots.ox.ac.uk/~vgg/software/traherne/")
   endif()
     
-  #SET(CPACK_NSIS_MUI_FINISHPAGE_RUN "${CPACK_NSIS_INSTALL_ROOT}\\\\${CPACK_PACKAGE_INSTALL_DIRECTORY}\\\\bin\\\\${RELEASE_PACKAGE_NAME}.exe")
+  #SET(CPACK_NSIS_MUI_FINISHPAGE_RUN "$INSTDIR\\\\bin\\\\${RELEASE_PACKAGE_NAME}.exe")
   
   # @todo avoid hard coded paths
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset" DESTINATION "bin")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG" DESTINATION ".")
-  INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/asset/imcomp/traherne/images/icons/traherne_48x48.ico" DESTINATION "traherne.ico")
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party_licenses" DESTINATION ".")
   
   INCLUDE(CPack)
