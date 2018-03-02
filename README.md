@@ -1,6 +1,11 @@
-# Image Comparator (imcomp)
+# Image Comparator
 
-`imcomp` is a standalone tool to compare a pair of images. It is an open source 
+`imcomp_server` is an HTTP web server that handles the HTTP requests from 
+`imcomp` and `traherne` web based user interfaces.
+
+@todo@
+
+ is a standalone tool to compare a pair of images. It is an open source 
 project developed at the [Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) and 
 released under the BSD-2 clause license. For more details, see [http://www.robots.ox.ac.uk/~vgg/software/imcomp/].
 

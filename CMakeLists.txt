@@ -50,6 +50,8 @@ endif()
 ##
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   set(CMAKE_CXX_FLAGS_RELEASE "-Ox")
+  SET(WINDOWS_RESOURCE_FILENAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/imcomp_server_win_res.rc")
+  
   if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
     SET (VLFEAT_LIB "C:\\Users\\tlm\\build\\imcomp\\deps\\x64\\vlfeat\\vlfeat-0.9.21\\bin\\win64\\vl.lib")
     SET (VLFEAT_INCLUDE_DIR "C:\\Users\\tlm\\build\\imcomp\\deps\\x64\\vlfeat\\vlfeat-0.9.21")
@@ -136,7 +138,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_GENERATOR "NSIS")
   SET(CPACK_PACKAGE_NAME "${RELEASE_PACKAGE_NAME}")
-  SET(CPACK_PACKAGE_VENDOR "Abhishek Dutta <adutta@robots.ox.ac.uk>")
+  SET(CPACK_PACKAGE_VENDOR "Visual Geometry Group")
   SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${RELEASE_PACKAGE_DESCRIPTION}")
   SET(CPACK_PACKAGE_VERSION "${IMCOMP_SERVER_VERSION_MAJOR}.${IMCOMP_SERVER_VERSION_MINOR}.${IMCOMP_SERVER_VERSION_PATCH}")
   SET(CPACK_PACKAGE_VERSION_MAJOR ${IMCOMP_SERVER_VERSION_MAJOR})
@@ -158,24 +160,36 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     INSTALL(DIRECTORY "${IMCOMP_DEPS_BASEDIR_4SLASH}\\\\cpack_win_deps_dll\\\\" DESTINATION "bin")
   endif()
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-  SET(CPACK_CREATE_DESKTOP_LINKS "bin\\\\${RELEASE_PACKAGE_NAME}.exe")
-  #SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/asset/images/traherne/traherne_48x48.ico")
-
-  SET(CPACK_NSIS_CONTACT "Abhishek Dutta <adutta@robots.ox.ac.uk>")
-  #SET(CPACK_NSIS_CREATE_ICONS_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/asset/images/traherne/traherne_48x48.ico")
   
+  # NSIS specific settings
+  SET(CPACK_NSIS_CONTACT "Abhishek Dutta <adutta@robots.ox.ac.uk>")
   SET(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
-  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${RELEASE_PACKAGE_NAME}.exe")
-  SET(CPACK_NSIS_HELP_LINK "http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/")
-  SET(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/asset/imcomp/traherne/images/traherne/traherne_48x48.ico")
+  
   SET(CPACK_NSIS_PACKAGE_NAME "${RELEASE_PACKAGE_DESCRIPTION}")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/")
+  SET(CPACK_NSIS_DISPLAY_NAME "${RELEASE_PACKAGE_DESCRIPTION}")
+  #SET(CPACK_NSIS_MODIFY_PATH "ON")
+  
+  if(RELEASE_PACKAGE_NAME MATCHES "Traherne")
+    #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
+    #SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${RELEASE_PACKAGE_NAME}.exe")
+    SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
+    SET(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
+    SET(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}\\\\asset\\\\imcomp\\\\traherne\\\\images\\\\icons\\\\traherne_48x48.ico")
+    #set(CPACK_NSIS_CREATE_ICONS_EXTRA "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\${RELEASE_PACKAGE_NAME}.lnk' '$INSTDIR\\\\bin\\${RELEASE_PACKAGE_NAME}.exe' ''")
+    #set(CPACK_NSIS_DELETE_ICONS_EXTRA "Delete '$SMPROGRAMS\\\\$START_MENU\\\\${RELEASE_PACKAGE_NAME}'")
+    
+    SET(CPACK_NSIS_HELP_LINK "http://www.robots.ox.ac.uk/~vgg/software/traherne/")
+    SET(CPACK_NSIS_URL_INFO_ABOUT "http://www.robots.ox.ac.uk/~vgg/software/traherne/")
+  endif()
+    
+  #SET(CPACK_NSIS_MUI_FINISHPAGE_RUN "${CPACK_NSIS_INSTALL_ROOT}\\\\${CPACK_PACKAGE_INSTALL_DIRECTORY}\\\\bin\\\\${RELEASE_PACKAGE_NAME}.exe")
   
   # @todo avoid hard coded paths
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset" DESTINATION "bin")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG" DESTINATION ".")
+  INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/asset/imcomp/traherne/images/icons/traherne_48x48.ico" DESTINATION "traherne.ico")
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party_licenses" DESTINATION ".")
   
   INCLUDE(CPack)
