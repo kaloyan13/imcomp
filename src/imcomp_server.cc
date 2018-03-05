@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   std::cout << "\nAuthor: "
             << IMCOMP_SERVER_AUTHOR_NAME << " <"
             << IMCOMP_SERVER_AUTHOR_EMAIL << ">"
-            << "\nRelease: " << IMCOMP_SERVER_CURRENT_RELEASE_DATE
+//            << "\nRelease: " << IMCOMP_SERVER_CURRENT_RELEASE_DATE
             << std::endl;
 
   if ( argc != 6 && argc != 7 && argc != 1) {
