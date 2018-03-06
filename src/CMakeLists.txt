@@ -3,10 +3,21 @@ add_subdirectory( imcomp )
 add_subdirectory( util )
 add_subdirectory( imreg_sift )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  add_executable( imcomp_server imcomp_server.cc )
-  target_link_libraries( imcomp_server http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
-else()
+if(APPLE)
+  if(RELEASE_PACKAGE_NAME MATCHES "Traherne")
+    add_executable( Traherne imcomp_server.cc )
+    target_link_libraries( Traherne http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
+    install(TARGETS Traherne BUNDLE DESTINATION .
+                             RUNTIME DESTINATION bin
+                             LIBRARY DESTINATION lib
+                             ARCHIVE DESTINATION lib/static)
+  else()
+    add_executable( imcomp_server imcomp_server.cc )
+    target_link_libraries( imcomp_server http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
+  endif()
+endif()
+
+if(WIN32)
   if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(RELEASE_PACKAGE_NAME MATCHES "Traherne")
       # Create installer in Windows
