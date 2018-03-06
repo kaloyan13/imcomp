@@ -4,7 +4,7 @@ Note: version A.B.C corresponds to:
   C : the version number for client user interfaces of imcomp and traherne
 
   
-## [imcomp_server-2.0.x] - Not Released Yet
+## [imcomp_server-2.0.x] - March 06, 2018
  * code natively compiles in Linux, Windows and MacOS
  * native installers for Windows and MacOS
  * new c++ based implementations:
