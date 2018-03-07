@@ -30,7 +30,9 @@ else
     wget -O ImageMagick-6.9.9-36.tar.gz --no-clobber https://codeload.github.com/ImageMagick/ImageMagick/tar.gz/6.9.9-36
     tar -zxvf ImageMagick-6.9.9-36.tar.gz
     cd ImageMagick-6.9.9-36
-    CC=gcc-6 CXX=g++-6 ./configure --prefix=$LIBDIR --enable-hdri=no --with-quantum-depth=8 --disable-dependency-tracking --with-x=no --without-perl
+    #CC=gcc-6 CXX=g++-6 ./configure --prefix=/Users/tlm/deps/imcomp/lib/ --enable-hdri=no --with-quantum-depth=8 --with-x=no --without-perl --disable-shared --enable-static --disable-deprecated
+    CC=gcc-6 CXX=g++-6 ./configure --prefix=/Users/tlm/deps/imcomp/lib/ --enable-hdri=no --with-quantum-depth=8 --with-x=no --without-perl --disable-deprecated
+    #CC=gcc-6 CXX=g++-6 ./configure --prefix=$LIBDIR --enable-hdri=no --with-quantum-depth=8 --disable-dependency-tracking --with-x=no --without-perl
     make -j 8
     make install
 fi

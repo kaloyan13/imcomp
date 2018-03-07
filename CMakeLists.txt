@@ -46,9 +46,6 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 ## @todo avoid hard coded paths
 ##
 if(WIN32)
-  #set(CMAKE_CXX_FLAGS_RELEASE "-Ox")
-  #set(CMAKE_CXX_FLAGS_RELEASE "/MT")
-  
   SET(WINDOWS_RESOURCE_FILENAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/imcomp_server_win_res.rc")
   
   if(CMAKE_GENERATOR_PLATFORM MATCHES "x64")
@@ -66,10 +63,6 @@ if(WIN32)
   endif()
   STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_2SLASH ${IMCOMP_DEPS_BASEDIR})
   STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_4SLASH ${IMCOMP_DEPS_BASEDIR_2SLASH})
-  #message("IMCOMP_DEPS_BASEDIR: " ${IMCOMP_DEPS_BASEDIR})
-  #message("IMCOMP_DEPS_BASEDIR_2SLASH: " ${IMCOMP_DEPS_BASEDIR_2SLASH})
-  #message("IMCOMP_DEPS_BASEDIR_4SLASH: " ${IMCOMP_DEPS_BASEDIR_4SLASH})
-  #ADD_DEFINITIONS(-D_WIN32_WINDOWS) # this prevents graceful exit from console application
 endif()
 
 ##
@@ -77,20 +70,9 @@ endif()
 ## @todo avoid using hard coded paths
 ##
 if(APPLE)
-  #SET(WINDOWS_RESOURCE_FILENAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win/imcomp_server_win_res.rc")
-  
   SET (VLFEAT_LIB "/Users/tlm/deps/imcomp/tmp_libsrc/vlfeat-0.9.21/bin/maci64/libvl.dylib")
   SET (VLFEAT_INCLUDE_DIR "/Users/tlm/deps/imcomp/tmp_libsrc/vlfeat-0.9.21")
   SET (IMCOMP_DEPS_BASEDIR "")
-  SET (BOOST_ROOT "/Users/tlm/deps/imcomp/lib")
-  SET (Eigen3_DIR "/Users/tlm/deps/imcomp/tmp_libsrc/Eigen-3.3.4")
-
-  #STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_2SLASH ${IMCOMP_DEPS_BASEDIR})
-  #STRING(REPLACE "\\" "\\\\" IMCOMP_DEPS_BASEDIR_4SLASH ${IMCOMP_DEPS_BASEDIR_2SLASH})
-  #message("IMCOMP_DEPS_BASEDIR: " ${IMCOMP_DEPS_BASEDIR})
-  #message("IMCOMP_DEPS_BASEDIR_2SLASH: " ${IMCOMP_DEPS_BASEDIR_2SLASH})
-  #message("IMCOMP_DEPS_BASEDIR_4SLASH: " ${IMCOMP_DEPS_BASEDIR_4SLASH})
-  #ADD_DEFINITIONS(-D_WIN32_WINDOWS) # this prevents graceful exit from console application
 endif()
 
 ## Boost
@@ -121,7 +103,7 @@ ${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;
   SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
   link_directories("${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
 else()
-  # for Linux and MacOS, the automatic detection is ok
+  # for Linux the automatic detection is ok
   find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
 endif()
@@ -244,5 +226,14 @@ if(APPLE)
   #SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/traherne_icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
   #SET(CPACK_BINARY_DRAGNDROP ON)  
+
+  # @todo avoid hard coded paths
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset" DESTINATION "bin")
+  INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt" DESTINATION ".")
+  INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION ".")
+  INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG" DESTINATION ".")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party_licenses" DESTINATION ".")
+
+  INSTALL(DIRECTORY "/Users/tlm/deps/clang/imcomp/cpack_mac_deps/" DESTINATION "bin")
   INCLUDE(CPack)
 endif()

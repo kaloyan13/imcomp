@@ -2,10 +2,9 @@
 
 ## Compiling Dependencies
 ```
-brew install gcc@6 # we use gcc compiler to compiler dependencies and imcomp
 cd /Users/tlm/dev/
 git clone git@gitlab.com:vgg/imcomp.git
-./scripts/install_mac_dep.sh /Users/tlm/deps/imcomp/
+./scripts/install_mac_clang_deps.sh /Users/tlm/deps/clang/imcomp/
 
 ```
 
