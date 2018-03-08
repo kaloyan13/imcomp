@@ -70,9 +70,8 @@ endif()
 ## @todo avoid using hard coded paths
 ##
 if(APPLE)
-  SET (VLFEAT_LIB "/Users/tlm/deps/imcomp/tmp_libsrc/vlfeat-0.9.21/bin/maci64/libvl.dylib")
-  SET (VLFEAT_INCLUDE_DIR "/Users/tlm/deps/imcomp/tmp_libsrc/vlfeat-0.9.21")
-  SET (IMCOMP_DEPS_BASEDIR "")
+  SET (VLFEAT_LIB "/Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21/bin/maci64/libvl.dylib")
+  SET (VLFEAT_INCLUDE_DIR "/Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21")
 endif()
 
 ## Boost
@@ -102,6 +101,10 @@ ${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
   SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
   link_directories("${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
+elseif(APPLE)
+  set(CMAKE_MACOSX_RPATH 1)
+  find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
+  include_directories( ${ImageMagick_INCLUDE_DIRS} )
 else()
   # for Linux the automatic detection is ok
   find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
@@ -222,18 +225,18 @@ if(APPLE)
   SET(CPACK_BUNDLE_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/resources.plist")
 
   # icon
-  #SET(MACOSX_BUNDLE_ICON_FILE "traherne_icon.icns")
+  SET(MACOSX_BUNDLE_ICON_FILE "traherne_icon.icns")
   #SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/traherne_icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
   #SET(CPACK_BINARY_DRAGNDROP ON)  
 
   # @todo avoid hard coded paths
-  INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset" DESTINATION "bin")
+  INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/asset" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/README.md" DESTINATION ".")
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG" DESTINATION ".")
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party_licenses" DESTINATION ".")
 
-  INSTALL(DIRECTORY "/Users/tlm/deps/clang/imcomp/cpack_mac_deps/" DESTINATION "bin")
+  INSTALL(DIRECTORY "/Users/tlm/deps/clang/imcomp/cpack_mac_deps/" DESTINATION ".")
   INCLUDE(CPack)
 endif()

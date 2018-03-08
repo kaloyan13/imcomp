@@ -7,10 +7,11 @@ if(APPLE)
   if(RELEASE_PACKAGE_NAME MATCHES "Traherne")
     add_executable( Traherne imcomp_server.cc )
     target_link_libraries( Traherne http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
-    #install(TARGETS Traherne BUNDLE DESTINATION .
-    #                         RUNTIME DESTINATION bin
-    #                         LIBRARY DESTINATION lib
-    #                         ARCHIVE DESTINATION lib/static)
+    set_target_properties( Traherne PROPERTIES INSTALL_RPATH "@loader_path" )
+
+    install(TARGETS Traherne BUNDLE DESTINATION .
+                             RUNTIME DESTINATION .
+                             LIBRARY DESTINATION .)
   else()
     add_executable( imcomp_server imcomp_server.cc )
     target_link_libraries( imcomp_server http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
