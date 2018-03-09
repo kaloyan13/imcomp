@@ -70,6 +70,12 @@ endif()
 ## @todo avoid using hard coded paths
 ##
 if(APPLE)
+  set(CMAKE_SKIP_BUILD_RPATH FALSE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  set(CMAKE_MACOSX_RPATH TRUE)
+  set(CMAKE_INSTALL_RPATH "@executable_path/;@loader_path/;/usr/local/lib")
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
   SET (VLFEAT_LIB "/Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21/bin/maci64/libvl.dylib")
   SET (VLFEAT_INCLUDE_DIR "/Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21")
 endif()
@@ -86,6 +92,7 @@ if(WIN32)
   add_definitions(-DBOOST_ALL_NO_LIB)
   add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 endif()
+
 link_directories( ${Boost_LIBRARY_DIRS} )
 include_directories( ${Boost_INCLUDE_DIRS} )
 
@@ -102,7 +109,6 @@ ${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\ImageMagick\\Magick++\\lib;
   SET(ImageMagick_LIBRARIES "CORE_RL_Magick++_;CORE_RL_magick_;CORE_RL_wand_")
   link_directories("${IMCOMP_DEPS_BASEDIR_2SLASH}\\ImageMagick-6.9.9-36\\VisualMagick\\lib")
 elseif(APPLE)
-  set(CMAKE_MACOSX_RPATH 1)
   find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
 else()

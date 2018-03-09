@@ -7,14 +7,8 @@ cd /Users/tlm/dev/
 git clone git@gitlab.com:vgg/imcomp.git
 ./scripts/install_mac_clang_deps.sh /Users/tlm/deps/clang/imcomp/
 
-# to remove absolute path from the name of ImageMagick libraries
-install_name_tool -id libMagick++-6.Q8.8.dylib /Users/tlm/deps/clang/imcomp/lib/lib/libMagick++-6.Q8.8.dylib
-install_name_tool -id libMagickCore-6.Q8.dylib /Users/tlm/deps/clang/imcomp/lib/lib/libMagickCore-6.Q8.dylib
-install_name_tool -id libMagickWand-6.Q8.dylib /Users/tlm/deps/clang/imcomp/lib/lib/libMagickWand-6.Q8.dylib
-
-install_name_tool -change "/Users/tlm/deps/clang/imcomp/lib/lib/libMagickCore-6.Q8.5.dylib" "libMagickCore-6.Q8.5.dylib" libMagick++-6.Q8.dylib
-install_name_tool -change "/Users/tlm/deps/clang/imcomp/lib/lib/libMagickWand-6.Q8.5.dylib" "libMagickWand-6.Q8.5.dylib" libMagick++-6.Q8.dylib
-
+./scripts/dist/mac_deps_fix_dylib.sh
+./scripts/dist/mac_fix_traherne.sh
 ```
 
 ## Compiling imcomp
@@ -32,6 +26,22 @@ make package # to build dmg package
 ## make -j 8
 ```
 ## Building imcomp installers for MacOS
+
+## Debugging
+```
+export DYLD_PRINT_OPTS="1"
+export DYLD_PRINT_ENV="1"
+export DYLD_PRINT_LIBRARIES="1"
+export DYLD_PRINT_LIBRARIES_POST_LAUNCH="1"
+export DYLD_PRINT_APIS="1"
+export DYLD_PRINT_BINDINGS="1"
+export DYLD_PRINT_INITIALIZERS="1"
+export DYLD_PRINT_REBASINGS="1"
+export DYLD_PRINT_SEGMENTS="1"
+export DYLD_PRINT_STATISTICS="1"
+export DYLD_PRINT_DOFS="1"
+export DYLD_PRINT_RPATHS="1"
+```
 
 ## References
  * [Bundle Programming Guide](https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/Introduction/Introduction.html#//apple_ref/doc/uid/10000123i-CH1-SW1)
