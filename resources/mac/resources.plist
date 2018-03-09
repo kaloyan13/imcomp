@@ -9,6 +9,10 @@
   <key>CFBundleExecutable</key>
   <string>Traherne</string>
   <key>CFBundleIconFile</key>
-  <string>traherne_icon.icns</string>
+  <string>Traherne.icns</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>2.0.3</string>
 </dict>
 </plist>

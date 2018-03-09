@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
   //std::cout << "\nMagick::InitializeMagick = " << exec_dir.parent_path().string().c_str() << std::endl;
   
   boost::filesystem::path asset_dir( exec_dir.parent_path() / "asset");
+
   unsigned int thread_pool_size = 3;
   
   boost::filesystem::path temp_dir( boost::filesystem::temp_directory_path() / "imcomp" );
