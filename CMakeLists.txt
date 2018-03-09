@@ -73,8 +73,8 @@ if(APPLE)
   set(CMAKE_SKIP_BUILD_RPATH FALSE)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
   set(CMAKE_MACOSX_RPATH TRUE)
-  set(CMAKE_INSTALL_RPATH "@executable_path/;@loader_path/;/usr/local/lib")
-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  set(CMAKE_INSTALL_RPATH "@executable_path/lib/")
+  #set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
   SET (VLFEAT_LIB "/Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21/bin/maci64/libvl.dylib")
   SET (VLFEAT_INCLUDE_DIR "/Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21")
@@ -224,11 +224,14 @@ if(APPLE)
   SET(CPACK_PACKAGE_VERSION_PATCH ${IMCOMP_SERVER_VERSION_PATCH})
   SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${RELEASE_PACKAGE_DESCRIPTION}")
 
+  SET(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/traherne_icon.icns")
   SET(CPACK_BUNDLE_NAME "${RELEASE_PACKAGE_NAME}")
   SET(CPACK_BUNDLE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/traherne_icon.icns")
   SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
   SET(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
   SET(CPACK_BUNDLE_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/resources.plist")
+  SET(CPACK_BUNDLE_STARTUP_COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/dist/mac_start_traherne.sh")
 
   # icon
   SET(MACOSX_BUNDLE_ICON_FILE "traherne_icon.icns")
@@ -243,6 +246,6 @@ if(APPLE)
   INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG" DESTINATION ".")
   INSTALL(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party_licenses" DESTINATION ".")
 
-  INSTALL(DIRECTORY "/Users/tlm/deps/clang/imcomp/cpack_mac_deps/" DESTINATION ".")
+  INSTALL(DIRECTORY "/Users/tlm/deps/clang/imcomp/cpack_mac_deps/" DESTINATION "lib")
   INCLUDE(CPack)
 endif()

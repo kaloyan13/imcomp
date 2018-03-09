@@ -47,7 +47,7 @@ else
     tar -zxvf boost_1_64_0.tar.gz
     cd boost_1_64_0
     ./bootstrap.sh --prefix=$LIBDIR --with-libraries=filesystem,system,thread,date_time,chrono,atomic,timer
-    ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer variant=release threading=multi install
+    ./b2 --with-filesystem --with-system --with-thread --with-date_time --with-chrono --with-atomic --with-timer variant=release threading=multi link=static runtime-link=static install
 fi
 
 #

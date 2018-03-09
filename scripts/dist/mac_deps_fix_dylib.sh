@@ -58,18 +58,18 @@ install_name_tool -change /usr/local/opt/xz/lib/liblzma.5.dylib "@rpath/liblzma.
 ##
 ## Boost libraries
 ##
-install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_chrono.dylib
-install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_filesystem.dylib
-install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_thread.dylib
-install_name_tool -change "libboost_chrono.dylib" "@rpath/libboost_chrono.dylib" "$DYLIB_SRC"/libboost_timer.dylib
-install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_timer.dylib
+#install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_chrono.dylib
+#install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_filesystem.dylib
+#install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_thread.dylib
+#install_name_tool -change "libboost_chrono.dylib" "@rpath/libboost_chrono.dylib" "$DYLIB_SRC"/libboost_timer.dylib
+#install_name_tool -change "libboost_system.dylib" "@rpath/libboost_system.dylib" "$DYLIB_SRC"/libboost_timer.dylib
 
 ##
 ## vlfeat
 ##
 install_name_tool -change "@loader_path/libvl.dylib" "@rpath/libvl.dylib" "$DYLIB_SRC"/libboost_timer.dylib
 # todo
-#install_name_tool -change "@loader_path/libomp.dylib" "@rpath/libomp.dylib" "$DYLIB_SRC"/libboost_timer.dylib
+install_name_tool -change "@loader_path/libomp.dylib" "@rpath/libomp.dylib" "$DYLIB_SRC"/libboost_timer.dylib
 
 cp -f "$DYLIB_SRC/libMagick++-6.Q8.8.dylib" "$DYLIB_DST/"
 cp -f "$DYLIB_SRC/libMagickCore-6.Q8.5.dylib" "$DYLIB_DST/"
@@ -78,10 +78,13 @@ cp -f "$DYLIB_SRC/libjpeg.8.dylib" "$DYLIB_DST/"
 cp -f "$DYLIB_SRC/libpng16.16.dylib" "$DYLIB_DST/"
 cp -f "$DYLIB_SRC/liblzma.5.dylib" "$DYLIB_DST/"
 
-cp -f "$DYLIB_SRC/libboost_atomic.dylib" "$DYLIB_DST/"
-cp -f "$DYLIB_SRC/libboost_chrono.dylib" "$DYLIB_DST/"
-cp -f "$DYLIB_SRC/libboost_date_time.dylib" "$DYLIB_DST/"
-cp -f "$DYLIB_SRC/libboost_filesystem.dylib" "$DYLIB_DST/"
-cp -f "$DYLIB_SRC/libboost_system.dylib" "$DYLIB_DST/"
-cp -f "$DYLIB_SRC/libboost_thread.dylib" "$DYLIB_DST/"
-cp -f "$DYLIB_SRC/libboost_timer.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_atomic.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_chrono.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_date_time.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_filesystem.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_system.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_thread.dylib" "$DYLIB_DST/"
+#cp -f "$DYLIB_SRC/libboost_timer.dylib" "$DYLIB_DST/"
+
+cp -f "$DYLIB_SRC/libvl.dylib" "$DYLIB_DST/"
+cp -f "$DYLIB_SRC/libomp.dylib" "$DYLIB_DST/"

@@ -8,13 +8,10 @@ if(APPLE)
     add_executable( Traherne imcomp_server.cc )
     target_link_libraries( Traherne http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
 
-    #set_target_properties(Traherne PROPERTIES INSTALL_RPATH "@executable_path/")
     add_custom_command(TARGET Traherne POST_BUILD COMMAND ${CMAKE_SOURCE_DIR}/scripts/dist/mac_deps_fix_dylib.sh)
     add_custom_command(TARGET Traherne POST_BUILD COMMAND ${CMAKE_SOURCE_DIR}/scripts/dist/mac_post_build_script.sh $<TARGET_FILE:Traherne>)
 
-    install(TARGETS Traherne BUNDLE DESTINATION .
-                             RUNTIME DESTINATION .
-                             LIBRARY DESTINATION .)
+    install(TARGETS Traherne BUNDLE DESTINATION "bin" RUNTIME DESTINATION ".")
   else()
     add_executable( imcomp_server imcomp_server.cc )
     target_link_libraries( imcomp_server http_server imcomp_request_handler ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES})
