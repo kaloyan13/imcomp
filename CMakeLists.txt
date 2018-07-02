@@ -123,7 +123,7 @@ endif()
 ## @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
 ## and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
-if(_host_name MATCHES "0x02")
+if(_host_name MATCHES "0x02|0x04")
   set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so")
 endif()
 
