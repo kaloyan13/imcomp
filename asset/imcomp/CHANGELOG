@@ -3,6 +3,7 @@ Note: version A.B.C corresponds to:
   B : the minor version number of imcomp server
   C : the version number for client user interfaces of imcomp and traherne
 
-## [imcomp-2.0.1] - Not Released Yet
- * generic image compator
- 
+## [imcomp-2.0.0] - Not Released Yet
+ * imported all basic user interface components and visualisation tools from traherne-2.0.3
+ * comparison algorithm settings exposed to user @todo
+ * added slider based visualisation of image difference @todo

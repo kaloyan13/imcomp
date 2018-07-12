@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     boost::filesystem::remove_all( result_dir );
     boost::filesystem::create_directories(result_dir);
   }
-  
+  // this is critical to avoid race conditions for imcomp_request_handler::instance()
   imcomp_request_handler::instance()->init(upload_dir, result_dir, asset_dir);
 
   http_server server(address, port, thread_pool_size);
