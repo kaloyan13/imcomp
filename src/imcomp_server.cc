@@ -106,6 +106,12 @@ int main(int argc, char** argv) {
   ShellExecute(NULL, NULL, "http://localhost:9972/imcomp/traherne/index.html", 0, 0, SW_SHOW);
 #endif
 
+#if defined(__APPLE__)
+  std::cout << "\n  - To quit this application, close this console window.";
+  std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
+  system("open http://localhost:9972/imcomp/traherne/index.html");
+#endif
+
   server.start();
   return 0;
 }
