@@ -163,11 +163,23 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
 
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
+    this.c.reset_all_toggle();
   }.bind(this), false);
 
   document.getElementById( 'zoom_level').addEventListener('change', function(e) {
     this.theme.ZOOM_LEVEL = e.target.value;
     this.c.zoom_update_level();
+  }.bind(this), false);
+
+  document.getElementById('href_line_toggler').addEventListener('change', function(e) {
+    if ( e.target.checked ) {
+      this.c.ref_line_position(100);
+      this.c.show_element(this.c.ref_line.hline);
+    } else {
+      // hide horizontal reference line
+      this.c.hide_element(this.c.ref_line.hline);
+      this.c.ref_line.current_y = -1;
+    }
   }.bind(this), false);
 }
 

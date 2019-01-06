@@ -606,6 +606,15 @@ _traherne_controller.prototype.get_current_content_selector_id = function(type) 
   }
 }
 
+_traherne_controller.prototype.reset_all_toggle = function() {
+  for( var type in this.type_list ) {
+    // only reset the existing toggles
+    if( _traherne_toggle_timer[type] > 0 ) {
+      this.set_toggle(type);
+    }
+  }
+}
+
 _traherne_controller.prototype.set_toggle = function(type) {
   if( _traherne_toggle_timer[type] > 0 ) {
     this.clear_toggle(type);
@@ -722,20 +731,23 @@ _traherne_controller.prototype.init_ref_line = function() {
       this.ref_line_position(this.ref_line.current_y);
     }
   }.bind(this), false);
-  
+
   var parent = document.getElementById('ref_line_container');
   parent.addEventListener('mouseup', function(e) {
+    document.getElementById('href_line_toggler').checked = true;
     var y = e.offsetY;
-   
+
     this.ref_line_position(y);
     this.show_element(this.ref_line.hline);
   }.bind(this), false);
-  
+
   var hline = document.getElementById('horizontal_line');
   hline.addEventListener('mouseup', function(e) {
     this.hide_element(this.ref_line.hline);
     this.ref_line.current_y = -1;
+    document.getElementById('href_line_toggler').checked = false;
   }.bind(this), false);
+
 }
 
 
@@ -766,23 +778,26 @@ _traherne_controller.prototype.zoom_event_handler = function(e) {
 
 _traherne_controller.prototype.zoom_update_level = function() {
   for( var type in this.type_list ) {
-    var switch_name = this.type_list[type] + '_zoom';
-    var e = document.getElementById(switch_name);
+    // ensure that files are loaded for "type"
+    if ( typeof(this.v.now[type].findex) !== 'undefined' ) {
+      var switch_name = this.type_list[type] + '_zoom';
+      var e = document.getElementById(switch_name);
 
-    if( this.v.now[type].sid_suffix.endsWith('_via') ) {
-      if( e.target.checked ) {
-        this.v.now[type].zoom.is_enabled = false;
-        this.m.via[type].c.zoom_deactivate();
-        this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
-        this.m.via[type].c.zoom_activate();
-        this.v.now[type].zoom.is_enabled = true;
-      }
-    } else {
-      if( e.target.checked ) {
-        this.v.now[type].zoom.is_enabled = false;
-        this.disable_image_zoom(type);
-        this.enable_image_zoom(type);
-        this.v.now[type].zoom.is_enabled = true;
+      if( this.v.now[type].sid_suffix.endsWith('_via') ) {
+        if( e.checked ) {
+          this.v.now[type].zoom.is_enabled = false;
+          this.m.via[type].c.zoom_deactivate();
+          this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+          this.m.via[type].c.zoom_activate();
+          this.v.now[type].zoom.is_enabled = true;
+        }
+      } else {
+        if( e.checked ) {
+          this.v.now[type].zoom.is_enabled = false;
+          this.disable_image_zoom(type);
+          this.enable_image_zoom(type);
+          this.v.now[type].zoom.is_enabled = true;
+        }
       }
     }
   }

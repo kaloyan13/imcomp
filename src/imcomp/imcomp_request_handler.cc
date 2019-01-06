@@ -23,7 +23,7 @@ void imcomp_request_handler::init(const boost::filesystem::path upload_dir,
 }
 
 void imcomp_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  //cout << "\n" << request.method_ << " [" << request.uri_ << "]" << flush;
+  cout << "\n" << request.method_ << " [" << request.uri_ << "]" << flush;
   response.set_status(200);
 
   if ( util::begins_with(request.uri_, "/imcomp/static/result/") && request.method_ == "GET") {
