@@ -14,8 +14,9 @@
     Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
     Using Google Analytics, we record the usage of this application.
     This data is used in reporting of this programme grant.
-  -->
+
   <script src="./traherne_google_analytics.js"></script>
+  -->
 </head>
 
 <body>
@@ -102,14 +103,20 @@
             <td>Ref. Line</td>
             <td>
               <input id="href_line_toggler" type="checkbox">
-              <label for="href_line_toggler">Toggle horizontal reference line across base and comp image.</label>
+              <label for="href_line_toggler">Toggle reference line across base and comp image.</label>
             </td>
           </tr>
           <tr title="Change the images in base or comp set.">
             <td>Images</td>
             <td>
-              <button id="base_load_images" type="button">Change Base Image Set</button>
-              <button id="comp_load_images" type="button">Change Comp Image Set</button>
+              <button id="base_load_images" type="button">Change Base</button>
+              <button id="comp_load_images" type="button">Change Comp</button>
+            </td>
+          </tr>
+          <tr title="Change the images in base or comp set.">
+            <td>Save</td>
+            <td>
+              <button id="save_current_visualisation" type="button">Current Visualisation</button>
             </td>
           </tr>
         </tbody>
@@ -124,22 +131,41 @@
     <!-- Content name, description and status -->
     <div id="content_label" class="row">
       <div class="img_label cell">
+        <div id="base_img_status" class="img_upload_status"></div>
         <label for="base_img_filename_list">Base&nbsp;</label>
         <button id="base_move_to_prev" type="button">&lt;</button>
         <select name="base_img_filename_list" id="base_img_filename_list">
         </select>
         <button id="base_move_to_next" type="button">&gt;</button>
+        <span class="nobreak">
+          <span id="base_flip_horizontal" class="text_button" title="Flip base image horizontally">&harr;</span>
+          <span id="base_flip_vertical" class="text_button" title="Flip base image vertically">&varr;</span>
+        </span>
+        <span class="nobreak">
+          <span id="base_rotate_-90" class="text_button" title="Rotate base image by 90 degree in anti-clockwise direction">&cularr;</span>
+          <span id="base_rotate_+90" class="text_button" title="Rotate base image by 90 degree in clockwise direction">&curarr;</span>
+        </span>
 
-        <div id="base_img_status" class="img_upload_status"></div>
       </div>
+
       <div class="vertical_img_separator_panel cell"></div>
+
       <div class="img_label cell">
+        <div id="comp_img_status" class="img_upload_status"></div>
         <label for="comp_img_filename_list">Comp.&nbsp;</label>
         <button id="comp_move_to_prev" type="button">&lt;</button>
         <select name="comp_img_filename_list" id="comp_img_filename_list">
         </select>
         <button id="comp_move_to_next" type="button">&gt;</button>
-        <div id="comp_img_status" class="img_upload_status"></div>
+
+        <span class="nobreak">
+          <span id="comp_flip_horizontal" class="text_button" title="Flip comp image horizontally">&harr;</span>
+          <span id="comp_flip_vertical" class="text_button" title="Flip comp image vertically">&varr;</span>
+        </span>
+        <span class="nobreak">
+          <span id="comp_rotate_-90" class="text_button" title="Rotate comp image by 90 degree in anti-clockwise direction">&cularr;</span>
+          <span id="comp_rotate_+90" class="text_button" title="Rotate comp image by 90 degree in clockwise direction">&curarr;</span>
+        </span>
       </div>
     </div>
 

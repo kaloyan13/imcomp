@@ -127,6 +127,11 @@ _traherne_model.prototype.set_via_config = function() {
 }
 
 _traherne_model.prototype.clear_images = function( type ) {
+  // reset VIA
+  var via_panel = document.getElementById( this.c.type_list[type] + '_via_panel' );
+  this.via[type].init(via_panel);
+  //this.reset_model_state(type);
+
   this.files[type] = [];
 
   this.file_count[type] = 0;
@@ -140,71 +145,87 @@ _traherne_model.prototype.clear_images = function( type ) {
   this.upload_scale[type] = {};
 }
 
+_traherne_model.prototype.local_file_sorter = function(a,b) {
+  if( a.name < b.name ) {
+    return -1;
+  }
+  if( a.name > b.name ) {
+    return 1;
+  }
+  return 0;
+}
+
 _traherne_model.prototype.add_images = function( type, files ) {
   this.clear_images(type);
   this.files[type] = Array.from(files);
+  var nfiles = this.files[type].length;
 
   // sort files based on filename
-  this.files[type].sort(
-    function(a,b) {
-      if( a.name < b.name ) {
-        return -1;
-      }
-      if( a.name > b.name ) {
-        return 1;
-      }
-      return 0;
-    }
-  );
+  this.files[type].sort( this.local_file_sorter );
 
-  var n = this.files[type].length;
-  var promises = [];
-  for (var i=0; i < n; i++) {
-    //('[' + i + '] Adding local file to ' + type + ' : ' + this.files[type][i].name);
-    promises.push( this.via[type].m.add_file_local(this.files[type][i]) );
+  //// mark all TIF files as remote and everything else as local
+  for (var i=0; i < nfiles; i++) {
+    if (this.files[type][i].type === 'image/tiff') {
+      this.files[type][i].location = 'remote';
+      this.files[type][i].uri = this.c.config.placeholder_tif_conv_ongoing;
+    } else {
+      this.files[type][i].location = 'local';
+    }
   }
 
-  Promise.all(promises).then( function(result) {
-    var n = result.length;
+  //// add all files to VIA (so that user can view them)
+  var via_file_add_promises = [];
+  for (var i=0; i < nfiles; i++) {
+    if ( this.files[type][i].location === 'remote' ) {
+      //console.log('Adding remote file to VIA : ' + this.files[type][i].name);
+      via_file_add_promises.push( this.via[type].m.add_file_from_url(this.files[type][i].uri, 'image') );
+    } else {
+      //console.log('Adding local file to VIA : ' + this.files[type][i].name);
+      via_file_add_promises.push( this.via[type].m.add_file_local(this.files[type][i]) );
+    }
+  }
 
-    // @todo: this can be avoided in Promise.all() can operate on this.upload[type]
-    //var upload_promises = [];
+  //// upload all images to imcomp server
+  Promise.all(via_file_add_promises).then( function(via_added_fid_list) {
+    // upload the files to server
+    var n = via_added_fid_list.length;
+    var i, via_fid;
+    for ( i = 0; i < n; i++ ) {
+      via_fid = via_added_fid_list[i];
+      this.fid_to_index[type][via_fid] = i;
+      this.index_to_fid[type][i] = via_fid;
+      this.file_count[type] = this.file_count[type] + 1;
+      this.upload_status[type][i] = {};
 
-    for( var i=0; i<n; i++ ) {
-      var fid = result[i];
-      if ( !fid.startsWith("Error") ) {
-        // record the internal file-id in via
-        this.fid_to_index[type][fid] = i;
-        this.index_to_fid[type][i] = fid;
-        this.file_count[type] = this.file_count[type] + 1;
-
-        // upload image to server
-        this.upload_status[type][i] = {};
+      if ( this.files[type][i].location === 'remote' ) {
+        this.upload_scale[type][i] = 1.0; // scaled image retrived from server is used as it is
         this.set_upload_status(type, i, '...', 'Queued for upload');
-        this.upload[type][i] = this.upload_file(type, i);
-        //upload_promises.push( this.upload[type][i] ); // @todo: avoid
+        this.upload[type][i] = this.upload_and_transform_file(type, i, via_fid).then(
+          function(ok) {
+            this.files[ok.type][ok.findex].uri = ok.uri;
+            this.via[ok.type].m.files.content[ok.via_fid] = ok.uri;
+            this.via[ok.type].c.load_file(ok.via_fid);
+            console.log('done showing remote file')
+            return ok;
+          }.bind(this),
+          function(err) {
+            this.files[err.type][err.findex].uri = this.c.config.placeholder_tif_conv_error;
+            this.via[err.type].m.files.content[err.via_fid] = this.c.config.placeholder_tif_conv_error;
+            return err;
+          }.bind(this)
+        );
+      } else {
+        this.set_upload_status(type, i, '...', 'Queued for upload');
+        this.upload[type][i] = this.upload_file(type, i, via_fid);
       }
     }
+    // update the UI to show all the added files
+    // the local files are available right away for visualisation
     this.c.on_filelist_update(type);
-    /*
-    // @todo: err_callback() is not being invoked correctly.
-    // I expect, error.length == 12, if err_callback() is invoked 12 times
-    // but this is not happening. @fixme
-
-    console.log(upload_promises.length);
-    Promise.all( upload_promises ).then( function(result) {
-      console.log('result count = ' + result.length + ', {' + result + '}');
-      if( result.length !== 0 ) {
-        this.c.append_message(' <span class="blue">[added ' + result.length + ' images]</span>');
-      }
-    }.bind(this), function(error) {
-      console.log(error.length);
-      if( error.length !== 0 ) {
-        this.c.append_message(' <span class="red">[failed to add ' + error.length + ' images]</span>');
-      }
-    }.bind(this));
-    */
-
+  }.bind(this), function(via_err) {
+    this.c.show_message('Failed to add some images to image annotation application!');
+    console.log('Failed to add images to VIA');
+    console.log(via_err)
   }.bind(this));
 }
 
@@ -225,7 +246,151 @@ _traherne_model.prototype.set_upload_status = function(type, findex, status, msg
   this.c.on_upload_status_update(type, findex);
 }
 
-_traherne_model.prototype.upload_file = function(type, findex) {
+_traherne_model.prototype.upload_and_transform_file = function(type, findex, via_fid) {
+  return new Promise( function(ok_callback, err_callback) {
+    this.set_upload_status(type, findex, '...', 'Uploading image');
+    var uploader = new XMLHttpRequest();
+    uploader.addEventListener('error', function(e) {
+      err_callback({'success':false,
+                    'type':type,
+                    'findex':findex,
+                    'via_fid':via_fid
+                   });
+      var msg = 'Upload error!';
+      this.set_upload_status(type, findex, 'ERR', msg);
+    }.bind(this));
+    uploader.addEventListener('abort', function(e) {
+      err_callback({'success':false,
+                    'type':type,
+                    'findex':findex,
+                    'via_fid':via_fid
+                   });
+
+      var msg = 'Upload abort!';
+      this.set_upload_status(type, findex, 'ERR', msg);
+    }.bind(this));
+
+    uploader.addEventListener('load', function() {
+      try {
+        var response_str = uploader.responseText;
+        if ( response_str === '' ) {
+          var msg = 'Error uploading image! [empty server response]';
+          this.set_upload_status(type, findex, 'ERR', msg);
+          err_callback({'success':false,
+                        'type':type,
+                        'findex':findex,
+                        'via_fid':via_fid
+                       });
+        } else {
+          var response = JSON.parse(response_str);
+          if(response.status === 'ERR') {
+            var msg = 'Error uploading image!';
+            this.set_upload_status(type, findex, 'ERR', msg);
+            err_callback({'success':false,
+                          'type':type,
+                          'findex':findex,
+                          'via_fid':via_fid
+                         });
+          } else {
+            var msg = 'File uploaded [' + response.fid + ']';
+            this.set_upload_status(type, findex, 'OK', msg);
+            ok_callback({'success':true,
+                         'fid':response.fid,
+                         'uri':this.c.config.imcomp_server_file_uri + '?fid=' + response.fid,
+                         'type':type,
+                         'findex':findex,
+                         'via_fid':via_fid
+                        });
+          }
+        }
+      }
+      catch(e) {
+        var msg = 'Error uploading image! [exception occured]';
+        console.log('error except');
+        this.set_upload_status(type, findex, 'ERR', msg);
+        err_callback({'success':false,
+                      'type':type,
+                      'findex':findex,
+                      'via_fid':via_fid
+                     });
+      }
+    }.bind(this));
+
+    var param = [];
+    param.push('maxwidth=' + this.c.config.upload.MAX_IMG_DIM_PX);
+    param.push('maxheight=' + this.c.config.upload.MAX_IMG_DIM_PX);
+    param.push('filename=' + this.files[type][findex].name);
+    uploader.open('POST', this.c.config.imcomp_server_upload_uri + '?' + param.join('&') , true);
+    uploader.send(this.files[type][findex]);
+  }.bind(this));
+}
+
+_traherne_model.prototype.transform_remote_file = function(type, findex, via_fid, remote_fid, operation, param) {
+  return new Promise( function(ok_callback, err_callback) {
+    var uploader = new XMLHttpRequest();
+    uploader.addEventListener('error', function(e) {
+      err_callback({'success':false,
+                    'type':type,
+                    'findex':findex,
+                    'via_fid':via_fid
+                   });
+    }.bind(this));
+    uploader.addEventListener('abort', function(e) {
+      err_callback({'success':false,
+                    'type':type,
+                    'findex':findex,
+                    'via_fid':via_fid
+                   });
+    }.bind(this));
+
+    uploader.addEventListener('load', function() {
+      try {
+        var response_str = uploader.responseText;
+        if ( response_str === '' ) {
+          err_callback({'success':false,
+                        'type':type,
+                        'findex':findex,
+                        'via_fid':via_fid
+                       });
+        } else {
+          var response = JSON.parse(response_str);
+          if(response.status === 'ERR') {
+            err_callback({'success':false,
+                          'type':type,
+                          'findex':findex,
+                          'via_fid':via_fid
+                         });
+          } else {
+            ok_callback({'success':true,
+                         'fid':response.fid,
+                         'uri':this.c.config.imcomp_server_file_uri + '?fid=' + response.fid,
+                         'type':type,
+                         'findex':findex,
+                         'via_fid':via_fid
+                        });
+          }
+        }
+      }
+      catch(e) {
+        this.set_upload_status(type, findex, 'ERR', msg);
+        err_callback({'success':false,
+                      'type':type,
+                      'findex':findex,
+                      'via_fid':via_fid
+                     });
+      }
+    }.bind(this));
+
+    var arg = [];
+    arg.push('fid=' + remote_fid);
+    arg.push('operation=' + operation);
+    arg.push('param=' + param);
+    uploader.open('POST', this.c.config.imcomp_server_transform_uri + '?' + arg.join('&') , true);
+    uploader.send();
+  }.bind(this));
+}
+
+_traherne_model.prototype.upload_file = function(type, findex, via_fid) {
   return new Promise( function(ok_callback, err_callback) {
     var file_content = this.files[type][findex];
     var file_source = 'local';
@@ -284,13 +449,22 @@ _traherne_model.prototype.upload_file = function(type, findex) {
         this.set_upload_status(type, findex, '...', 'Uploading image');
         var uploader = new XMLHttpRequest();
         uploader.addEventListener('error', function(e) {
-          err_callback(findex);
+          err_callback({'success':false,
+                        'type':type,
+                        'findex':findex,
+                        'via_fid':via_fid
+                       });
           var msg = 'Upload error!';
           console.log('uploader.event() == error');
           this.set_upload_status(type, findex, 'ERR', msg);
         }.bind(this));
         uploader.addEventListener('abort', function(e) {
-          err_callback("_ERROR_");
+          err_callback({'success':false,
+                        'type':type,
+                        'findex':findex,
+                        'via_fid':via_fid
+                       });
+
           var msg = 'Upload abort!';
           console.log('aborted');
           this.set_upload_status(type, findex, 'ERR', msg);
@@ -303,19 +477,34 @@ _traherne_model.prototype.upload_file = function(type, findex) {
             if ( response_str === '' ) {
               var msg = 'Error uploading image! [empty server response]';
               this.set_upload_status(type, findex, 'ERR', msg);
-              err_callback(findex);
+              err_callback({'success':false,
+                            'type':type,
+                            'findex':findex,
+                            'via_fid':via_fid
+                           });
               console.log(msg);
             } else {
               var response = JSON.parse(response_str);
               if(response.fid) {
                 var msg = 'File uploaded [' + response.fid + ']';
                 this.set_upload_status(type, findex, 'OK', msg);
-                ok_callback(response.fid);
+                ok_callback({'success':true,
+                             'fid':response.fid,
+                             'type':type,
+                             'findex':findex,
+                             'via_fid':via_fid
+                            });
+
               } else {
                 console.log('Error uploading image!');
                 var msg = 'Error uploading image!';
                 this.set_upload_status(type, findex, 'ERR', msg);
-                err_callback("_ERROR_");
+                err_callback({'success':false,
+                             'type':type,
+                              'findex':findex,
+                              'via_fid':via_fid
+                            });
+
                 console.log(msg);
               }
             }
@@ -324,7 +513,11 @@ _traherne_model.prototype.upload_file = function(type, findex) {
             var msg = 'Error uploading image! [exception occured]';
             console.log('error except');
             this.set_upload_status(type, findex, 'ERR', msg);
-            err_callback("_ERROR_");
+            err_callback({'success':false,
+                          'type':type,
+                          'findex':findex,
+                          'via_fid':via_fid
+                         });
           }
         }.bind(this));
 
@@ -392,37 +585,39 @@ _traherne_model.prototype.set_compare_status = function(status, msg) {
 }
 
 // c is an instance of _traherne_compare_instance
-_traherne_model.prototype.compare_img_pair = function(c) {
+_traherne_model.prototype.compare_img_pair = function(compare_task) {
   return new Promise( function(ok_callback, err_callback) {
     this.c.on_compare_start();
     var args = [];
-    args.push('file1=' + c.upload_id1);
-    args.push('file2=' + c.upload_id2);
+    args.push('file1=' + compare_task.upload_id1);
+    args.push('file2=' + compare_task.upload_id2);
 
     // resize the img1 region based on the scaling of upload image
-    if( c.scale1 != 1.0 ) {
-      for( var i=0; i<c.region1.length; i++ ) {
-        c.region1[i] = Math.round( c.region1[i] * c.scale1 );
+    if( compare_task.scale1 != 1.0 ) {
+      var i;
+      for( i = 0; i < compare_task.region1.length; i++ ) {
+        compare_task.region1[i] = Math.round( compare_task.region1[i] * compare_task.scale1 );
       }
     }
-    args.push('region=' + c.region1.join(','));
+
+    args.push('region=' + compare_task.region1.join(','));
     var algorithm_choice = document.getElementById('algorithm_choice');
     var algname = algorithm_choice.options[algorithm_choice.selectedIndex].value;
     args.push('algname=' + algname);
 
     var cr = new XMLHttpRequest();
     cr.addEventListener('timeout', function(e) {
-      var msg = 'xhr timeout: [' + e + ']';
+      var msg = 'the compare operation timed out';
       this.set_compare_status('ERR', msg);
       err_callback();
     }.bind(this));
     cr.addEventListener('error', function(e) {
-      var msg = 'xhr error: [' + e + ']';
+      var msg = 'error communicating with imcomp server';
       this.set_compare_status('ERR', msg);
       err_callback();
     }.bind(this));
     cr.addEventListener('abort', function(e) {
-      var msg = 'xhr abort: [' + e + ']';
+      var msg = 'aborted communication with imcomp server';
       this.set_compare_status('ERR', msg);
       err_callback();
     }.bind(this));
@@ -430,11 +625,11 @@ _traherne_model.prototype.compare_img_pair = function(c) {
     cr.addEventListener('load', function() {
       var response_str = cr.responseText;
       try {
-        c.response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
-        if( c.response.status === 'OK' ) {
+        compare_task.response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
+        if( compare_task.response.status === 'OK' ) {
           var msg = 'finished comparison';
           this.set_compare_status('OK', msg);
-          ok_callback(c);
+          ok_callback(compare_task);
         } else {
           var msg = 'comparison failed [' + c.response.status_message + ']';
           this.set_compare_status('ERR', msg);

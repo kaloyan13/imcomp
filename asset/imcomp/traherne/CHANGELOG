@@ -3,6 +3,10 @@ Note: version A.B.C corresponds to:
   B : the minor version number of imcomp server
   C : the version number for client user interfaces of imcomp and traherne
 
+## [traherne-2.0.4] - ?, 2019
+ * users can upload and view TIF files (even when browser does not support loading of TIF images)
+ * improved top toolbar (better organized and more clear)
+ * 
 ## [traherne-2.0.3] - March 06, 2018
  * web browser based interface for Traherne project
  * support for zoom and frozen zoom (for comparison)

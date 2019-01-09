@@ -27,7 +27,7 @@ set (IMCOMP_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/imcomp/")
 set (IMCOMP_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (IMCOMP_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
 set (IMCOMP_SERVER_FIRST_RELEASE_DATE "Nov. 2017")
-set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "02 Mar. 2018")
+set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "06 Jan. 2019")
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/imcomp_server_config.h.in" 
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_INCLUDE_DIR}/imcomp_server_config.h"
@@ -130,6 +130,8 @@ endif()
 # Eigen
 # requires EIGEN_DIR to be set to the location where Eigen3 is built using cmake
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+add_definitions     ( ${EIGEN3_DEFINITIONS} )
+include_directories ( ${EIGEN3_INCLUDE_DIRS} )
 
 # VLFEAT
 # VLFEAT_LIB must be define during cmake
@@ -143,6 +145,8 @@ message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
 message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
 message("VLFEAT_LIB: " ${VLFEAT_LIB} )
 message("VLFEAT_INCLUDE_DIR: " ${VLFEAT_INCLUDE_DIR} )
+message("EIGEN3_DEFINITIONS: " ${EIGEN3_DEFINITIONS} )
+message("EIGEN3_INCLUDE_DIRS: " ${EIGEN3_INCLUDE_DIRS} )
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )

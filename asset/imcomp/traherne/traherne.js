@@ -44,7 +44,7 @@ function traherne_imcomp_user_interface() {
   // name, version, etc defined in _model.js
 
   this.init = function() {
-    console.log("Initializing Traherne user interface components ...");
+    //console.log("Initializing Traherne user interface components ...");
     this.m.init( this.c );
     this.v.init( this.c );
     this.c.init( this.m, this.v );
@@ -56,7 +56,7 @@ function traherne_imcomp_user_interface() {
 var _traherne_about = {};
 _traherne_about.name = "Traherne Digital Collator";
 _traherne_about.shortname = "traherne";
-_traherne_about.version = "2.0.3";
+_traherne_about.version = "2.0.4";
 _traherne_about.date_first_release  = "June 01, 2017";
 _traherne_about.date_current_release  = "";
 _traherne_about.author_name  = "Abhishek Dutta";

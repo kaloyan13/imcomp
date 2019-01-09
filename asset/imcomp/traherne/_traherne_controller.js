@@ -51,6 +51,10 @@ function _traherne_controller() {
   this.config.upload.MAX_IMG_DIM_PX = 1200;
   this.config.imcomp_server_upload_uri = "/imcomp/_upload";
   this.config.imcomp_server_compare_uri = "/imcomp/_compare";
+  this.config.imcomp_server_transform_uri = "/imcomp/_transform";
+  this.config.imcomp_server_file_uri = "/imcomp/_file";
+  this.config.placeholder_tif_conv_ongoing = "/imcomp/img/tif_conversion_ongoing_message.png";
+  this.config.placeholder_tif_conv_error = "/imcomp/img/tif_conversion_error_message.png";
 
   this.compare = {}
   this.compare.is_ongoing = false;
@@ -284,21 +288,35 @@ _traherne_controller.prototype.compare_base_comp = function() {
 
   var findex1 = this.v.now['base'].findex;
   var findex2 = this.v.now['comp'].findex;
-  var c = new _traherne_compare_instance(findex1, findex2);
-  this.m.upload['base'][findex1].then( function(upload_id1) {
-    c.upload_id1 = upload_id1;
-    c.scale1 = this.m.upload_scale['base'][c.findex1];
-    var fid1 = this.m.index_to_fid['base'][c.findex1];
-    var rid = this.m.via['base'].v.now.all_rid_list[0];
-    c.region1 = this.m.via['base'].m.regions[fid1][rid].dimg.slice(0);
+  var compare_task = new _traherne_compare_instance(findex1, findex2);
 
-    this.m.upload['comp'][findex2].then( function(upload_id2) {
-      c.upload_id2 = upload_id2;
-      c.scale2 = this.m.upload_scale['comp'][c.findex2];
+  this.m.upload['base'][findex1].then( function(result1) {
+    if ( !result1.success ) {
+      this.show_message('Cannot compare because file ' +
+                        '[ ' + this.m.files[result1.type][result1.findex].name + ' ] ' +
+                        '<span class="red">failed to upload</span>.');
+      return;
+    }
+    compare_task.upload_id1 = result1.fid;
+    compare_task.scale1 = this.m.upload_scale['base'][compare_task.findex1];
+    var fid1 = this.m.index_to_fid['base'][compare_task.findex1];
+    var rid = this.m.via['base'].v.now.all_rid_list[0];
+    compare_task.region1 = this.m.via['base'].m.regions[fid1][rid].dimg.slice(0);
+
+    this.m.upload['comp'][findex2].then( function(result2) {
+      if ( !result2.success ) {
+        this.show_message('Cannot compare because file ' +
+                          '[ ' + this.m.files[result2.type][result2.findex].name + ' ] ' +
+                          '<span class="red">failed to upload</span>.');
+        return;
+      }
+      compare_task.upload_id2 = result2.fid;
+      compare_task.scale2 = this.m.upload_scale['comp'][compare_task.findex2];
       this.compare.is_ongoing = true;
-      this.compare.promise = this.m.compare_img_pair(c);
+      this.compare.promise = this.m.compare_img_pair(compare_task);
       var exp_comp_time;
-      var algname = document.querySelector('input[name="algorithm_choice"]:checked').value;
+      var algorithm_choice = document.getElementById('algorithm_choice');
+      var algname = algorithm_choice.options[algorithm_choice.selectedIndex].value;
       switch(algname) {
         case 'ransac_dlt':
           exp_comp_time = 5;
@@ -308,12 +326,14 @@ _traherne_controller.prototype.compare_base_comp = function() {
           break;
       }
       this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around ' + exp_comp_time + ' sec. to complete, larger regions may take longer to complete)')
+    }.bind(this), function(err2) {
+      var filename = this.files[ err2.type ][ err2.findex].name;
+      this.show_message('<span class="red">Cannot compare as image [' + filename + ' could not be uploaded to server');
     }.bind(this));
-    // @todo: fixme
-    // note: the err_callback() is defined in _traherne_model.prototype.add_images()
+  }.bind(this), function(err1) {
+      var filename = this.files[ err1.type ][ err1.findex].name;
+    this.show_message('<span class="red">Cannot compare as image [' + filename + ' could not be uploaded to server');
   }.bind(this));
-  // @todo: fixme
-  // note: the err_callback() is defined in _traherne_model.prototype.add_images()
 }
 
 _traherne_controller.prototype.is_base_region_selected = function() {
@@ -896,6 +916,69 @@ _traherne_controller.prototype.image_zoom_mousemove_handler = function(e) {
   zp_style.push('border-radius: ' + this.v.theme.ZOOM_WINDOW_SIZE_BY2 + 'px');
   var zoom = document.getElementById( content_prefix + '_zoom_panel' );
   zoom.setAttribute('style', zp_style.join(';'));
+}
+
+///
+/// Download of current visualisation
+///
+_traherne_controller.prototype.save_current_visualisation = function() {
+  console.log('save @todo')
+}
+
+///
+/// Image Rotation
+///
+_traherne_controller.prototype.transform_remote_file = function(d) {
+
+  var tokens = d.split('_');
+  var type = tokens[0];
+  var operation = tokens[1];
+  var param = tokens[2];
+  var findex = this.v.now[type].findex;
+  var via_fid = this.m.index_to_fid[type][findex];
+  var sid_suffix = type + '_via';
+
+  // image rotation is only allowed for full image
+  if ( this.v.now[type].sid_suffix !== sid_suffix ) {
+    this.show_message('Image rotation and flip operations are <span class="red">only allowed</span> for full images of base and comp.');
+    return;
+  }
+
+  this.m.upload[type][findex].then( function(result) {
+    if ( !result.success ) {
+      this.show_message('Cannot ' + operation + ' because file ' +
+                        '[ ' + this.m.files[result1.type][result1.findex].name + ' ] ' +
+                        '<span class="red">failed to upload</span>.');
+      return;
+
+    }
+    var remote_fid = result.fid;
+    var transform_promise = this.m.transform_remote_file(type, findex, via_fid, remote_fid, operation, param);
+    transform_promise.then( function(ok) {
+      // to force, web browser to download a new copy of an existing uri,
+      // we add a random number to the remote file uri
+      var uri = ok.uri + '&force_img_fetch=' + Date.now();
+      this.m.via[ok.type].m.files.content[ok.via_fid] = uri;
+      this.m.via[ok.type].m.files.metadata[ok.via_fid].source = 'url'
+      this.m.files[ok.type][ok.findex].location = 'remote';
+      this.m.files[ok.type][ok.findex].uri = uri;
+      if ( this.m.via[ok.type].v.now.all_rid_list.length ) {
+        this.m.via[ok.type].c.region_delete( this.m.via[ok.type].v.now.all_rid_list ); // delete all existing regions
+      }
+      this.m.via[ok.type].c.load_file(ok.via_fid);
+    }.bind(this), function(err) {
+      console.log(err);
+      this.show_message('Cannot ' + operation + ' because file ' +
+                        '[ ' + this.m.files[err.type][err.findex].name + ' ] ' +
+                        '<span class="red">' + err.msg + '</span>.');
+    }.bind(this));
+  }.bind(this));
+}
+
+_traherne_controller.prototype.rotate_remote_file = function(type, findex, via_fid, operation, param) {
+  return new Promise( function(ok_callback, err_callback) {
+
+  }.bind(this));
 }
 
 ///

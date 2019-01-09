@@ -51,10 +51,13 @@ body {
     height:8em;
 }
 #top_panel .about {
-    display:inline-block;
-    padding:1em 0.4em;
+    display:inline-table;
     width:190px;
     text-align:center;
+    height:100%;
+    padding:1em 0;
+    margin:0;
+    vertical-align:top;
 }
 #top_panel .about img {
     width:171px;
@@ -68,12 +71,11 @@ body {
 #top_panel .controls {
     display:inline-block;
     font-size:small;
-    vertical-align:top;
     margin:0;
     padding:0;
-    height:100%;
     border-left:1px solid #9E9E9E;
     border-right:1px solid #9E9E9E;
+    height:100%;
 }
 #top_panel .controls table {
     height:100%;
@@ -85,12 +87,13 @@ body {
 
 #top_panel .settings {
     display:inline-block;
-    vertical-align:top;
     overflow-y:scroll;
     overflow-x:hidden;
     margin:0;
-    padding:0.5em 1em;
+    padding:0.4em;
+    vertical-align:top;
     height:100%;
+    max-width:28em;
 }
 #top_panel .settings table {
     border:1px solid #f2f2f2;
@@ -121,7 +124,25 @@ body {
     border: 1px solid #9E9E9E;
     overflow: hidden;
     width: 100%;
+    font-size:small;
 }
+#middle_panel label {
+    font-size:small;
+    vertical-align:middle;
+}
+#middle_panel button {
+    font-size:small;
+    vertical-align:middle;
+}
+#middle_panel select {
+    font-size:small;
+    vertical-align:middle;
+}
+#middle_panel input[type="radio"] {
+    font-size:small;
+    vertical-align:middle;
+}
+
 #middle_panel .row {
     display: table-row;
     margin: 0;
@@ -147,8 +168,8 @@ body {
     position: relative;
     display: inline-block;
     width: 100%;
-    height: 66vh;
-    min-height: 66vh;
+    height: 70vh;
+    min-height: 70vh;
 }
 #left_content_img_panel {
     position: relative;
@@ -185,8 +206,8 @@ body {
     position: relative;
     display: inline-block;
     width: 100%;
-    height: 66vh;
-    min-height: 66vh;
+    height: 70vh;
+    min-height: 70vh;
 }
 #right_content_img_panel {
     position: relative;
@@ -296,3 +317,14 @@ body {
 .nobreak {
     white-space: nowrap;
 }
+
+.text_button {
+    color: #0000ff;
+    padding: 0 0.3em;
+    margin: 0 0.2em;
+    -moz-user-select:none;
+    -webkit-user-select:none;
+    -ms-user-select:none;
+}
+.text_button:hover { cursor:pointer; }
+.text_button:active { color: #ff0000; }

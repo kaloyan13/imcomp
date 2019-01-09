@@ -24,7 +24,7 @@
   #include <ShellAPI.h>
 #endif
 
-int main(int argc, char** argv) {  
+int main(int argc, char** argv) {
   std::cout << IMCOMP_SERVER_NAME << " "
             << IMCOMP_SERVER_VERSION_MAJOR << "."
             << IMCOMP_SERVER_VERSION_MINOR << "."
@@ -41,22 +41,22 @@ int main(int argc, char** argv) {
     std::cout << "\nUsage: " << argv[0] << " hostname port thread_count asset_dir [application_data_dir | [upload_dir result_dir] ]\n" << std::flush;
     return 0;
   }
-  
+
   // default values
   std::string address("0.0.0.0");
   std::string port("9972");
   boost::filesystem::path exec_dir( argv[0] );
-  
+
   Magick::InitializeMagick(exec_dir.parent_path().string().c_str());
   //std::cout << "\nMagick::InitializeMagick = " << exec_dir.parent_path().string().c_str() << std::endl;
-  
+
   boost::filesystem::path asset_dir( exec_dir.parent_path() / "asset");
   unsigned int thread_pool_size = 3;
-  
+
   boost::filesystem::path temp_dir( boost::filesystem::temp_directory_path() / "imcomp" );
   boost::filesystem::path upload_dir = temp_dir / "upload";
   boost::filesystem::path result_dir = temp_dir / "result";
-  
+
   if( argc == 6 || argc == 7 ) {
     address = argv[1];
     port    = argv[2];
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
   } else {
     cout << "\nUsing default settings";
   }
-  
+
   if ( !boost::filesystem::exists(upload_dir) ) {
     boost::filesystem::create_directories(upload_dir);
   } else {
@@ -97,19 +97,29 @@ int main(int argc, char** argv) {
   imcomp_request_handler::instance()->init(upload_dir, result_dir, asset_dir);
 
   http_server server(address, port, thread_pool_size);
+  std::ostringstream uri;
+  uri << "http://" << address << ":" << port << "/imcomp/traherne/index.html";
+
   std::cout << "\n\nNotes:";
-  std::cout << "\n  - To use the application, visit http://localhost:9972/imcomp/traherne in a web browser" << flush;
+  std::cout << "\n  - To use the application, visit "
+            << uri.str()
+            << " in a web browser" << std::flush;
 
 #if defined(_WIN32) || defined(WIN32)
   std::cout << "\n  - To quit this application, close this console window.";
-  std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
-  ShellExecute(NULL, NULL, "http://localhost:9972/imcomp/traherne/index.html", 0, 0, SW_SHOW);
+  std::cout << "\n  - Opening "
+            << uri.str()
+            << " in default web browser ..." << std::flush;
+
+  ShellExecute(NULL, NULL, uri.str(), 0, 0, SW_SHOW);
 #endif
 
 #if defined(__APPLE__)
   std::cout << "\n  - To quit this application, close this console window.";
-  std::cout << "\n\nOpening http://localhost:9972/imcomp/traherne in default web browser ..." << std::flush;
-  system("open http://localhost:9972/imcomp/traherne/index.html");
+  std::cout << "\n  - Opening "
+            << uri.str()
+            << " in default web browser ..." << std::flush;
+  system("open " + uri.str());
 #endif
 
   server.start();

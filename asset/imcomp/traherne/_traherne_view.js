@@ -86,6 +86,21 @@ function _traherne_view() {
       this.c.compare_base_comp();
       break;
 
+    case 'save_current_visualisation':
+      this.c.save_current_visualisation();
+      break;
+
+    case 'base_flip_vertical':
+    case 'base_flip_horizontal':
+    case 'base_rotate_-90':
+    case 'base_rotate_+90':
+    case 'comp_flip_vertical':
+    case 'comp_flip_horizontal':
+    case 'comp_rotate_-90':
+    case 'comp_rotate_+90':
+      this.c.transform_remote_file(e.currentTarget.id);
+      break;
+
     default:
       console.log('_via_view: handler unknown for event: ' + e.currentTarget);
     }
@@ -131,7 +146,7 @@ _traherne_view.prototype.select_local_files = function(type) {
   this.local_file_selector.setAttribute('multiple', 'multiple');
   this.local_file_selector.setAttribute('style', 'display:none;');
   //this.local_file_selector.classList.add('display-none');
-  this.local_file_selector.setAttribute('accept', '.jpg,.jpeg,.png,.bmp');
+  this.local_file_selector.setAttribute('accept', '.jpg,.jpeg,.png,.bmp,.tif');
 
   if( type === 'base' || type === 'comp' ) {
     this.local_file_selector.addEventListener('change', function(e) {
@@ -145,6 +160,7 @@ _traherne_view.prototype.select_local_files = function(type) {
 }
 
 _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
+  // these events are handeled by _traherne_view.handleEvent() method
   for( var type in this.c.type_list ) {
     document.getElementById( type + '_load_images').addEventListener('click', this, false);
     document.getElementById( type + '_load_images2').addEventListener('click', this, false);
@@ -160,6 +176,14 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
   document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
 
   document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
+  document.getElementById( 'save_current_visualisation').addEventListener('click', this, false);
+
+  for( var type in this.c.type_list ) {
+    document.getElementById( type + '_flip_vertical').addEventListener('click', this, false);
+    document.getElementById( type + '_flip_horizontal').addEventListener('click', this, false);
+    document.getElementById( type + '_rotate_-90').addEventListener('click', this, false);
+    document.getElementById( type + '_rotate_+90').addEventListener('click', this, false);
+  }
 
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
