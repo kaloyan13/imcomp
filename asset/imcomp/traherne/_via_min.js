@@ -1630,7 +1630,6 @@ _via_ctrl.prototype.load_file = function( fileid ) {
 
     // 1. Load file contents (local image, url, base64)
     this.set_now_file(fileid).then( function() {
-      console.log('now fileid = ' + fileid);
       this.compute_view_panel_to_nowfile_tform();
       this.update_file_info_for_nowfile();
 

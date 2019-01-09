@@ -355,13 +355,13 @@ _traherne_controller.prototype.on_compare_end = function() {
 
   document.getElementById('compare_base_comp').disabled = false;
 
-  this.compare.promise.then( function(c) {
-    this.compare.result = c;
-    if( c.response.status === 'OK' ) {
-      this.on_compare_success();
-    } else {
-      this.on_compare_failure();
-    }
+  this.compare.promise.then( function(compare_result) {
+    this.compare.result.response = compare_result;
+    this.on_compare_success();
+    console.log(this.compare.result);
+  }.bind(this), function(err_msg) {
+    this.compare.result = {};
+    this.on_compare_failure();
   }.bind(this));
 }
 
@@ -381,14 +381,10 @@ _traherne_controller.prototype.on_compare_success = function() {
 
 _traherne_controller.prototype.on_compare_failure = function() {
   var time = this.compare.end_time - this.compare.start_time;
-  this.show_message('<span class="red">Comparison failed!</span');
+  this.show_message('<span class="red">Error</span> : ' + this.m.compare_status.msg);
 }
 
-_traherne_controller.prototype.show_compare_result = function(c) {
-  // NOTE: this.compare.result contains the comparison result
-  // var c = this.compare.result.response;
-  // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
-  var c = this.compare.result.response;
+_traherne_controller.prototype.show_compare_result = function() {
   // in base panel, show file1 crop
   this.set_content('base', 'base_crop');
 
@@ -922,7 +918,76 @@ _traherne_controller.prototype.image_zoom_mousemove_handler = function(e) {
 /// Download of current visualisation
 ///
 _traherne_controller.prototype.save_current_visualisation = function() {
-  console.log('save @todo')
+  if ( this.v.now['base'].sid_suffix.endsWith('_via') ||
+       this.v.now['comp'].sid_suffix.endsWith('_via') ) {
+    this.show_message('Switch to <span class="blue">cropped, overlap or diff</span> mode to save visualisations.');
+    return;
+  }
+  var im1 = document.getElementById( this.type_list['base'] + '_image' );
+  var fn1 = this.m.files['base'][this.v.now['base'].findex].name;
+  var w1 = im1.naturalWidth;
+  var h1 = im1.naturalHeight;
+
+  var im2 = document.getElementById( this.type_list['comp'] + '_image' );
+  var fn2 = this.m.files['comp'][this.v.now['comp'].findex].name;
+  var w2 = im2.naturalWidth;
+  var h2 = im2.naturalHeight;
+
+  var vpad = 60;
+  var offset = 10;
+
+  if ( h1 !== h2 ) {
+    console.log('Both images must have same height');
+  }
+
+  var canvas_width = 3*offset + w1 + w2;
+  var canvas_height = vpad + h1;
+
+  console.log(im1);
+  console.log(im2);
+  console.log('canvas = ' + canvas_width + 'x' + canvas_height);
+
+  var c = document.createElement('canvas');
+  c.width = canvas_width;
+  c.height = canvas_height;
+  var ctx = c.getContext('2d', {alpha:false});
+  ctx.font = '10px Sans';
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas_width, canvas_height);
+
+  ctx.fillStyle = 'yellow';
+  var char_width  = ctx.measureText('M').width;
+  var char_height = 1.8 * char_width;
+
+  var ts = new Date().toString();
+  ctx.fillText('Base: ' + fn1, offset, offset + char_height);
+  ctx.fillText('Comp: ' + fn2, 2*offset + w1, offset + char_height);
+  ctx.fillText('Saved using ' +
+               _traherne_about.name + ' ' +
+               _traherne_about.version + ' on ' + ts , offset, canvas_height - offset);
+
+  // draw images
+  ctx.drawImage(im1, 0, 0, w1, h1, offset, 2*offset + char_height, w1, h1);
+  ctx.drawImage(im2, 0, 0, w2, h2, 2*offset + w1, 2*offset + char_height, w2, h2);
+
+  // extract image data from canvas
+  var img_mime = 'image/jpeg';
+  var visualisation_image = c.toDataURL(img_mime);
+
+  //visualisation_image.replace(img_mime, 'image/octet-stream'); // to force download
+  // simulate user click to trigger download of image
+  var a      = document.createElement('a');
+  a.href     = visualisation_image;
+  a.download = 'BASE_' + fn1 + '_COMP_' + fn2 + '.jpg';
+
+  // simulate a mouse click event
+  var event = new MouseEvent('click', {
+    view: window,
+    bubbles: true,
+    cancelable: true
+  });
+
+  a.dispatchEvent(event);
 }
 
 ///

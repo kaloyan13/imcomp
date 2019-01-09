@@ -137,7 +137,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     map<string,string> uri_arg;
     bool success = request.parse_uri(uri_arg);
     //for( auto it=uri_arg.begin(); it!=uri_arg.end(); it++ ) {
-      //cout << "\n" << it->first << ":" << it->second << flush;
+    //  cout << "\n" << it->first << ":" << it->second << flush;
     //}
     if(success) {
       string fid1 = uri_arg["file1"];
@@ -171,6 +171,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       size_t fp_match_count = -1;
       MatrixXd H(3,3);
       bool success = false;
+      std::string message = "";
       if( algname == "robust_ransac_tps" ) {
         imreg_sift::robust_ransac_tps(im1_fn.string().c_str(),
                                       im2_fn.string().c_str(),
@@ -182,25 +183,25 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                       im2_tx_fn.string().c_str(),
                                       diff_fn.string().c_str(),
                                       overlap_fn.string().c_str(),
-                                      success);
+                                      success,
+                                      message);
       } else {
         imreg_sift::ransac_dlt(im1_fn.string().c_str(),
-                                im2_fn.string().c_str(),
-                                file1_region[0], file1_region[2], file1_region[1], file1_region[3],
-                                H,
-                                fp_match_count,
-                                im1_crop_fn.string().c_str(),
-                                im2_crop_fn.string().c_str(),
-                                im2_tx_fn.string().c_str(),
-                                diff_fn.string().c_str(),
-                                overlap_fn.string().c_str(),
-                                success);
+                               im2_fn.string().c_str(),
+                               file1_region[0], file1_region[2], file1_region[1], file1_region[3],
+                               H,
+                               fp_match_count,
+                               im1_crop_fn.string().c_str(),
+                               im2_crop_fn.string().c_str(),
+                               im2_tx_fn.string().c_str(),
+                               diff_fn.string().c_str(),
+                               overlap_fn.string().c_str(),
+                               success,
+                               message);
       }
 
       std::ostringstream json;
       if ( success ) {
-        //std::cout << "\nfile2_region = " << file2_region[0] << "," << file2_region[1] << "," << file2_region[2] << "," << im2_region[3] << std::flush;
-
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"OK\","
              << "\"status_message\": \"\","
@@ -218,8 +219,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"ERR\","
 //             << "\"status_message\": \"Could not match sufficient feature points (best inliers count = "
-             << "\"status_message\": \"Could not match sufficient feature points (matched features = "
-             << fp_match_count << ")\","
+             << "\"status_message\": \"" << message << "\","
              << "\"fp_match_count\": \"" << fp_match_count << "\","
              << "\"homography\": []";
       }

@@ -205,7 +205,6 @@ _traherne_model.prototype.add_images = function( type, files ) {
             this.files[ok.type][ok.findex].uri = ok.uri;
             this.via[ok.type].m.files.content[ok.via_fid] = ok.uri;
             this.via[ok.type].c.load_file(ok.via_fid);
-            console.log('done showing remote file')
             return ok;
           }.bind(this),
           function(err) {
@@ -612,12 +611,12 @@ _traherne_model.prototype.compare_img_pair = function(compare_task) {
       err_callback();
     }.bind(this));
     cr.addEventListener('error', function(e) {
-      var msg = 'error communicating with imcomp server';
+      var msg = 'error communicating with server';
       this.set_compare_status('ERR', msg);
       err_callback();
     }.bind(this));
     cr.addEventListener('abort', function(e) {
-      var msg = 'aborted communication with imcomp server';
+      var msg = 'aborted communication with server';
       this.set_compare_status('ERR', msg);
       err_callback();
     }.bind(this));
@@ -625,18 +624,17 @@ _traherne_model.prototype.compare_img_pair = function(compare_task) {
     cr.addEventListener('load', function() {
       var response_str = cr.responseText;
       try {
-        compare_task.response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
-        if( compare_task.response.status === 'OK' ) {
+        var response = JSON.parse(response_str).IMAGE_HOMOGRAPHY[0];
+        if( response.status === 'OK' ) {
           var msg = 'finished comparison';
           this.set_compare_status('OK', msg);
-          ok_callback(compare_task);
+          ok_callback(response);
         } else {
-          var msg = 'comparison failed [' + c.response.status_message + ']';
-          this.set_compare_status('ERR', msg);
+          this.set_compare_status('ERR', response.status_message);
           err_callback();
         }
       } catch(e) {
-        var msg = 'malformed response from server [exception: ' + e + ']';
+        var msg = 'exception occured while communicating with server';
         this.set_compare_status('ERR', msg);
         err_callback();
       }

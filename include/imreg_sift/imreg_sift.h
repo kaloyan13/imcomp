@@ -19,6 +19,7 @@ extern "C" {
 #include <algorithm>
 #include <fstream>
 #include <chrono>  // for high_resolution_clock
+#include <sstream>
 
 #include <cmath>
 
@@ -37,12 +38,13 @@ class imreg_sift {
   // Applies RANSAC and Direct Linear Transform (DLT)
   // see Chapter 4 of Hartley and Zisserman (2nd Edition)
   static void ransac_dlt(const char im1_fn[], const char im2_fn[],
-                          double xl, double xu, double yl, double yu,
-                          MatrixXd& Hopt, size_t& fp_match_count,
-                          const char im1_crop_fn[], const char im2_crop_fn[], const char im2_tx_fn[],
-                          const char diff_image_fn[],
-                          const char overlap_image_fn[], 
-                          bool& success);
+                         double xl, double xu, double yl, double yu,
+                         MatrixXd& Hopt, size_t& fp_match_count,
+                         const char im1_crop_fn[], const char im2_crop_fn[], const char im2_tx_fn[],
+                         const char diff_image_fn[],
+                         const char overlap_image_fn[],
+                         bool& success,
+                         std::string& message);
 
   // Applies robust filtering of point correspondences and uses Thin Plate Spline for image registration
   //
@@ -56,8 +58,9 @@ class imreg_sift {
                                 MatrixXd& Hopt, size_t& fp_match_count,
                                 const char im1_crop_fn[], const char im2_crop_fn[], const char im2_tx_fn[],
                                 const char diff_image_fn[],
-                                const char overlap_image_fn[], 
-                                bool& success);
+                                const char overlap_image_fn[],
+                                bool& success,
+                                std::string& message);
 
  private:
   // implementation of Direct Linear Transform (DLT)
