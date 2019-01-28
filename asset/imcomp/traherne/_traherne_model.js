@@ -164,7 +164,7 @@ _traherne_model.prototype.add_images = function( type, files ) {
   this.files[type].sort( this.local_file_sorter );
 
   //// mark all TIF files as remote and everything else as local
-  for (var i=0; i < nfiles; i++) {
+  for ( var i = 0; i < nfiles; i++) {
     if (this.files[type][i].type === 'image/tiff') {
       this.files[type][i].location = 'remote';
       this.files[type][i].uri = this.c.config.placeholder_tif_conv_ongoing;
@@ -175,7 +175,7 @@ _traherne_model.prototype.add_images = function( type, files ) {
 
   //// add all files to VIA (so that user can view them)
   var via_file_add_promises = [];
-  for (var i=0; i < nfiles; i++) {
+  for ( var i = 0; i < nfiles; i++) {
     if ( this.files[type][i].location === 'remote' ) {
       //console.log('Adding remote file to VIA : ' + this.files[type][i].name);
       via_file_add_promises.push( this.via[type].m.add_file_from_url(this.files[type][i].uri, 'image') );
@@ -192,9 +192,6 @@ _traherne_model.prototype.add_images = function( type, files ) {
     var i, via_fid;
     for ( i = 0; i < n; i++ ) {
       via_fid = via_added_fid_list[i];
-      this.fid_to_index[type][via_fid] = i;
-      this.index_to_fid[type][i] = via_fid;
-      this.file_count[type] = this.file_count[type] + 1;
       this.upload_status[type][i] = {};
 
       if ( this.files[type][i].location === 'remote' ) {
@@ -202,14 +199,19 @@ _traherne_model.prototype.add_images = function( type, files ) {
         this.set_upload_status(type, i, '...', 'Queued for upload');
         this.upload[type][i] = this.upload_and_transform_file(type, i, via_fid).then(
           function(ok) {
+            this.fid_to_index[ok.type][ok.via_fid] = ok.findex;
+            this.index_to_fid[ok.type][ok.findex] = ok.via_fid;
+            this.file_count[ok.type] = this.file_count[ok.type] + 1;
+
             this.files[ok.type][ok.findex].uri = ok.uri;
             this.via[ok.type].m.files.content[ok.via_fid] = ok.uri;
-            this.via[ok.type].c.load_file(ok.via_fid);
+            this.via[ok.type].m.files.metadata[ok.via_fid].filename = ok.uri;
             return ok;
           }.bind(this),
           function(err) {
             this.files[err.type][err.findex].uri = this.c.config.placeholder_tif_conv_error;
             this.via[err.type].m.files.content[err.via_fid] = this.c.config.placeholder_tif_conv_error;
+            this.show_message('<span class="blue">Failed</span> to upload and transform file [' + this.files[err.type][err.findex].name + ']' );
             return err;
           }.bind(this)
         );
@@ -485,6 +487,10 @@ _traherne_model.prototype.upload_file = function(type, findex, via_fid) {
             } else {
               var response = JSON.parse(response_str);
               if(response.fid) {
+                this.fid_to_index[type][via_fid] = findex;
+                this.index_to_fid[type][findex] = via_fid;
+                this.file_count[type] = this.file_count[type] + 1;
+
                 var msg = 'File uploaded [' + response.fid + ']';
                 this.set_upload_status(type, findex, 'OK', msg);
                 ok_callback({'success':true,
@@ -493,9 +499,7 @@ _traherne_model.prototype.upload_file = function(type, findex, via_fid) {
                              'findex':findex,
                              'via_fid':via_fid
                             });
-
               } else {
-                console.log('Error uploading image!');
                 var msg = 'Error uploading image!';
                 this.set_upload_status(type, findex, 'ERR', msg);
                 err_callback({'success':false,
@@ -503,7 +507,6 @@ _traherne_model.prototype.upload_file = function(type, findex, via_fid) {
                               'findex':findex,
                               'via_fid':via_fid
                             });
-
                 console.log(msg);
               }
             }

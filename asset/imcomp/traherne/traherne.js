@@ -48,8 +48,6 @@ function traherne_imcomp_user_interface() {
     this.m.init( this.c );
     this.v.init( this.c );
     this.c.init( this.m, this.v );
-
-
   }
 }
 

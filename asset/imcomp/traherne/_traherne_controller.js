@@ -188,6 +188,11 @@ _traherne_controller.prototype.update_view_filelist = function(type) {
 }
 
 _traherne_controller.prototype.set_now = function(type, findex) {
+  // if a region is selected, VIA cannot move to next image
+  // so, clear VIA state to IDLE
+  this.m.via[type].c.region_unselect_all();
+  this.m.via[type].v.set_state( this.m.via[type].v.state.IDLE );
+
   this.m.via[type].c.load_file_from_index( findex );
   this.v.now[type].findex = findex;
 
@@ -358,7 +363,6 @@ _traherne_controller.prototype.on_compare_end = function() {
   this.compare.promise.then( function(compare_result) {
     this.compare.result.response = compare_result;
     this.on_compare_success();
-    console.log(this.compare.result);
   }.bind(this), function(err_msg) {
     this.compare.result = {};
     this.on_compare_failure();

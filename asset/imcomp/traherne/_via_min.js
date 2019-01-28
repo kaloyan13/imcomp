@@ -2689,6 +2689,7 @@ _via_ctrl.prototype.set_now_file = function( fileid ) {
     if ( this.m.files.metadata[fileid].source === 'local' ) {
       filereader.readAsDataURL( this.m.files.content[fileid] );
     } else {
+      // if it is a url, read it as a text containing url
       filereader.readAsText( new Blob([this.m.files.content[fileid]]) );
     }
   }.bind(this));
