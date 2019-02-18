@@ -426,7 +426,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform; // see Hartley and Zisserman p.109
     H = H / H(2,2);
     Hopt = H; // Hopt is the reference variable passed to this method
-    //cout << "\nH (recomputed using all inliers) = " << endl << H;
 
     // im1 crop
     Magick::Image im1_crop(im1);
@@ -507,11 +506,9 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     get_diff_image(im1_crop, im2t_crop, cdiff);
     cdiff.write(diff_image_fn);
 
-    // write overlap image
-    overlap.write(overlap_image_fn);
     success = true;
     message = "";
-    //std::cout << "\ndone" << std::endl;
+    std::cout << "\ndone" << std::endl;
   } catch( std::exception &e ) {
     success = false;
     std::ostringstream ss;
@@ -785,18 +782,12 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     MatrixXd cp1(2,n_cp);
     MatrixXd cp2(2,n_cp);
 
-    // write to file for debug
-    //std::ofstream cpf("/home/tlm/cp.csv");
-
     for( size_t i=0; i<n_cp; ++i ) {
       unsigned long match_idx = sel_best_robust_match_idx.at(i);
 
       cp1(0,i) = pts1(0, match_idx ); cp1(1,i) = pts1(1, match_idx );
       cp2(0,i) = pts2(0, match_idx ); cp2(1,i) = pts2(1, match_idx );
-      //cpf << pts1(0, match_idx) << "," << pts1(1, match_idx) << "," << pts2(0, match_idx) << "," << pts2(1, match_idx) << endl;
     }
-    //cpf.close();
-    //cout << "\nUsing " << n_cp << " control points for TPS" << flush;
 
     // im1 crop
     Magick::Image im1_crop(im1);
@@ -885,8 +876,6 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     double x_affine_terms, y_affine_terms;
     Magick::Image overlap(im1_crop.size(), "white");
 
-    // for debug
-    //im2.read( "/home/tlm/dev/imcomp/test/data/checkerboard_1024x1024.jpg" );
     for(unsigned int j=0; j<im1_crop.rows(); j++) {
       for(unsigned int i=0; i<im1_crop.columns(); i++) {
         //cout << "\n(" << i << "," << j << ") :" << flush;

@@ -206,6 +206,11 @@ _traherne_model.prototype.add_images = function( type, files ) {
             this.files[ok.type][ok.findex].uri = ok.uri;
             this.via[ok.type].m.files.content[ok.via_fid] = ok.uri;
             this.via[ok.type].m.files.metadata[ok.via_fid].filename = ok.uri;
+
+            // reload this file if VIA is showing placeholder for this file
+            if ( this.via[ok.type].v.now.fileid === ok.via_fid ) {
+              this.via[ok.type].c.load_file(ok.via_fid);
+            }
             return ok;
           }.bind(this),
           function(err) {
