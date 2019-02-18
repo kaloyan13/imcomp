@@ -22,107 +22,116 @@
 <body>
 <div id="page">
   <div id="horizontal_line" class="horizontal_ref_line display-none" title="Click on the line to hide this reference line"></div>
-  <div id="top_panel">
-    <div class="about">
-      <img src="img/traherne_logo.png">
-      <div class="links">ver. 2.0.4&nbsp;|&nbsp;<a href="http://www.robots.ox.ac.uk/~vgg/software/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/traherne/user_guide.html">user guide</a></div>
 
-    </div>
+  <!-- @todo: when support for old browsers is not longer required, use flex or grid layout -->
+  <div class="top_panel">
+    <table>
+      <tbody>
+        <tr>
+          <td class="about">
+            <table>
+              <tbody>
+                <tr><td><img src="img/traherne_logo.png"></td></tr>
+                <tr><td><div class="links">ver. 2.0.4&nbsp;|&nbsp;<a href="http://www.robots.ox.ac.uk/~vgg/software/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/traherne/user_guide.html">user guide</a></div></td></tr>
+              </tbody>
+            </table>
+          </td>
 
-    <div class="controls">
-      <table>
-        <tbody>
-          <tr>
-            <td><button id="base_load_images2" type="button" title="Select or update the set of images contained in base" style="float:left;">Load Base</button></td>
-            <td><button id="comp_load_images2" type="button" title="Select or update the set of images contained in comp" style="float:right;">Load Comp</button></td>
-          </tr>
-          <tr>
-            <td colspan="2"><button id="compare_base_comp" type="button" style="width:100%; padding:0.5em;" title="Compare the images shown in base and comp">Compare</button></td>
-          </tr>
-          <tr>
-            <td><button id="move_to_prev_pair" type="button" title="Move to next pair of base and comp image" style="float:left;">&lt; Prev Pair</button></td>
-            <td><button id="move_to_next_pair" type="button" title="Move to previous pair of base and comp image" style="float:right;">Next Pair &gt; </button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          <!-- Main Control Buttons -->
+          <td class="control">
+            <table>
+              <tbody>
+                <tr>
+                  <td><button id="base_load_images2" type="button" title="Select or update the set of images contained in base" style="float:left;">Load Base</button></td>
+                  <td><button id="comp_load_images2" type="button" title="Select or update the set of images contained in comp" style="float:right;">Load Comp</button></td>
+                </tr>
+                <tr>
+                  <td colspan="2"><button id="compare_base_comp" type="button" style="width:100%; padding:0.6em;" title="Compare the images shown in base and comp">Compare</button></td>
+                </tr>
+                <tr>
+                  <td><button id="move_to_prev_pair" type="button" title="Move to next pair of base and comp image" style="float:left;">&lt; Prev Pair</button></td>
+                  <td><button id="move_to_next_pair" type="button" title="Move to previous pair of base and comp image" style="float:right;">Next Pair &gt; </button></td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
 
-    <div class="settings">
-      <table>
-        <thead>
-          <tr>
-            <th>Tool</th>
-            <th>Settings</th>
-          </tr>
-        </thead>
+          <!-- Settings Panel -->
+          <td class="config">
+            <div class="config_container">
+              <div class="config_item" title="Show magnifying glass when mouse is hovered on base or comp image">
+                <div class="title">Zoom</div>
+                <div class="options">
+                  <select name="zoom_level" id="zoom_level">
+                    <option value="0.4">0.4X (shrink)</option>
+                    <option value="0.8">0.8X (shrink)</option>
+                    <option value="2.0" selected="selected">2X (magnify)</option>
+                    <option value="3.0">3X (magnify)</option>
+                    <option value="4.0">4X (magnify)</option>
+                    <option value="8.0">8X (magnify)</option>
+                  </select>
+                  <input id="left_content_zoom" type="checkbox">
+                  <label for="left_content_zoom">Base</label>
+                  <input id="right_content_zoom" type="checkbox">
+                  <label for="right_content_zoom">Comp</label>
+                </div>
+              </div>
 
-        <tbody>
-          <tr title="Show magnifying glass when mouse is hovered on base or comp image">
-            <td>Zoom</td>
-            <td>
-              <select name="zoom_level" id="zoom_level">
-                <option value="0.4">0.4X (shrink)</option>
-                <option value="0.8">0.8X (shrink)</option>
-                <option value="2.0" selected="selected">2X (magnify)</option>
-                <option value="3.0">3X (magnify)</option>
-                <option value="4.0">4X (magnify)</option>
-                <option value="8.0">8X (magnify)</option>
-              </select>
-              <input id="left_content_zoom" type="checkbox">
-              <label for="left_content_zoom">Base</label>
-              <input id="right_content_zoom" type="checkbox">
-              <label for="right_content_zoom">Comp</label>
-            </td>
-          </tr>
-          <tr title="Toggle between images currently showing in base and comp">
-            <td>Toggle</td>
-            <td>
-              <select name="toggle_speed" id="toggle_speed">
-                <option value="1000">Speed: Very Slow</option>
-                <option value="600">Speed: Slow</option>
-                <option value="300">Speed: Medium</option>
-                <option value="150">Speed: Fast</option>
-                <option value="100">Speed: Very Fast</option>
-              </select>
-              <input id="left_content_toggle" type="checkbox">
-              <label for="left_content_toggle">Base</label>
-              <input id="right_content_toggle" type="checkbox">
-              <label for="right_content_toggle">Comp</label>
-            </td>
-          </tr>
-          <tr title="To improve the robustness of comparison, select the type of images that are being compared.">
-            <td>Compare</td>
-            <td>
-              <select name="algorithm_choice" id="algorithm_choice">
-                <option selected="selected" value="ransac_dlt">Flat book pages</option>
-                <option value="robust_ransac_tps">Curled book pages</option>
-              </select>
-            </td>
-          </tr>
-          <tr title="Toggle a horizontal reference line across the base and comp image">
-            <td>Ref. Line</td>
-            <td>
-              <input id="href_line_toggler" type="checkbox">
-              <label for="href_line_toggler">Toggle reference line across base and comp image.</label>
-            </td>
-          </tr>
-          <tr title="Change the images in base or comp set.">
-            <td>Images</td>
-            <td>
-              <button id="base_load_images" type="button">Change Base</button>
-              <button id="comp_load_images" type="button">Change Comp</button>
-            </td>
-          </tr>
-          <tr title="Change the images in base or comp set.">
-            <td>Save</td>
-            <td>
-              <button id="save_current_visualisation" type="button">Current Visualisation</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              <div class="config_item" title="Toggle between images currently showing in base and comp">
+                <div class="title">Toggle</div>
+                <div class="options">
+                  <select name="toggle_speed" id="toggle_speed">
+                    <option value="1000">Speed: Very Slow</option>
+                    <option value="600">Speed: Slow</option>
+                    <option value="300">Speed: Medium</option>
+                    <option value="150">Speed: Fast</option>
+                    <option value="100">Speed: Very Fast</option>
+                  </select>
+                  <input id="left_content_toggle" type="checkbox">
+                  <label for="left_content_toggle">Base</label>
+                  <input id="right_content_toggle" type="checkbox">
+                  <label for="right_content_toggle">Comp</label>
+                </div>
+              </div>
 
+              <div class="config_item"  title="To improve the robustness of comparison, select the type of images that are being compared.">
+                <div class="title">Compare Type</div>
+                <div class="options">
+                  <select name="algorithm_choice" id="algorithm_choice">
+                    <option selected="selected" value="ransac_dlt">Flat book pages</option>
+                    <option value="robust_ransac_tps">Curled book pages</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="config_item" title="Save current visualisation as an image">
+                <div class="title">Save</div>
+                <div class="options">
+                  <button id="save_current_visualisation" type="button">Current Visualisation</button>
+                </div>
+              </div>
+
+              <div class="config_item" title="Toggle a horizontal reference line across the base and comp image">
+                <div class="title">Reference Line</div>
+                <div class="options">
+                  <input id="href_line_toggler" type="checkbox">
+                  <label for="href_line_toggler">Toggle</label>
+                </div>
+              </div>
+
+              <div class="config_item" title="Change the images in base or comp set.">
+                <div class="title">Update</div>
+                <div class="options">
+                  <button id="base_load_images" type="button">Change Base</button>
+                  <button id="comp_load_images" type="button">Change Comp</button>
+                </div>
+              </div>
+
+            </div> <!-- end of config_container -->
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div id="message_panel" title="Shows help messages, program log, etc"></div>
