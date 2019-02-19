@@ -23,7 +23,7 @@ void imcomp_request_handler::init(const boost::filesystem::path upload_dir,
 }
 
 void imcomp_request_handler::handle_http_request(const http_request& request, http_response& response) {
-  cout << "\n" << request.method_ << " [" << request.uri_ << "]" << flush;
+  //cout << "\n" << request.method_ << " [" << request.uri_ << "]" << flush;
   response.set_status(200);
 
   if ( util::begins_with(request.uri_, "/imcomp/static/result/") && request.method_ == "GET") {
@@ -255,7 +255,7 @@ bool imcomp_request_handler::transform_file(const http_request& request, string&
           ss << args["param"];
           ss >> angle;
           im.rotate(angle);
-          std::cout << "\nRotated image by " << angle << " deg." << std::flush;
+          //std::cout << "\nRotated image by " << angle << " deg." << std::flush;
         }
       }
       // rotate image if requested
@@ -299,7 +299,7 @@ bool imcomp_request_handler::save_user_upload(const http_request& request, strin
       im.magick("JPEG");
       im.colorSpace(Magick::sRGBColorspace);
       im.write(fn.string());
-      std::clog << " : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
+      //std::clog << " : " << fn.string() << " (" << blob.length() << " bytes)" << std::flush;
       return true;
     } else {
       return false;

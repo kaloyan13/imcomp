@@ -10,7 +10,7 @@
 */
 
 body {
-    font-family: Sans;
+    font-family: Verdana,Arial,Helvetica; /* see http://web.mit.edu/jmorzins/www/fonts.html */
     margin: 0;
     padding: 0;
     border: 0;
@@ -50,7 +50,7 @@ body {
 .top_panel .config { width:100%; vertical-align:top; }
 .top_panel .config .config_container { width:100%; height:7.5em; overflow:auto; border:1px solid #cccccc;}
 
-.top_panel .config .config_container .config_item { display:inline-table; border:1px solid #cccccc; border-radius:0.5em; margin:0.4em 0.2em; padding:0.4em 0.2em; }
+.top_panel .config .config_container .config_item { display:inline-table; border:1px solid #cccccc; background-color:#f2f2f2; border-radius:0.5em; margin:0.4em 0.2em; padding:0.4em 0.2em; }
 .top_panel .config .config_container .config_item .title { display:table-row; text-align:center; }
 .top_panel .config .config_container .config_item .options { display:table-row; }
 

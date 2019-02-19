@@ -508,7 +508,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     success = true;
     message = "";
-    std::cout << "\ndone" << std::endl;
+    //std::cout << "\ndone" << std::endl;
   } catch( std::exception &e ) {
     success = false;
     std::ostringstream ss;

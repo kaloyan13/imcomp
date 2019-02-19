@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   }
 
   // default values
-  std::string address("0.0.0.0");
+  std::string address("localhost");
   std::string port("9972");
   boost::filesystem::path exec_dir( argv[0] );
 
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
             << uri.str()
             << " in default web browser ..." << std::flush;
 
-  ShellExecute(NULL, NULL, uri.str(), 0, 0, SW_SHOW);
+  ShellExecute(NULL, NULL, uri.str().c_str(), 0, 0, SW_SHOW);
 #endif
 
 #if defined(__APPLE__)
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
   std::cout << "\n  - Opening "
             << uri.str()
             << " in default web browser ..." << std::flush;
-  system("open " + uri.str());
+  system("open " + uri.str().c_str());
 #endif
 
   server.start();
