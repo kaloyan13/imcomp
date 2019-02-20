@@ -500,6 +500,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       }
     }
     im2t_crop.write( im2_tx_fn );
+    overlap.write(overlap_image_fn);
 
     // difference image
     Magick::Image cdiff(im1_crop.size(), "black");
