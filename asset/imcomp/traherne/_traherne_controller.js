@@ -167,7 +167,7 @@ _traherne_controller.prototype.on_filelist_update = function(type) {
 
   this.enable_switch(type, '_zoom');
 
-  if( this.m.file_count['base'] && this.m.file_count['comp'] ) {
+  if ( this.m.files['base'].length && this.m.files['comp'].length ) {
     this.show_message('Now <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
   }
 }
