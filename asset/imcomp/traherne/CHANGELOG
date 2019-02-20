@@ -3,7 +3,7 @@ Note: version A.B.C corresponds to:
   B : the minor version number of imcomp server
   C : the version number for client user interfaces of imcomp and traherne
 
-## [traherne-2.0.4] - February 19, 2019
+## [traherne-2.0.4] - February 20, 2019
  * users can upload and view TIF files (Traherne automatically converts TIF to JPEG and does not require browser's support for TIF images)
  * improved top toolbar (better organized and more clear)
  * Visualisation can now be saved as a JPEG image
