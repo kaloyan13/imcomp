@@ -120,7 +120,9 @@ int main(int argc, char** argv) {
   std::cout << "\n  - Opening "
             << uri.str()
             << " in default web browser ..." << std::flush;
-  system("open " + uri.str().c_str());
+  std::ostringstream cmd;
+  cmd << "open " << uri.str();
+  system(cmd.str().c_str());
 #endif
 
   server.start();

@@ -31,7 +31,7 @@ else
     cd ImageMagick-6.9.9-36
     #./configure --prefix=$LIBDIR --enable-hdri=no --with-quantum-depth=8 --with-x=no --without-perl --disable-deprecated
     #./configure --prefix=/Users/tlm/deps/clang/imcomp/lib --disable-installed --with-quantum-depth=8 --disable-hdri --without-modules --without-perl --without-freetype --without-dps --without-fpx --without-jbig --without-tiff --without-wmf --without-fontpath --without-gs-font-dir --without-windows-font-dir --without-x --without-fontconfig --without-pango --enable-shared=no --enable-static=yes --disable-dependency-tracking
-    ./configure --prefix=/Users/tlm/deps/clang/imcomp/lib --disable-installed --with-quantum-depth=8 --disable-hdri --without-perl --without-freetype --without-dps --without-fpx --without-jbig --without-tiff --without-wmf --without-fontpath --without-gs-font-dir --without-windows-font-dir --without-x --without-fontconfig --without-pango --enable-shared=yes --enable-static=no --disable-dependency-tracking --enable-zero-configuration
+    ./configure --prefix=/Users/tlm/deps/clang/imcomp/lib --disable-installed --with-quantum-depth=8 --disable-hdri --without-perl --without-freetype --without-dps --without-fpx --without-jbig --with-tiff --without-wmf --without-fontpath --without-gs-font-dir --without-windows-font-dir --without-x --without-fontconfig --without-pango --enable-shared=yes --enable-static=no --disable-dependency-tracking --enable-zero-configuration
     make -j 8
     make install
 fi
