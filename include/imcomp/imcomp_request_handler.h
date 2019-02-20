@@ -49,6 +49,8 @@ class imcomp_request_handler {
 
   // _upload
   bool save_user_upload(const http_request& request, string& fid);
+  bool transform_and_save_user_upload(const http_request& request, string& fid);
+  bool transform_file(const http_request& request, string& fid);
 
   // _compare
   void register_images();

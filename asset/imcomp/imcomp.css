@@ -1,0 +1,327 @@
+/*
+////////////////////////////////////////////////////////////////////////////////
+//
+// @file        imcomp.css
+// @description Image comparator user interface styles
+// @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
+// @date        09 May 2018
+//
+////////////////////////////////////////////////////////////////////////////////
+*/
+
+body {
+  font-family: "Roboto", Helvetica, Arial, sans-serif; font-size: medium;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.display-none {
+  display: none;
+}
+.display-inline-block {
+  display: inline-block;
+}
+
+/*
+* {
+  border:1px solid red;
+}
+*/
+.top {
+  display:block;
+  text-align:center;
+  margin:1rem 0;
+}
+.top button {
+  border: none;
+  outline: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin:0.4rem 1rem;
+  border-radius:0.6rem;
+  width: 16rem;
+}
+.top button:focus {
+    outline:none;
+}
+.top button:hover {
+}
+.top button:active {
+    outline:none;
+    color:#808080;
+}
+
+.step1_button_color {
+    background-color:#673AB7;
+    color:white;
+}
+.step2_button_color {
+    background-color:#FFC107;
+    color:black;
+}
+.step3_button_color {
+    background-color:#CDDC39;
+    color:black;
+}
+.stepn_button_deactivate {
+    opacity:0.4 !important;
+/*
+    background-color:#9E9E9E !important;
+    color:black !important;
+*/
+}
+
+.stepn_button_activate {
+    opacity:1.0 !important;
+}
+
+.step1_content_color {
+    border-top: 5px solid #673AB7 !important;
+}
+
+.step2_content_color {
+    border-top: 5px solid #FFC107 !important;
+}
+
+.step3_content_color {
+    border-top: 5px solid #CDDC39 !important;
+}
+
+.panel_content {
+    margin:0.5rem 1rem;
+    padding:1rem;
+    display:none;
+    border:1px solid #cccccc;
+}
+
+.bottom {
+  display:block;
+  text-align:center;
+  padding:0rem 1rem;
+  font-size:0.8rem;
+}
+
+#step3_panel .control_panel {
+  display:block;
+  padding-bottom:1rem;  
+}
+
+#step3_panel .control_panel .space {
+  margin-left:2rem;
+}
+
+
+#middle_panel {
+  display: table;
+  table-layout: fixed;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #9E9E9E;
+  overflow: hidden;
+  width: 100%;
+}
+#middle_panel .row {
+  display: table-row;
+  margin: 0;
+  padding: 0;
+}
+#middle_panel .cell {
+  display: table-cell;
+  margin: 0;
+  padding: 0.4% 0;
+  width: 48%;
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid #9E9E9E;
+}
+
+
+.img_label {
+  font-size: medium;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.img_label select {
+  max-width: 80%; /* squash large filenames */
+}
+
+.centered_text {
+  text-align: center;
+}
+.img_control {
+  overflow: scroll;
+}
+.vertical_img_separator_panel {
+  width: 0.8% !important;
+  min-width: 0.5% !important;
+  max-width: 1% !important;
+}
+.button_group {
+  display: block;
+}
+.button_group_space1 {
+  display: inline-block;
+  width: 2%;
+}
+.img_upload_status {
+  display: inline-block;
+  font-size: large;
+  cursor: default;
+}
+
+/* horizontal reference line */
+#ref_line_container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#ref_line_container:hover {
+  cursor: pointer;
+}
+
+.horizontal_ref_line {
+  z-index: 1000;
+  padding: 0;
+  border-top: 2px solid white;
+  border-bottom: 2px solid black;
+  position: fixed;
+  width: 96.5%;
+  height: 4px;
+}
+.horizontal_ref_line:hover {
+  cursor: pointer;
+}
+
+#message_panel {
+    display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center;
+}
+#message_panel .content {
+    display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;
+}
+
+/* misc. */
+.nobreak {
+  white-space: nowrap;
+}
+
+
+/* base panel */
+#left_content {
+  text-align: right !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#left_content_container { /* container for via or base image */
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 66vh;
+  min-height: 66vh;
+}
+#left_content_img_panel {
+    position: relative;
+}
+#left_content_image_top_panel {
+    position: absolute;
+    z-index: 1002;
+    width: 100%;
+    height: 100%;
+    top: 0;
+}
+#left_content_image_zoom_panel {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid red;
+}
+#left_content_image_zoom {
+    position: absolute;
+    z-index: 1001;
+}
+#left_content_image {
+    z-index: 1000;
+    top: 0;
+    width: 100%;
+}
+
+/* comp panel */
+#right_content {
+  text-align: left !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#right_content_container { /* container for via or comp image */
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 66vh;
+  min-height: 66vh;
+}
+#right_content_img_panel {
+    position: relative;
+}
+#right_content_image {
+    text-align: left;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+#right_content_image_zoom_panel {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid red;
+}
+#right_content_image_zoom {
+    position: absolute;
+    z-index: 1001;
+}
+#right_content_image_top_panel {
+    position: absolute;
+    z-index: 1002;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+}
+
+/* Comparison settings */
+#comparison_settings {
+    display:table;
+}
+#comparison_settings .row {
+    display:table-row;
+}
+#comparison_settings .cell {
+    display:table-cell;
+}
+#comparison_settings .key {
+    display:table-cell;
+    font-weight:bold;
+    border-bottom:1px solid #f2f2f2;
+    padding: 0.6rem 1rem;
+    width:15rem;
+}
+#comparison_settings .value {
+    display:table-cell;
+    font-weight:bold;
+    border-bottom:1px solid #f2f2f2;
+    padding: 0.6rem 1rem;
+    font-weight:normal;
+}
+
+#comparison_settings .value input[type=text] {
+}
+#comparison_settings .config {
+    font-family: mono;
+}
+#comparison_settings .alg_description_text {
+    font-size: 0.8rem;
+}

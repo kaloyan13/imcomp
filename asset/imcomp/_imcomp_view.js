@@ -28,14 +28,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// @file        _traherne_view.js
+// @file        _imcomp_view.js
 // @description View of the MVC design for user interface javascript
 // @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
-// @date        Nov 2017
+// @date        July 2018
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-function _traherne_view() {
+function _imcomp_view() {
   this.now = {};
   //this.now[{'base','comp'}].zoom = {is_enabled, is_frozen...}
 
@@ -49,7 +49,7 @@ function _traherne_view() {
 
   this.message_panel = document.getElementById('message_panel');
 
-  // capture all user interface events and notify _traherne_controller
+  // capture all user interface events and notify _imcomp_controller
   this.handleEvent = function(e) {
     if( e.currentTarget.classList.contains('disabled') ) {
       return;
@@ -60,11 +60,8 @@ function _traherne_view() {
     }
 
     switch(e.currentTarget.id) {
-    case 'base_load_images':
-    case 'comp_load_images':
-    case 'base_load_images2':
-    case 'comp_load_images2':
-      this.select_local_files(type);
+    case 'add_images':
+      this.select_local_files();
       break;
     case 'base_move_to_next':
     case 'comp_move_to_next':
@@ -86,21 +83,6 @@ function _traherne_view() {
       this.c.compare_base_comp();
       break;
 
-    case 'save_current_visualisation':
-      this.c.save_current_visualisation();
-      break;
-
-    case 'base_flip_vertical':
-    case 'base_flip_horizontal':
-    case 'base_rotate_-90':
-    case 'base_rotate_+90':
-    case 'comp_flip_vertical':
-    case 'comp_flip_horizontal':
-    case 'comp_rotate_-90':
-    case 'comp_rotate_+90':
-      this.c.transform_remote_file(e.currentTarget.id);
-      break;
-
     default:
       console.log('_via_view: handler unknown for event: ' + e.currentTarget);
     }
@@ -108,8 +90,8 @@ function _traherne_view() {
   }
 }
 
-_traherne_view.prototype.init = function( traherne_controller ) {
-  this.c = traherne_controller;
+_imcomp_view.prototype.init = function( imcomp_controller ) {
+  this.c = imcomp_controller;
 
   for( var type in this.c.type_list ) {
     this.now[type] = {};
@@ -132,13 +114,13 @@ _traherne_view.prototype.init = function( traherne_controller ) {
     }
   }
 
-  this.connect_ui_elements_to_traherne_view();
+  this.connect_ui_elements_to_imcomp_view();
 
   // precompute mostly used values
   this.theme.ZOOM_WINDOW_SIZE_BY2 = this.theme.ZOOM_WINDOW_SIZE / 2;
 }
 
-_traherne_view.prototype.select_local_files = function(type) {
+_imcomp_view.prototype.select_local_files = function() {
   this.local_file_selector = document.createElement('input');
   this.local_file_selector.setAttribute('id', 'local_file_selector');
   this.local_file_selector.setAttribute('type', 'file');
@@ -146,24 +128,18 @@ _traherne_view.prototype.select_local_files = function(type) {
   this.local_file_selector.setAttribute('multiple', 'multiple');
   this.local_file_selector.setAttribute('style', 'display:none;');
   //this.local_file_selector.classList.add('display-none');
-  this.local_file_selector.setAttribute('accept', '.jpg,.jpeg,.png,.bmp,.tif');
+  this.local_file_selector.setAttribute('accept', '.jpg,.jpeg,.png,.bmp');
 
-  if( type === 'base' || type === 'comp' ) {
-    this.local_file_selector.addEventListener('change', function(e) {
-      this.c.update_files(type, e);
-    }.bind(this), false);
-    this.local_file_selector.click();
-  } else {
-    this.local_file_selector = {};
-    console.log('unknown type : ' + type);
-  }
+  this.local_file_selector.addEventListener('change', function(e) {
+    this.c.update_files(e);
+  }.bind(this), false);
+  this.local_file_selector.click();
 }
 
-_traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
-  // these events are handeled by _traherne_view.handleEvent() method
+_imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
+  document.getElementById( 'add_images').addEventListener('click', this, false);
+
   for( var type in this.c.type_list ) {
-    document.getElementById( type + '_load_images').addEventListener('click', this, false);
-    document.getElementById( type + '_load_images2').addEventListener('click', this, false);
     document.getElementById( type + '_move_to_prev').addEventListener('click', this, false);
     document.getElementById( type + '_move_to_next').addEventListener('click', this, false);
     document.getElementById( type + '_img_filename_list').addEventListener('change', function(e) {
@@ -176,38 +152,18 @@ _traherne_view.prototype.connect_ui_elements_to_traherne_view = function() {
   document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
 
   document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
-  document.getElementById( 'save_current_visualisation').addEventListener('click', this, false);
-
-  for( var type in this.c.type_list ) {
-    document.getElementById( type + '_flip_vertical').addEventListener('click', this, false);
-    document.getElementById( type + '_flip_horizontal').addEventListener('click', this, false);
-    document.getElementById( type + '_rotate_-90').addEventListener('click', this, false);
-    document.getElementById( type + '_rotate_+90').addEventListener('click', this, false);
-  }
 
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
-    this.c.reset_all_toggle();
   }.bind(this), false);
 
   document.getElementById( 'zoom_level').addEventListener('change', function(e) {
     this.theme.ZOOM_LEVEL = e.target.value;
     this.c.zoom_update_level();
   }.bind(this), false);
-
-  document.getElementById('href_line_toggler').addEventListener('change', function(e) {
-    if ( e.target.checked ) {
-      this.c.ref_line_position(100);
-      this.c.show_element(this.c.ref_line.hline);
-    } else {
-      // hide horizontal reference line
-      this.c.hide_element(this.c.ref_line.hline);
-      this.c.ref_line.current_y = -1;
-    }
-  }.bind(this), false);
 }
 
-_traherne_view.prototype.msg = function(msg, t) {
+_imcomp_view.prototype.msg = function(msg, t) {
   //console.log('showing msg: ' + msg);
   if ( this.message_clear_timer ) {
     clearTimeout(this.message_clear_timer); // stop any previous timeouts

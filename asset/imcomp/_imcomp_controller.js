@@ -28,14 +28,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// @file        _traherne_controller.js
+// @file        _imcomp_controller.js
 // @description Controller of the MVC design for user interface javascript
 // @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
-// @date        Nov 2017
+// @date        July 2018
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-function _traherne_controller() {
+function _imcomp_controller() {
   this.type_list = {'base':'left_content', 'comp':'right_content'};
   this.type_description = {'base':'Base', 'comp':'Comp.'};
 
@@ -51,10 +51,6 @@ function _traherne_controller() {
   this.config.upload.MAX_IMG_DIM_PX = 1200;
   this.config.imcomp_server_upload_uri = "/imcomp/_upload";
   this.config.imcomp_server_compare_uri = "/imcomp/_compare";
-  this.config.imcomp_server_transform_uri = "/imcomp/_transform";
-  this.config.imcomp_server_file_uri = "/imcomp/_file";
-  this.config.placeholder_tif_conv_ongoing = "/imcomp/img/tif_conversion_ongoing_message.png";
-  this.config.placeholder_tif_conv_error = "/imcomp/img/tif_conversion_error_message.png";
 
   this.compare = {}
   this.compare.is_ongoing = false;
@@ -63,17 +59,21 @@ function _traherne_controller() {
   this.compare.promise = {};  // promise to current compare operation
   this.compare.result = {};
 
+  this.compare_config = {};
+  this.compare_config.algname = 'ransac_dlt'; // {ransac_dlt, robust_ransac_tps}
+  
+
   this.ref_line = {};
 }
 
-function _traherne_compare_instance(findex1, findex2) {
+function _imcomp_compare_instance(findex1, findex2) {
   this.findex1 = findex1;
   this.findex2 = findex2;
 }
 
-_traherne_controller.prototype.init = function( traherne_model, traherne_view ) {
-  this.m = traherne_model;
-  this.v = traherne_view;
+_imcomp_controller.prototype.init = function( imcomp_model, imcomp_view ) {
+  this.m = imcomp_model;
+  this.v = imcomp_view;
 
   for(var type in this.type_list) {
     this.clear_content(type);
@@ -81,11 +81,9 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
   this.disable_all_content_selectors();
   this.disable_all_switches('_toggle');
   this.disable_all_switches('_zoom');
-
   this.init_ref_line();
 
-  this.show_message('To start collation, click <span class="blue">Load Base</span> and <span class="blue">Load Comp</span> buttons to load base and compare images.');
-
+  
   /*
   // for debugging zoom feature
   for( type in this.type_list ) {
@@ -107,7 +105,7 @@ _traherne_controller.prototype.init = function( traherne_model, traherne_view ) 
 */
 }
 
-_traherne_controller.prototype.reset_controller_state = function(type) {
+_imcomp_controller.prototype.reset_controller_state = function(type) {
   this.m.reset_model_state(type);
   this.clear_content(type);
 
@@ -116,13 +114,15 @@ _traherne_controller.prototype.reset_controller_state = function(type) {
   this.disable_switch(type, '_zoom');
 }
 
-_traherne_controller.prototype.update_files = function(type, e) {
-  this.reset_controller_state(type);
-  this.m.add_images(type, e.target.files);
+_imcomp_controller.prototype.update_files = function(e) {
+  console.log('adding files')
+  console.log(e.target.files)
+  //this.reset_controller_state(type);
+  this.m.add_images(e.target.files);
 }
 
-_traherne_controller.prototype.move_to_next = function(type) {
-  var n = this.m.files[type].length;
+_imcomp_controller.prototype.move_to_next = function(type) {
+  var n = this.m.files.length;
   if( n > 0 ) {
     var now_findex = this.v.now[type].findex;
     if( now_findex === (n - 1) ) {
@@ -130,11 +130,12 @@ _traherne_controller.prototype.move_to_next = function(type) {
     } else {
       this.set_now(type, now_findex + 1);
     }
+    this.disable_all_content_selectors();
   }
 }
 
-_traherne_controller.prototype.move_to_prev = function(type) {
-  var n = this.m.files[type].length;
+_imcomp_controller.prototype.move_to_prev = function(type) {
+  var n = this.m.files.length;
   if( n > 0 ) {
     var now_findex = this.v.now[type].findex;
     if( now_findex === 0 ) {
@@ -142,37 +143,31 @@ _traherne_controller.prototype.move_to_prev = function(type) {
     } else {
       this.set_now(type, now_findex - 1);
     }
+    this.disable_all_content_selectors();
   }
 }
 
-_traherne_controller.prototype.move_to_next_pair = function() {
+_imcomp_controller.prototype.move_to_next_pair = function() {
   for( var type in this.type_list ) {
     this.move_to_next(type);
   }
 }
-_traherne_controller.prototype.move_to_prev_pair = function() {
+_imcomp_controller.prototype.move_to_prev_pair = function() {
   for( var type in this.type_list ) {
     this.move_to_prev(type);
   }
 }
 
-_traherne_controller.prototype.on_filelist_update = function(type) {
-  this.update_view_filelist(type);
-  this.set_now(type, 0); // show first image
+_imcomp_controller.prototype.on_filelist_update = function(type) {
+  var p = document.getElementById('step1_file_added_count');
+  p.innerHTML = this.m.file_count + ' files selected';
 
-  var sid_suffix = type + '_via';
+  show_message('Added [' + this.m.file_count + '] files');
 
-  this.content_selector_set_state(type, sid_suffix, true);
-  this.set_content(type, sid_suffix);
-
-  this.enable_switch(type, '_zoom');
-
-  if( this.m.file_count['base'] && this.m.file_count['comp'] ) {
-    this.show_message('Now <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
-  }
+  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP2);
 }
 
-_traherne_controller.prototype.update_view_filelist = function(type) {
+_imcomp_controller.prototype.update_view_filelist = function(type) {
   var list_name = type + '_img_filename_list';
   var list = document.getElementById(list_name);
   list.innerText = null; // clear existing entries
@@ -187,12 +182,7 @@ _traherne_controller.prototype.update_view_filelist = function(type) {
   }
 }
 
-_traherne_controller.prototype.set_now = function(type, findex) {
-  // if a region is selected, VIA cannot move to next image
-  // so, clear VIA state to IDLE
-  this.m.via[type].c.region_unselect_all();
-  this.m.via[type].v.set_state( this.m.via[type].v.state.IDLE );
-
+_imcomp_controller.prototype.set_now = function(type, findex) {
   this.m.via[type].c.load_file_from_index( findex );
   this.v.now[type].findex = findex;
 
@@ -204,7 +194,7 @@ _traherne_controller.prototype.set_now = function(type, findex) {
   this.on_now_update(type);
 }
 
-_traherne_controller.prototype.on_now_update = function(type) {
+_imcomp_controller.prototype.on_now_update = function(type) {
   // update the selected item in filelist dropdown
   var list_name = type + '_img_filename_list';
   var list = document.getElementById(list_name);
@@ -225,24 +215,26 @@ _traherne_controller.prototype.on_now_update = function(type) {
     */
   }
   this.update_now_file_status(type);
-  this.clear_message();
 }
 
-_traherne_controller.prototype.update_now = function(type, e) {
+_imcomp_controller.prototype.update_now = function(type, e) {
   var findex = parseInt(e.target.value, 10);
   this.set_now(type, findex);
 }
 
-_traherne_controller.prototype.on_upload_status_update = function(type, findex) {
-  if ( this.v.now[type].findex == findex ) {
+_imcomp_controller.prototype.on_upload_status_update = function(findex) {
+  if ( this.v.now.findex == findex ) {
     this.update_now_file_status(type);
   }
 }
 
-_traherne_controller.prototype.update_now_file_status = function(type) {
+_imcomp_controller.prototype.update_now_file_status = function(type) {
   var now_findex = this.v.now[type].findex;
-  var status = this.m.upload_status[type][now_findex].status;
-  var msg = this.m.upload_status[type][now_findex].msg;
+  console.log(this.m.upload_status);
+  console.log(now_findex);
+  console.log(type)
+  var status = this.m.upload_status[now_findex].status;
+  var msg = this.m.upload_status[now_findex].msg;
   var status_symbol;
   switch(status) {
   case 'OK':
@@ -260,7 +252,7 @@ _traherne_controller.prototype.update_now_file_status = function(type) {
   elem.innerHTML = '<span title="' + msg + '">' + status_symbol + '</span>';
 }
 
-_traherne_controller.prototype.is_upload_resize_req = function(type, findex, w, h) {
+_imcomp_controller.prototype.is_upload_resize_req = function(findex, w, h) {
   if( w > this.config.upload.MAX_IMG_DIM_PX || h > this.config.upload.MAX_IMG_DIM_PX ) {
     return true;
   } else {
@@ -271,18 +263,18 @@ _traherne_controller.prototype.is_upload_resize_req = function(type, findex, w, 
 ///
 /// Comparison of Base and Comp. pair
 ///
-_traherne_controller.prototype.compare_base_comp = function() {
+_imcomp_controller.prototype.compare_base_comp = function() {
+  console.log('comparing')
   // sanity checks
   for( type in this.type_list ) {
     if( this.m.file_count[type] === 0 ) {
       var type_name = this.type_list[type];
-      this.show_message('You must load base and comp images before starting the comparison process. Click <span class="blue">Load Base</span> and <span class="blue">Load Comp</span> button to load base and comp images.');
       return;
     }
   }
 
   if( !this.is_base_region_selected() ) {
-    this.show_message('To compare, you must <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
+    show_message('To compare, you must <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
     return;
   }
 
@@ -293,35 +285,21 @@ _traherne_controller.prototype.compare_base_comp = function() {
 
   var findex1 = this.v.now['base'].findex;
   var findex2 = this.v.now['comp'].findex;
-  var compare_task = new _traherne_compare_instance(findex1, findex2);
-
-  this.m.upload['base'][findex1].then( function(result1) {
-    if ( !result1.success ) {
-      this.show_message('Cannot compare because file ' +
-                        '[ ' + this.m.files[result1.type][result1.findex].name + ' ] ' +
-                        '<span class="red">failed to upload</span>.');
-      return;
-    }
-    compare_task.upload_id1 = result1.fid;
-    compare_task.scale1 = this.m.upload_scale['base'][compare_task.findex1];
-    var fid1 = this.m.index_to_fid['base'][compare_task.findex1];
+  var c = new _imcomp_compare_instance(findex1, findex2);
+  this.m.upload[findex1].then( function(upload_id1) {
+    c.upload_id1 = upload_id1;
+    c.scale1 = this.m.upload_scale[c.findex1];
+    var via_fid1 = this.m.fid_to_via_fileid['base'][c.findex1];
     var rid = this.m.via['base'].v.now.all_rid_list[0];
-    compare_task.region1 = this.m.via['base'].m.regions[fid1][rid].dimg.slice(0);
-
-    this.m.upload['comp'][findex2].then( function(result2) {
-      if ( !result2.success ) {
-        this.show_message('Cannot compare because file ' +
-                          '[ ' + this.m.files[result2.type][result2.findex].name + ' ] ' +
-                          '<span class="red">failed to upload</span>.');
-        return;
-      }
-      compare_task.upload_id2 = result2.fid;
-      compare_task.scale2 = this.m.upload_scale['comp'][compare_task.findex2];
+    c.region1 = this.m.via['base'].m.regions[via_fid1][rid].dimg.slice(0);
+    this.m.upload[findex2].then( function(upload_id2) {
+      c.upload_id2 = upload_id2;
+      c.scale2 = this.m.upload_scale[c.findex2];
       this.compare.is_ongoing = true;
-      this.compare.promise = this.m.compare_img_pair(compare_task);
+      this.compare.promise = this.m.compare_img_pair(c);
       var exp_comp_time;
-      var algorithm_choice = document.getElementById('algorithm_choice');
-      var algname = algorithm_choice.options[algorithm_choice.selectedIndex].value;
+      //var algname = document.querySelector('input[name="algorithm_choice"]:checked').value;
+      var algname = this.compare_config.algname;
       switch(algname) {
         case 'ransac_dlt':
           exp_comp_time = 5;
@@ -330,18 +308,16 @@ _traherne_controller.prototype.compare_base_comp = function() {
           exp_comp_time = 10;
           break;
       }
-      this.show_message('<span class="blue">Comparing ... </span>(Please wait, it takes around ' + exp_comp_time + ' sec. to complete, larger regions may take longer to complete)')
-    }.bind(this), function(err2) {
-      var filename = this.files[ err2.type ][ err2.findex].name;
-      this.show_message('<span class="red">Cannot compare as image [' + filename + ' could not be uploaded to server');
+      show_message('Comparing ... (Please wait, it takes around ' + exp_comp_time + ' sec. to complete, larger regions may take longer to complete)')
     }.bind(this));
-  }.bind(this), function(err1) {
-      var filename = this.files[ err1.type ][ err1.findex].name;
-    this.show_message('<span class="red">Cannot compare as image [' + filename + ' could not be uploaded to server');
+    // @todo: fixme
+    // note: the err_callback() is defined in _imcomp_model.prototype.add_images()
   }.bind(this));
+  // @todo: fixme
+  // note: the err_callback() is defined in _imcomp_model.prototype.add_images()
 }
 
-_traherne_controller.prototype.is_base_region_selected = function() {
+_imcomp_controller.prototype.is_base_region_selected = function() {
   if ( this.m.via['base'].v.now.all_rid_list.length == 1 ) {
     return true;
   } else {
@@ -349,46 +325,51 @@ _traherne_controller.prototype.is_base_region_selected = function() {
   }
 }
 
-_traherne_controller.prototype.on_compare_start = function() {
+_imcomp_controller.prototype.on_compare_start = function() {
   this.compare.start_time = new Date();
   document.getElementById('compare_base_comp').disabled = true;
 }
 
-_traherne_controller.prototype.on_compare_end = function() {
+_imcomp_controller.prototype.on_compare_end = function() {
   this.compare.end_time = new Date();
   this.compare.is_ongoing = false;
 
   document.getElementById('compare_base_comp').disabled = false;
 
-  this.compare.promise.then( function(compare_result) {
-    this.compare.result.response = compare_result;
-    this.on_compare_success();
-  }.bind(this), function(err_msg) {
-    this.compare.result = {};
-    this.on_compare_failure();
+  this.compare.promise.then( function(c) {
+    this.compare.result = c;
+    if( c.response.status === 'OK' ) {
+      this.on_compare_success();
+    } else {
+      this.on_compare_failure();
+    }
   }.bind(this));
 }
 
-_traherne_controller.prototype.on_compare_status_update = function() {
-  this.show_message('Compare status: ' + this.m.compare_status.msg);
+_imcomp_controller.prototype.on_compare_status_update = function() {
+  show_message('Compare status: ' + this.m.compare_status.msg);
 }
 
-_traherne_controller.prototype.on_compare_success = function() {
+_imcomp_controller.prototype.on_compare_success = function() {
   // note: this.compare.result contains the result
   var time = this.compare.end_time - this.compare.start_time;
-  this.show_message('Comparison <span class="blue">completed in ' + Math.round(time/1000) + ' sec.</span>');
+  show_message('Comparison <span class="blue">completed in ' + Math.round(time/1000) + ' sec.</span>');
 
   this.show_compare_result();
 
   this.enable_all_content_selectors();
 }
 
-_traherne_controller.prototype.on_compare_failure = function() {
+_imcomp_controller.prototype.on_compare_failure = function() {
   var time = this.compare.end_time - this.compare.start_time;
-  this.show_message('<span class="red">Error</span> : ' + this.m.compare_status.msg);
+  show_message('<span class="red">Comparison failed!</span');
 }
 
-_traherne_controller.prototype.show_compare_result = function() {
+_imcomp_controller.prototype.show_compare_result = function(c) {
+  // NOTE: this.compare.result contains the comparison result
+  // var c = this.compare.result.response;
+  // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
+  var c = this.compare.result.response;
   // in base panel, show file1 crop
   this.set_content('base', 'base_crop');
 
@@ -396,19 +377,19 @@ _traherne_controller.prototype.show_compare_result = function() {
   this.set_content('comp', 'comp_crop_tx');
 }
 
-_traherne_controller.prototype.disable_all_content_selectors = function() {
+_imcomp_controller.prototype.disable_all_content_selectors = function() {
   for( var type in this.type_list ) {
     this.content_selector_group_set_state(type, false);
   }
 }
 
-_traherne_controller.prototype.enable_all_content_selectors = function() {
+_imcomp_controller.prototype.enable_all_content_selectors = function() {
   for( var type in this.type_list ) {
     this.content_selector_group_set_state(type, true);
   }
 }
 
-_traherne_controller.prototype.content_selector_set_state = function(type, sid_suffix, is_enabled) {
+_imcomp_controller.prototype.content_selector_set_state = function(type, sid_suffix, is_enabled) {
   var container_name_prefix = this.type_list[type];
   var content_selector_name = container_name_prefix + '_' + sid_suffix;
   var content_selector = document.getElementById(content_selector_name);
@@ -419,7 +400,7 @@ _traherne_controller.prototype.content_selector_set_state = function(type, sid_s
   }
 }
 
-_traherne_controller.prototype.content_selector_set_checked = function(type, name_suffix) {
+_imcomp_controller.prototype.content_selector_set_checked = function(type, name_suffix) {
   this.content_selector_uncheck_all(type);
   var container_name_prefix = this.type_list[type];
   var content_selector_name = container_name_prefix + '_' + name_suffix;
@@ -427,7 +408,7 @@ _traherne_controller.prototype.content_selector_set_checked = function(type, nam
   content_selector.checked = true;
 }
 
-_traherne_controller.prototype.content_selector_uncheck_all = function(type) {
+_imcomp_controller.prototype.content_selector_uncheck_all = function(type) {
   var container_name = this.type_list[type] + '_selector';
   var container = document.getElementById(container_name);
   var child = container.getElementsByClassName('content_selector');
@@ -437,17 +418,17 @@ _traherne_controller.prototype.content_selector_uncheck_all = function(type) {
   }
 }
 
-_traherne_controller.prototype.enable_content_selector = function(element) {
+_imcomp_controller.prototype.enable_content_selector = function(element) {
   element.removeAttribute('disabled');
   element.addEventListener('click', this.content_selector_event_handler.bind(this), false);
 }
 
-_traherne_controller.prototype.disable_content_selector = function(element) {
+_imcomp_controller.prototype.disable_content_selector = function(element) {
   element.setAttribute('disabled', 'disabled');
   element.removeEventListener('click', this.content_selector_event_handler.bind(this), false);
 }
 
-_traherne_controller.prototype.content_selector_group_set_state = function(type, is_enabled) {
+_imcomp_controller.prototype.content_selector_group_set_state = function(type, is_enabled) {
   var container_name_prefix = this.type_list[type];
   var container_name = container_name_prefix + '_selector';
   var container = document.getElementById(container_name);
@@ -463,7 +444,7 @@ _traherne_controller.prototype.content_selector_group_set_state = function(type,
   }
 }
 
-_traherne_controller.prototype.content_selector_event_handler = function(e) {
+_imcomp_controller.prototype.content_selector_event_handler = function(e) {
   var id = e.target.id;
   var container_type = this.get_container_type(id);
   var container_name = this.type_list[container_type];
@@ -471,7 +452,7 @@ _traherne_controller.prototype.content_selector_event_handler = function(e) {
   this.set_content(container_type, sid_suffix);
 }
 
-_traherne_controller.prototype.clear_content = function(type) {
+_imcomp_controller.prototype.clear_content = function(type) {
   var container_name = this.type_list[type] + '_container';
   var container = document.getElementById(container_name);
   var child = container.getElementsByClassName('content');
@@ -482,7 +463,7 @@ _traherne_controller.prototype.clear_content = function(type) {
   this.disable_image_zoom(type);
 }
 
-_traherne_controller.prototype.set_content = function(type, sid_suffix) {
+_imcomp_controller.prototype.set_content = function(type, sid_suffix) {
   var via = document.getElementById( this.type_list[type] + '_via_panel' );
   var img = document.getElementById( this.type_list[type] + '_img_panel' );
 
@@ -517,7 +498,7 @@ _traherne_controller.prototype.set_content = function(type, sid_suffix) {
 
     if( sid_suffix === 'base_comp_diff') {
       //this.show_message('In the difference image, color code is as follows: <span style="color: #0072b2">base image</span> and <span style="color: #d55e00">comp. image</span>');
-      this.show_message('In the difference image, color code is as follows: <span style="color: blue">base image</span> and <span style="color: red">comp. image</span>');
+      show_message('In the difference image, color code is as follows: <span style="color: blue">base image</span> and <span style="color: red">comp. image</span>');
     }
   }
   this.enable_switch(type, '_zoom');
@@ -525,7 +506,7 @@ _traherne_controller.prototype.set_content = function(type, sid_suffix) {
   this.v.now[type].sid_suffix = sid_suffix;
 }
 
-_traherne_controller.prototype.get_content_url = function(type, sid_suffix) {
+_imcomp_controller.prototype.get_content_url = function(type, sid_suffix) {
   // NOTE: this.compare.result contains the comparison result
   // var c = this.compare.result.response;
   // c = {"homography", "file1_crop", "file2_crop", "file2_crop_tx", "file1_file2_diff"}
@@ -552,14 +533,14 @@ _traherne_controller.prototype.get_content_url = function(type, sid_suffix) {
   return content_url;
 }
 
-_traherne_controller.prototype.show_element = function(e) {
+_imcomp_controller.prototype.show_element = function(e) {
   if( e.classList.contains('display-none') ) {
     e.classList.remove('display-none');
   }
   e.classList.add('display-inline-block');
 }
 
-_traherne_controller.prototype.hide_element = function(e) {
+_imcomp_controller.prototype.hide_element = function(e) {
   if( e.classList.contains('display-inline-block') ) {
     e.classList.remove('display-inline-block');
   }
@@ -571,7 +552,7 @@ _traherne_controller.prototype.hide_element = function(e) {
 ///
 // extract suffix from selector-id
 // example: left_content_base_comp_diff => type=left_content, suffix=base_comp_diff
-_traherne_controller.prototype.get_sid_suffix = function(type, sid) {
+_imcomp_controller.prototype.get_sid_suffix = function(type, sid) {
   var container_name = this.type_list[type];
   if( sid.startsWith(container_name) ) {
     return sid.substr( container_name.length + 1 );
@@ -581,7 +562,7 @@ _traherne_controller.prototype.get_sid_suffix = function(type, sid) {
   }
 }
 
-_traherne_controller.prototype.get_container_type = function(id) {
+_imcomp_controller.prototype.get_container_type = function(id) {
   var container_type = '';
   for( var type in this.type_list ) {
     if( id.startsWith(this.type_list[type]) ) {
@@ -592,7 +573,7 @@ _traherne_controller.prototype.get_container_type = function(id) {
   return container_type;
 }
 
-_traherne_controller.prototype.toggle_event_handler = function(e) {
+_imcomp_controller.prototype.toggle_event_handler = function(e) {
   var id = e.target.id;
   var type = this.get_container_type(id);
   if( e.target.checked ) {
@@ -602,10 +583,10 @@ _traherne_controller.prototype.toggle_event_handler = function(e) {
   }
 }
 
-_traherne_controller.prototype.clear_toggle = function(type) {
-  if( _traherne_toggle_timer[type] > 0 ) {
-    clearInterval(_traherne_toggle_timer[type]);
-    _traherne_toggle_timer[type] = 0;
+_imcomp_controller.prototype.clear_toggle = function(type) {
+  if( _imcomp_toggle_timer[type] > 0 ) {
+    clearInterval(_imcomp_toggle_timer[type]);
+    _imcomp_toggle_timer[type] = 0;
     this.content_selector_group_set_state(type, true);
 
     // reset the content to that pointed by content selector
@@ -615,7 +596,7 @@ _traherne_controller.prototype.clear_toggle = function(type) {
   }
 }
 
-_traherne_controller.prototype.get_current_content_selector_id = function(type) {
+_imcomp_controller.prototype.get_current_content_selector_id = function(type) {
   var container = document.getElementById( this.type_list[type] + '_selector' );
   var child = container.getElementsByClassName('content_selector');
   var n = child.length;
@@ -626,17 +607,8 @@ _traherne_controller.prototype.get_current_content_selector_id = function(type) 
   }
 }
 
-_traherne_controller.prototype.reset_all_toggle = function() {
-  for( var type in this.type_list ) {
-    // only reset the existing toggles
-    if( _traherne_toggle_timer[type] > 0 ) {
-      this.set_toggle(type);
-    }
-  }
-}
-
-_traherne_controller.prototype.set_toggle = function(type) {
-  if( _traherne_toggle_timer[type] > 0 ) {
+_imcomp_controller.prototype.set_toggle = function(type) {
+  if( _imcomp_toggle_timer[type] > 0 ) {
     this.clear_toggle(type);
   }
 
@@ -654,12 +626,12 @@ _traherne_controller.prototype.set_toggle = function(type) {
   }
 
   this.content_selector_group_set_state(type, false);
-  _traherne_toggle_timer[type] = setInterval( function() {
+  _imcomp_toggle_timer[type] = setInterval( function() {
     this.toggle_content(type, toggle_url_list);
   }.bind(this), this.v.theme.TOGGLE_SPEED);
 }
 
-_traherne_controller.prototype.toggle_content = function(type, toggle_url_list) {
+_imcomp_controller.prototype.toggle_content = function(type, toggle_url_list) {
   var container_name = this.type_list[type];
   var img_elem_name = container_name + '_image';
   var img_elem = document.getElementById(img_elem_name);
@@ -680,14 +652,14 @@ _traherne_controller.prototype.toggle_content = function(type, toggle_url_list) 
       zoom_img.setAttribute('src', toggle_url_list[next_index]);
     }
   } else {
-    console.log('_traherne_controller.prototype.toggle_content : error');
+    console.log('_imcomp_controller.prototype.toggle_content : error');
     console.log(img_elem_name);
     console.log(toggle_url_list);
     return;
   }
 }
 
-_traherne_controller.prototype.enable_switch = function(type, switch_suffix) {
+_imcomp_controller.prototype.enable_switch = function(type, switch_suffix) {
   var el = document.getElementById( this.type_list[type] + switch_suffix );
   if( el.hasAttribute('disabled') ) {
     el.removeAttribute('disabled');
@@ -702,7 +674,7 @@ _traherne_controller.prototype.enable_switch = function(type, switch_suffix) {
   }
 }
 
-_traherne_controller.prototype.disable_switch = function(type, switch_suffix) {
+_imcomp_controller.prototype.disable_switch = function(type, switch_suffix) {
   var el = document.getElementById( this.type_list[type] + switch_suffix );
   if( !el.hasAttribute('disabled') ) {
     el.setAttribute('disabled', 'true');
@@ -717,13 +689,13 @@ _traherne_controller.prototype.disable_switch = function(type, switch_suffix) {
   }
 }
 
-_traherne_controller.prototype.disable_all_switches = function(switch_suffix) {
+_imcomp_controller.prototype.disable_all_switches = function(switch_suffix) {
   for( var type in this.type_list ) {
     this.disable_switch(type, switch_suffix);
   }
 }
 
-_traherne_controller.prototype.enable_all_switches = function(switch_suffix) {
+_imcomp_controller.prototype.enable_all_switches = function(switch_suffix) {
   for( var type in this.type_list ) {
     this.enable_switch(type, switch_suffix);
   }
@@ -732,7 +704,7 @@ _traherne_controller.prototype.enable_all_switches = function(switch_suffix) {
 ///
 /// horizontal reference line
 ///
-_traherne_controller.prototype.ref_line_position = function(y) {
+_imcomp_controller.prototype.ref_line_position = function(y) {
   var st = document.documentElement.scrollTop;
   var ot = document.getElementById('ref_line_container').offsetTop;
   //console.log('y=' + y + ', st=' + st + ', ot=' + ot + ', (ot + y - st)=' + (ot + y - st));
@@ -740,7 +712,7 @@ _traherne_controller.prototype.ref_line_position = function(y) {
   this.ref_line.current_y = y;
 }
 
-_traherne_controller.prototype.init_ref_line = function() {
+_imcomp_controller.prototype.init_ref_line = function() {
   this.ref_line.hline = document.getElementById('horizontal_line');
   this.hide_element(this.ref_line.hline);
   this.ref_line.current_y = -1;
@@ -751,30 +723,27 @@ _traherne_controller.prototype.init_ref_line = function() {
       this.ref_line_position(this.ref_line.current_y);
     }
   }.bind(this), false);
-
+  
   var parent = document.getElementById('ref_line_container');
   parent.addEventListener('mouseup', function(e) {
-    document.getElementById('href_line_toggler').checked = true;
     var y = e.offsetY;
-
+   
     this.ref_line_position(y);
     this.show_element(this.ref_line.hline);
   }.bind(this), false);
-
+  
   var hline = document.getElementById('horizontal_line');
   hline.addEventListener('mouseup', function(e) {
     this.hide_element(this.ref_line.hline);
     this.ref_line.current_y = -1;
-    document.getElementById('href_line_toggler').checked = false;
   }.bind(this), false);
-
 }
 
 
 ///
 /// zoom
 ///
-_traherne_controller.prototype.zoom_event_handler = function(e) {
+_imcomp_controller.prototype.zoom_event_handler = function(e) {
   var id = e.target.id;
   var type = this.get_container_type(id);
   if( this.v.now[type].sid_suffix.endsWith('_via') ) {
@@ -796,35 +765,32 @@ _traherne_controller.prototype.zoom_event_handler = function(e) {
   }
 }
 
-_traherne_controller.prototype.zoom_update_level = function() {
+_imcomp_controller.prototype.zoom_update_level = function() {
   for( var type in this.type_list ) {
-    // ensure that files are loaded for "type"
-    if ( typeof(this.v.now[type].findex) !== 'undefined' ) {
-      var switch_name = this.type_list[type] + '_zoom';
-      var e = document.getElementById(switch_name);
+    var switch_name = this.type_list[type] + '_zoom';
+    var e = document.getElementById(switch_name);
 
-      if( this.v.now[type].sid_suffix.endsWith('_via') ) {
-        if( e.checked ) {
-          this.v.now[type].zoom.is_enabled = false;
-          this.m.via[type].c.zoom_deactivate();
-          this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
-          this.m.via[type].c.zoom_activate();
-          this.v.now[type].zoom.is_enabled = true;
-        }
-      } else {
-        if( e.checked ) {
-          this.v.now[type].zoom.is_enabled = false;
-          this.disable_image_zoom(type);
-          this.enable_image_zoom(type);
-          this.v.now[type].zoom.is_enabled = true;
-        }
+    if( this.v.now[type].sid_suffix.endsWith('_via') ) {
+      if( e.target.checked ) {
+        this.v.now[type].zoom.is_enabled = false;
+        this.m.via[type].c.zoom_deactivate();
+        this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+        this.m.via[type].c.zoom_activate();
+        this.v.now[type].zoom.is_enabled = true;
+      }
+    } else {
+      if( e.target.checked ) {
+        this.v.now[type].zoom.is_enabled = false;
+        this.disable_image_zoom(type);
+        this.enable_image_zoom(type);
+        this.v.now[type].zoom.is_enabled = true;
       }
     }
   }
 }
 
 
-_traherne_controller.prototype.disable_image_zoom = function(type) {
+_imcomp_controller.prototype.disable_image_zoom = function(type) {
   this.v.now[type].zoom.is_enabled = false;
   this.v.now[type].zoom.is_frozen = false;
 
@@ -840,7 +806,7 @@ _traherne_controller.prototype.disable_image_zoom = function(type) {
   this.hide_element(top_panel);
 }
 
-_traherne_controller.prototype.enable_image_zoom = function(type) {
+_imcomp_controller.prototype.enable_image_zoom = function(type) {
   this.v.now[type].zoom.is_enabled = true;
   this.v.now[type].zoom.is_frozen = false;
   var img0 = document.getElementById( this.type_list[type] + '_image' );
@@ -867,10 +833,10 @@ _traherne_controller.prototype.enable_image_zoom = function(type) {
   top_panel.addEventListener('mouseout', this.v.now[type].zoom.mouseout_el, false);
   top_panel.addEventListener('mousedown', this.v.now[type].zoom.mousedown_el, false);
 
-  this.show_message('To <span class="blue">freeze the zoom region</span>, click the left mouse button when zoom is active. Click the left mouse button again to unfreeze the zoom region.');
+  show_message('To <span class="blue">freeze the zoom region</span>, click the left mouse button when zoom is active. Click the left mouse button again to unfreeze the zoom region.');
 }
 
-_traherne_controller.prototype.image_zoom_mousedown_handler = function(e) {
+_imcomp_controller.prototype.image_zoom_mousedown_handler = function(e) {
   var type = this.get_container_type(e.currentTarget.id);
   var top_panel = e.currentTarget;
   if( this.v.now[type].zoom.is_frozen ) {
@@ -883,7 +849,7 @@ _traherne_controller.prototype.image_zoom_mousedown_handler = function(e) {
   }
 }
 
-_traherne_controller.prototype.image_zoom_mouseout_handler = function(e) {
+_imcomp_controller.prototype.image_zoom_mouseout_handler = function(e) {
   var type = this.get_container_type(e.currentTarget.id);
   if( ! this.v.now[type].zoom.is_frozen ) {
     var content_prefix = e.currentTarget.id.replace('_top_panel', '');
@@ -892,7 +858,7 @@ _traherne_controller.prototype.image_zoom_mouseout_handler = function(e) {
   }
 }
 
-_traherne_controller.prototype.image_zoom_mousemove_handler = function(e) {
+_imcomp_controller.prototype.image_zoom_mousemove_handler = function(e) {
   var content_prefix = e.currentTarget.id.replace('_top_panel', '');
   var px = e.offsetX;
   var py = e.offsetY;
@@ -916,151 +882,4 @@ _traherne_controller.prototype.image_zoom_mousemove_handler = function(e) {
   zp_style.push('border-radius: ' + this.v.theme.ZOOM_WINDOW_SIZE_BY2 + 'px');
   var zoom = document.getElementById( content_prefix + '_zoom_panel' );
   zoom.setAttribute('style', zp_style.join(';'));
-}
-
-///
-/// Download of current visualisation
-///
-_traherne_controller.prototype.save_current_visualisation = function() {
-  if ( this.v.now['base'].sid_suffix.endsWith('_via') ||
-       this.v.now['comp'].sid_suffix.endsWith('_via') ) {
-    this.show_message('Switch to <span class="blue">cropped, overlap or diff</span> mode to save visualisations.');
-    return;
-  }
-  var im1 = document.getElementById( this.type_list['base'] + '_image' );
-  var fn1 = this.m.files['base'][this.v.now['base'].findex].name;
-  var w1 = im1.naturalWidth;
-  var h1 = im1.naturalHeight;
-
-  var im2 = document.getElementById( this.type_list['comp'] + '_image' );
-  var fn2 = this.m.files['comp'][this.v.now['comp'].findex].name;
-  var w2 = im2.naturalWidth;
-  var h2 = im2.naturalHeight;
-
-  var vpad = 60;
-  var offset = 10;
-
-  if ( h1 !== h2 ) {
-    console.log('Both images must have same height');
-  }
-
-  var canvas_width = 3*offset + w1 + w2;
-  var canvas_height = vpad + h1;
-
-  console.log(im1);
-  console.log(im2);
-  console.log('canvas = ' + canvas_width + 'x' + canvas_height);
-
-  var c = document.createElement('canvas');
-  c.width = canvas_width;
-  c.height = canvas_height;
-  var ctx = c.getContext('2d', {alpha:false});
-  ctx.font = '10px Sans';
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 0, canvas_width, canvas_height);
-
-  ctx.fillStyle = 'yellow';
-  var char_width  = ctx.measureText('M').width;
-  var char_height = 1.8 * char_width;
-
-  var ts = new Date().toString();
-  ctx.fillText('Base: ' + fn1, offset, offset + char_height);
-  ctx.fillText('Comp: ' + fn2, 2*offset + w1, offset + char_height);
-  ctx.fillText('Saved using ' +
-               _traherne_about.name + ' ' +
-               _traherne_about.version + ' on ' + ts , offset, canvas_height - offset);
-
-  // draw images
-  ctx.drawImage(im1, 0, 0, w1, h1, offset, 2*offset + char_height, w1, h1);
-  ctx.drawImage(im2, 0, 0, w2, h2, 2*offset + w1, 2*offset + char_height, w2, h2);
-
-  // extract image data from canvas
-  var img_mime = 'image/jpeg';
-  var visualisation_image = c.toDataURL(img_mime);
-
-  //visualisation_image.replace(img_mime, 'image/octet-stream'); // to force download
-  // simulate user click to trigger download of image
-  var a      = document.createElement('a');
-  a.href     = visualisation_image;
-  a.download = 'BASE_' + fn1 + '_COMP_' + fn2 + '.jpg';
-
-  // simulate a mouse click event
-  var event = new MouseEvent('click', {
-    view: window,
-    bubbles: true,
-    cancelable: true
-  });
-
-  a.dispatchEvent(event);
-}
-
-///
-/// Image Rotation
-///
-_traherne_controller.prototype.transform_remote_file = function(d) {
-
-  var tokens = d.split('_');
-  var type = tokens[0];
-  var operation = tokens[1];
-  var param = tokens[2];
-  var findex = this.v.now[type].findex;
-  var via_fid = this.m.index_to_fid[type][findex];
-  var sid_suffix = type + '_via';
-
-  // image rotation is only allowed for full image
-  if ( this.v.now[type].sid_suffix !== sid_suffix ) {
-    this.show_message('Image rotation and flip operations are <span class="red">only allowed</span> for full images of base and comp.');
-    return;
-  }
-
-  this.m.upload[type][findex].then( function(result) {
-    if ( !result.success ) {
-      this.show_message('Cannot ' + operation + ' because file ' +
-                        '[ ' + this.m.files[result1.type][result1.findex].name + ' ] ' +
-                        '<span class="red">failed to upload</span>.');
-      return;
-
-    }
-    var remote_fid = result.fid;
-    var transform_promise = this.m.transform_remote_file(type, findex, via_fid, remote_fid, operation, param);
-    transform_promise.then( function(ok) {
-      // to force, web browser to download a new copy of an existing uri,
-      // we add a random number to the remote file uri
-      var uri = ok.uri + '&force_img_fetch=' + Date.now();
-      this.m.via[ok.type].m.files.content[ok.via_fid] = uri;
-      this.m.via[ok.type].m.files.metadata[ok.via_fid].source = 'url'
-      this.m.files[ok.type][ok.findex].location = 'remote';
-      this.m.files[ok.type][ok.findex].uri = uri;
-      if ( this.m.via[ok.type].v.now.all_rid_list.length ) {
-        this.m.via[ok.type].c.region_delete( this.m.via[ok.type].v.now.all_rid_list ); // delete all existing regions
-      }
-      this.m.via[ok.type].c.load_file(ok.via_fid);
-    }.bind(this), function(err) {
-      console.log(err);
-      this.show_message('Cannot ' + operation + ' because file ' +
-                        '[ ' + this.m.files[err.type][err.findex].name + ' ] ' +
-                        '<span class="red">' + err.msg + '</span>.');
-    }.bind(this));
-  }.bind(this));
-}
-
-_traherne_controller.prototype.rotate_remote_file = function(type, findex, via_fid, operation, param) {
-  return new Promise( function(ok_callback, err_callback) {
-
-  }.bind(this));
-}
-
-///
-/// messages
-///
-_traherne_controller.prototype.show_message = function(msg) {
-  document.getElementById('message_panel').innerHTML = msg;
-}
-
-_traherne_controller.prototype.clear_message = function() {
-  document.getElementById('message_panel').innerHTML = '&nbsp;';
-}
-
-_traherne_controller.prototype.append_message = function(msg) {
-  document.getElementById('message_panel').innerHTML += msg;
 }

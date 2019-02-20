@@ -22,12 +22,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set (IMCOMP_SERVER_NAME "imcomp_server")
 set (IMCOMP_SERVER_VERSION_MAJOR "2")
 set (IMCOMP_SERVER_VERSION_MINOR "0")
+# set during the build process (see build_win_release.cmd)
 #set (IMCOMP_SERVER_VERSION_PATCH "x") # traherne or imcomp user interface version to be set by user
 set (IMCOMP_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/imcomp/")
 set (IMCOMP_SERVER_AUTHOR_NAME "Abhishek Dutta")
 set (IMCOMP_SERVER_AUTHOR_EMAIL "adutta@robots.ox.ac.uk")
 set (IMCOMP_SERVER_FIRST_RELEASE_DATE "Nov. 2017")
-set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "02 Mar. 2018")
+set (IMCOMP_SERVER_CURRENT_RELEASE_DATE "19 Feb. 2019")
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_SOURCE_DIR}/imcomp_server_config.h.in" 
   "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_INCLUDE_DIR}/imcomp_server_config.h"
@@ -123,13 +124,15 @@ endif()
 ## @todo: on alienware, find_package() points to "/usr/lib/x86_64-linux-gnu/libMagick++-6.Q16.so"
 ## and does not detect the library available at "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so"
 cmake_host_system_information(RESULT _host_name QUERY HOSTNAME)
-if(_host_name MATCHES "0x02")
+if(_host_name MATCHES "0x02|0x04")
   set(ImageMagick_LIBRARIES "/home/tlm/deps/imcomp/lib/lib/libMagick++-6.Q8.so")
 endif()
 
 # Eigen
 # requires EIGEN_DIR to be set to the location where Eigen3 is built using cmake
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+add_definitions     ( ${EIGEN3_DEFINITIONS} )
+include_directories ( ${EIGEN3_INCLUDE_DIRS} )
 
 # VLFEAT
 # VLFEAT_LIB must be define during cmake
@@ -143,6 +146,8 @@ message("ImageMagick_LIBRARIES: " ${ImageMagick_LIBRARIES} )
 message("ImageMagick_INCLUDE_DIRS: " ${ImageMagick_INCLUDE_DIRS} )
 message("VLFEAT_LIB: " ${VLFEAT_LIB} )
 message("VLFEAT_INCLUDE_DIR: " ${VLFEAT_INCLUDE_DIR} )
+message("EIGEN3_DEFINITIONS: " ${EIGEN3_DEFINITIONS} )
+message("EIGEN3_INCLUDE_DIRS: " ${EIGEN3_INCLUDE_DIRS} )
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory("${PROJECT_SOURCE_DIR}" )

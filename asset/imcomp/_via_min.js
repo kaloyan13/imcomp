@@ -1459,7 +1459,6 @@ function _via_ctrl() {
                   };
 
   this.hook.now = {};
-  this.next_file_id = 1;
 }
 
 function _via_point(x, y) {
@@ -1604,12 +1603,9 @@ _via_ctrl.prototype.load_prev_file = function() {
 }
 
 _via_ctrl.prototype.load_file_from_index = function( file_index ) {
-  if ( file_index >= 0 && file_index < this.m.files.fileid_list.length ) {
+  if ( file_index >= 0 || file_index < this.m.files.fileid_list.length ) {
     var fileid = this.m.files.fileid_list[file_index];
     this.load_file(fileid);
-  } else {
-    this.v.view_panel.innerHTML = '';
-    this.init_view_panel();
   }
 }
 
@@ -1847,16 +1843,16 @@ _via_ctrl.prototype.compute_view_panel_to_nowfile_tform = function() {
 
 _via_ctrl.prototype.update_layers_size_for_nowfile = function() {
   var style = [];
-  style.push('display:inline-block');
-  style.push('position:absolute');
-  style.push('overflow:hidden'); // needed for zoom-panel overflowing in boundary
+  style.push('display: inline-block');
+  style.push('position: absolute');
+  style.push('overflow: hidden'); // needed for zoom-panel overflowing in boundary
 
   //style.push('top:  ' + this.v.now.tform.y + 'px'); // vertical alignment = center
-  style.push('top:0px'); // vertical alignment = top
-  style.push('left:' + this.v.now.tform.x + 'px');
-  style.push('width:' + this.v.now.tform.width  + 'px');
-  style.push('height:' + this.v.now.tform.height + 'px');
-  style.push('outline:none');
+  style.push('top: 0px'); // vertical alignment = top
+  style.push('left: ' + this.v.now.tform.x + 'px');
+  style.push('width:  ' + this.v.now.tform.width  + 'px');
+  style.push('height: ' + this.v.now.tform.height + 'px');
+  style.push('outline: none');
 
   var style_str = style.join(';');
 
@@ -2689,7 +2685,6 @@ _via_ctrl.prototype.set_now_file = function( fileid ) {
     if ( this.m.files.metadata[fileid].source === 'local' ) {
       filereader.readAsDataURL( this.m.files.content[fileid] );
     } else {
-      // if it is a url, read it as a text containing url
       filereader.readAsText( new Blob([this.m.files.content[fileid]]) );
     }
   }.bind(this));
@@ -2699,16 +2694,14 @@ _via_ctrl.prototype.set_now_file = function( fileid ) {
 /// utility functions
 ///
 _via_ctrl.prototype.file_hash = function(filename, filesize, frame, count) {
-  //var fileid_str = filename + (filesize || -1 ) + (frame || 0) + (count || 1);
-  //var fileid_str = filename + parseInt( Math.random() * 1e6 ).toString();
+  var fileid_str = filename + (filesize || -1 ) + (frame || 0) + (count || 1);
 
   // @@todo: fixme
   // avoid crypto.subtle.digest() because it is not allowed over http:// connection by chrome
   //return this.hash( fileid_str );
-  var fileid = this.next_file_id++;
 
   return new Promise( function(ok_callback, err_callback) {
-    ok_callback(fileid);
+    ok_callback(fileid_str);
   });
 }
 
@@ -3126,7 +3119,7 @@ function _via() {
   this.c = new _via_ctrl();   // controller
 
   this.init = function(view_panel, message_panel) {
-    //console.log("Initializing _VggImageAnnotator ...");
+    console.log("Initializing _VggImageAnnotator ...");
     this.m.init( this.c );
     this.v.init( this.c, view_panel, message_panel );
     this.c.init( this.m, this.v );

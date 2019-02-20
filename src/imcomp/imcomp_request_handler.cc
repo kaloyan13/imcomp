@@ -42,7 +42,32 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
 
     return;
   }
-  
+
+  if ( util::begins_with(request.uri_, "/imcomp/_file") && request.method_ == "GET") {
+    response.set_status(400);
+
+    std::map<std::string, std::string> args;
+    request.parse_uri(args);
+
+    if ( args.count("fid") ) {
+      std::string fid = args["fid"];
+      // ensure that fid is a valid uuid
+      boost::uuids::uuid u;
+      std::istringstream iss(fid);
+      iss >> u;
+      if ( iss.good() ) {
+        boost::filesystem::path fn = upload_dir_ / (fid + ".jpg");
+        std::string file_contents;
+        if( load_file_contents(fn, file_contents) ) {
+          response.set_status(200);
+          response.set_payload(file_contents);
+          response.set_content_type_from_filename(fn.string());
+        }
+      }
+    }
+    return;
+  }
+
   if ( (request.uri_ == "/imcomp/traherne/" || request.uri_ == "/imcomp/traherne") && request.method_ == "GET") {
     // forward to imcomp/traherne/index.html
     response.set_status(303);
@@ -56,7 +81,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     response.set_field("Location", "/imcomp/index.html");
     return;
   }
-  
+
   if ( util::begins_with(request.uri_, "/imcomp/") && request.method_ == "GET") {
     // serve application assets (css, html, js, etc)
     boost::filesystem::path static_res_path( request.uri_ );
@@ -73,16 +98,36 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     return;
   }
 
-  if ( request.uri_ == "/imcomp/_upload" && request.method_ == "POST" ) {
+  if ( util::begins_with(request.uri_, "/imcomp/_upload") && request.method_ == "POST" ) {
     string fid;
-    bool success = save_user_upload(request, fid);
+    bool success;
+    if ( request.uri_ == "/imcomp/_upload" ) {
+      success = save_user_upload(request, fid);
+    } else {
+      success = transform_and_save_user_upload(request, fid);
+    }
+    response.set_field("Content-Type", "application/json");
+    if(success) {
+      string payload = "{\"fid\":\"" + fid + "\"}";
+      response.set_payload(payload);
+    } else {
+      string payload = "{\"status\":\"ERR\", \"description\":\"failed to save file\"}";
+      response.set_payload(payload);
+    }
+    return;
+  }
+
+  if ( util::begins_with(request.uri_, "/imcomp/_transform") && request.method_ == "POST" ) {
+    std::string fid;
+    bool success;
+    success = transform_file(request, fid);
     response.set_field("Content-Type", "application/json");
     if(success) {
       string payload = "{\"fid\":\"" + fid + "\"}";
       response.set_payload(payload);
       return;
     } else {
-      string payload = "{\"status\":\"ERR\", \"description\":\"failed to save file\"}";
+      string payload = "{\"status\":\"ERR\", \"description\":\"failed to transform file\"}";
       response.set_payload(payload);
     }
     return;
@@ -92,7 +137,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     map<string,string> uri_arg;
     bool success = request.parse_uri(uri_arg);
     //for( auto it=uri_arg.begin(); it!=uri_arg.end(); it++ ) {
-      //cout << "\n" << it->first << ":" << it->second << flush;
+    //  cout << "\n" << it->first << ":" << it->second << flush;
     //}
     if(success) {
       string fid1 = uri_arg["file1"];
@@ -126,36 +171,37 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       size_t fp_match_count = -1;
       MatrixXd H(3,3);
       bool success = false;
+      std::string message = "";
       if( algname == "robust_ransac_tps" ) {
         imreg_sift::robust_ransac_tps(im1_fn.string().c_str(),
                                       im2_fn.string().c_str(),
                                       file1_region[0], file1_region[2], file1_region[1], file1_region[3],
-                                      H, 
+                                      H,
                                       fp_match_count,
                                       im1_crop_fn.string().c_str(),
                                       im2_crop_fn.string().c_str(),
                                       im2_tx_fn.string().c_str(),
                                       diff_fn.string().c_str(),
                                       overlap_fn.string().c_str(),
-                                      success);
+                                      success,
+                                      message);
       } else {
         imreg_sift::ransac_dlt(im1_fn.string().c_str(),
-                                im2_fn.string().c_str(),
-                                file1_region[0], file1_region[2], file1_region[1], file1_region[3],
-                                H, 
-                                fp_match_count,
-                                im1_crop_fn.string().c_str(),
-                                im2_crop_fn.string().c_str(),
-                                im2_tx_fn.string().c_str(),
-                                diff_fn.string().c_str(),
-                                overlap_fn.string().c_str(),
-                                success);
+                               im2_fn.string().c_str(),
+                               file1_region[0], file1_region[2], file1_region[1], file1_region[3],
+                               H,
+                               fp_match_count,
+                               im1_crop_fn.string().c_str(),
+                               im2_crop_fn.string().c_str(),
+                               im2_tx_fn.string().c_str(),
+                               diff_fn.string().c_str(),
+                               overlap_fn.string().c_str(),
+                               success,
+                               message);
       }
 
       std::ostringstream json;
       if ( success ) {
-        //std::cout << "\nfile2_region = " << file2_region[0] << "," << file2_region[1] << "," << file2_region[2] << "," << im2_region[3] << std::flush;
-
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"OK\","
              << "\"status_message\": \"\","
@@ -173,8 +219,7 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
         json << "{\"IMAGE_HOMOGRAPHY\":[{"
              << "\"status\": \"ERR\","
 //             << "\"status_message\": \"Could not match sufficient feature points (best inliers count = "
-             << "\"status_message\": \"Could not match sufficient feature points (matched features = "
-             << fp_match_count << ")\","
+             << "\"status_message\": \"" << message << "\","
              << "\"fp_match_count\": \"" << fp_match_count << "\","
              << "\"homography\": []";
       }
@@ -191,6 +236,52 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
   response.set_status(400);
 }
 
+bool imcomp_request_handler::transform_file(const http_request& request, string& fid) {
+  try {
+    std::map<std::string, std::string> args;
+    request.parse_uri(args);
+
+    if ( args.count("fid") && args.count("operation") ) {
+      fid = args["fid"];
+      boost::filesystem::path fn = upload_dir_ / ( fid + ".jpg");
+      Magick::Image im;
+      im.read( fn.string() );
+
+      // rotate image if requested
+      if ( args["operation"] == "rotate" ) {
+        if ( args.count("param") ) {
+          std::stringstream ss;
+          double angle;
+          ss << args["param"];
+          ss >> angle;
+          im.rotate(angle);
+          //std::cout << "\nRotated image by " << angle << " deg." << std::flush;
+        }
+      }
+      // rotate image if requested
+      if ( args["operation"] == "flip" ) {
+        if ( args.count("param") ) {
+          if ( args["param"] == "horizontal" ) {
+            im.flop();
+          } else {
+            im.flip();
+          }
+          std::cout << "\n" << args["param"] << " image" << std::flush;
+        }
+      }
+
+      im.write(fn.string());
+      return true;
+    } else {
+      return false;
+    }
+  } catch( std::exception &e ) {
+    std::clog << "\n  imcomp_request_handler::transform_file() : error transforming file";
+    std::clog << "\n  " << e.what() << std::flush;
+    return false;
+  }
+}
+
 bool imcomp_request_handler::save_user_upload(const http_request& request, string& fid) {
   try {
     const std::string img_data = request.payload_.str();
@@ -203,7 +294,7 @@ bool imcomp_request_handler::save_user_upload(const http_request& request, strin
       boost::uuids::random_generator uuid_generator;
       boost::uuids::uuid request_uuid = uuid_generator();
       fid = boost::uuids::to_string(request_uuid);
-      
+
       boost::filesystem::path fn = upload_dir_ / ( fid + ".jpg");
       im.magick("JPEG");
       im.colorSpace(Magick::sRGBColorspace);
@@ -216,6 +307,46 @@ bool imcomp_request_handler::save_user_upload(const http_request& request, strin
   } catch( std::exception &e ) {
     std::clog << "\n  imcomp_request_handler::save_user_upload() : error saving file";
     std::clog << e.what() << std::flush;
+    return false;
+  }
+}
+
+bool imcomp_request_handler::transform_and_save_user_upload(const http_request& request, string& fid) {
+  try {
+    std::map<std::string, std::string> args;
+    request.parse_uri(args);
+
+    const std::string img_data = request.payload_.str();
+    Magick::Blob blob(img_data.c_str(), img_data.length());
+
+    if ( blob.length() ) {
+      Magick::Image im(blob);
+
+      // to ensure thread safety, we initialize it every time
+      boost::uuids::random_generator uuid_generator;
+      boost::uuids::uuid request_uuid = uuid_generator();
+      fid = boost::uuids::to_string(request_uuid);
+
+      boost::filesystem::path fn = upload_dir_ / ( fid + ".jpg");
+      im.magick("JPEG");
+      im.colorSpace(Magick::sRGBColorspace);
+
+      // resize image if requested
+      if ( args.count("maxwidth") || args.count("maxheight") ) {
+        std::ostringstream ss;
+        ss << args["maxwidth"] << "x" << args["maxheight"] << "+0+0>"; // resize only if greater
+        im.resize( Magick::Geometry( ss.str() ) );
+      }
+
+      im.write(fn.string());
+      //std::clog << " : " << fn.string() << " (" << blob.length() << " bytes)" << ", size=" << im.columns() << "x" << im.rows() << std::endl;
+      return true;
+    } else {
+      return false;
+    }
+  } catch( std::exception &e ) {
+    std::clog << "\n  imcomp_request_handler::transform_and_save_user_upload() : error saving file";
+    std::clog << "\n  " << e.what() << std::flush;
     return false;
   }
 }

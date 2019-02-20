@@ -6,9 +6,9 @@
   <meta name="author" content="Abhishek Dutta">
   <meta name="description" content="Web browser based user interface for traherne digital collator">
 
-  <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico"/>
+  <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico"/>
   <link rel="stylesheet" type="text/css" href="./traherne.css" />
-  
+
   <!--
     Development of VIA is supported by the EPSRC programme grant
     Seebibyte: Visual Search for the Era of Big Data (EP/M013774/1).
@@ -16,125 +16,123 @@
     This data is used in reporting of this programme grant.
   -->
   <script src="./traherne_google_analytics.js"></script>
+
 </head>
 
 <body>
 <div id="page">
   <div id="horizontal_line" class="horizontal_ref_line display-none" title="Click on the line to hide this reference line"></div>
-  <div id="top_panel">
-    <!--
-      <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	   width="160px" height="160px" viewBox="0 0 425.199 425.199" enable-background="new 0 0 425.199 425.199" xml:space="preserve">
-        <rect x="0" y="0" fill="#BC2B18" width="53.1" height="425.199"/>
-        <g>
-	  <path fill="#BC2B18" d="M364.076,78.181l2.344,90.625h-26.367c0-21.222-4.364-37.207-13.086-47.949
-		                  c-8.725-10.742-20.834-16.046-36.328-15.918l-19.141,0.195v187.5c0,3.647-0.033,7.227-0.098,10.742
-		                  c-0.067,3.516-0.165,6.87-0.293,10.059c-0.131,3.192-0.293,6.089-0.488,8.691c-0.195,2.606-0.424,4.755-0.684,6.445l32.031-1.172
-		                  v30.859H185.17v-26.367c4.425-0.128,8.429-0.552,12.012-1.27c3.58-0.714,6.573-2.179,8.984-4.395
-		                  c2.408-2.212,4.264-5.597,5.566-10.156c1.3-4.556,1.953-10.87,1.953-18.945V105.525h-18.555c-15.234,0-27.246,5.146-36.035,15.43
-		                  c-8.789,10.288-13.251,26.239-13.379,47.852H119.35l2.344-90.625H364.076z"/>
-        </g>
-      </svg>
-      -->
 
-    <div id="about_panel">
-      <div class="row allcaps">
-        <!-- todo: improve the logo by finding a better way to combine SVG and raw text -->
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="30px" height="30px" viewBox="0 0 400 300">
-        <path fill="#BC2B18" d="M364.076,78.181l2.344,90.625h-26.367c0-21.222-4.364-37.207-13.086-47.949
-		                  c-8.725-10.742-20.834-16.046-36.328-15.918l-19.141,0.195v187.5c0,3.647-0.033,7.227-0.098,10.742
-		                  c-0.067,3.516-0.165,6.87-0.293,10.059c-0.131,3.192-0.293,6.089-0.488,8.691c-0.195,2.606-0.424,4.755-0.684,6.445l32.031-1.172
-		                  v30.859H185.17v-26.367c4.425-0.128,8.429-0.552,12.012-1.27c3.58-0.714,6.573-2.179,8.984-4.395
-		                  c2.408-2.212,4.264-5.597,5.566-10.156c1.3-4.556,1.953-10.87,1.953-18.945V105.525h-18.555c-15.234,0-27.246,5.146-36.035,15.43
-		                  c-8.789,10.288-13.251,26.239-13.379,47.852H119.35l2.344-90.625H364.076z"/>
-        </svg>raherne
-      </div>
-<!--      <div class="row allcaps"><span style="color: #bc2b18">T</span>raherne</div>-->
-      <div class="row allcaps">&nbsp;&nbsp;Digital</div>
-      <div class="row allcaps">&nbsp;&nbsp;Collator</div>
-      <div class="row small lh2">ver. 2.0.3 | <a href="http://www.robots.ox.ac.uk/~vgg/software/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/traherne/user_guide.html">help</a></div>
-    </div>
+  <!-- @todo: when support for old browsers is not longer required, use flex or grid layout -->
+  <div class="top_panel">
+    <table>
+      <tbody>
+        <tr>
+          <td class="about">
+            <table>
+              <tbody>
+                <tr><td><img src="img/traherne_logo.png"></td></tr>
+                <tr><td><div class="links">ver. <a target="_blank" href="https://gitlab.com/vgg/imcomp/blob/master/asset/imcomp/traherne/CHANGELOG">2.0.4</a></div></td></tr>
+                <tr><td><div class="links"><a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/traherne/help.html">help</a> | <a target="_blank" href="http://www.robots.ox.ac.uk/~vgg/software/traherne/index.html">about</a> | <a target="_blank" href="https://gitlab.com/vgg/imcomp/issues">report issue</a></div></td></tr>
+              </tbody>
+            </table>
+          </td>
 
-    <!--
-        <div id="about_panel">
-          <div class="row">
-            <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	         width="60px" height="60px" viewBox="0 0 425.199 425.199" enable-background="new 0 0 425.199 425.199" style="vertical-align: middle"
-	         xml:space="preserve">
-              <rect x="0" y="0" fill="#BC2B18" width="53.1" height="425.199"/>
-              <g>
-	        <path fill="#BC2B18" d="M364.076,78.181l2.344,90.625h-26.367c0-21.222-4.364-37.207-13.086-47.949
-		      c-8.725-10.742-20.834-16.046-36.328-15.918l-19.141,0.195v187.5c0,3.647-0.033,7.227-0.098,10.742
-		      c-0.067,3.516-0.165,6.87-0.293,10.059c-0.131,3.192-0.293,6.089-0.488,8.691c-0.195,2.606-0.424,4.755-0.684,6.445l32.031-1.172
-		      v30.859H185.17v-26.367c4.425-0.128,8.429-0.552,12.012-1.27c3.58-0.714,6.573-2.179,8.984-4.395
-		      c2.408-2.212,4.264-5.597,5.566-10.156c1.3-4.556,1.953-10.87,1.953-18.945V105.525h-18.555c-15.234,0-27.246,5.146-36.035,15.43
-		      c-8.789,10.288-13.251,26.239-13.379,47.852H119.35l2.344-90.625H364.076z"/>
-              </g>
-            </svg>
+          <!-- Main Control Buttons -->
+          <td class="control">
+            <table>
+              <tbody>
+                <tr>
+                  <td><button id="base_load_images2" type="button" title="Select or update the set of images contained in base" style="float:left;">Load Base</button></td>
+                  <td><button id="comp_load_images2" type="button" title="Select or update the set of images contained in comp" style="float:right;">Load Comp</button></td>
+                </tr>
+                <tr>
+                  <td colspan="2"><button id="compare_base_comp" type="button" style="width:100%; padding:0.6em;" title="Compare the images shown in base and comp">Compare</button></td>
+                </tr>
+                <tr>
+                  <td><button id="move_to_prev_pair" type="button" title="Move to next pair of base and comp image" style="float:left;">&lt; Prev Pair</button></td>
+                  <td><button id="move_to_next_pair" type="button" title="Move to previous pair of base and comp image" style="float:right;">Next Pair &gt; </button></td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
 
-          </div>
-      <div class="row small lh2">ver. 2.0.1 | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/">about</a> | <a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/traherne/UserGuide.html">help</a></div>
-    </div>
-    -->
+          <!-- Settings Panel -->
+          <td class="config">
+            <div class="config_container">
+              <div class="config_item" title="Show magnifying glass when mouse is hovered on base or comp image">
+                <div class="title">Zoom</div>
+                <div class="options">
+                  <select name="zoom_level" id="zoom_level">
+                    <option value="0.4">0.4X (shrink)</option>
+                    <option value="0.8">0.8X (shrink)</option>
+                    <option value="2.0" selected="selected">2X (magnify)</option>
+                    <option value="3.0">3X (magnify)</option>
+                    <option value="4.0">4X (magnify)</option>
+                    <option value="8.0">8X (magnify)</option>
+                  </select>
+                  <input id="left_content_zoom" type="checkbox">
+                  <label for="left_content_zoom">Base</label>
+                  <input id="right_content_zoom" type="checkbox">
+                  <label for="right_content_zoom">Comp</label>
+                </div>
+              </div>
 
-    <div class="control_block">
-      <span class="title">Commands</span>
+              <div class="config_item" title="Toggle between images currently showing in base and comp">
+                <div class="title">Toggle</div>
+                <div class="options">
+                  <select name="toggle_speed" id="toggle_speed">
+                    <option value="1000">Speed: Very Slow</option>
+                    <option value="600">Speed: Slow</option>
+                    <option value="300">Speed: Medium</option>
+                    <option value="150">Speed: Fast</option>
+                    <option value="100">Speed: Very Fast</option>
+                  </select>
+                  <input id="left_content_toggle" type="checkbox">
+                  <label for="left_content_toggle">Base</label>
+                  <input id="right_content_toggle" type="checkbox">
+                  <label for="right_content_toggle">Comp</label>
+                </div>
+              </div>
 
-      <span class="row">
-        <button id="base_load_images2" type="button">Load Base</button>
-        <button id="comp_load_images2" type="button">Load Comp</button>
-      </span>
+              <div class="config_item"  title="To improve the robustness of comparison, select the type of images that are being compared.">
+                <div class="title">Compare Type</div>
+                <div class="options">
+                  <select name="algorithm_choice" id="algorithm_choice">
+                    <option selected="selected" value="ransac_dlt">Flat book pages</option>
+                    <option value="robust_ransac_tps">Curled book pages</option>
+                  </select>
+                </div>
+              </div>
 
-      <span class="row">
-        <button id="compare_base_comp" type="button" title="Compare base and comp. image pair">Compare Base & Comp.</button>
-      </span>
-    </div>
+              <div class="config_item" title="Save current visualisation as an image">
+                <div class="title">Save</div>
+                <div class="options">
+                  <button id="save_current_visualisation" type="button">Current Visualisation</button>
+                </div>
+              </div>
 
-    <div class="control_block">
-      <span class="title">Navigation</span>
-      <span class="row">
-        <button id="move_to_prev_pair" type="button" title="Move to previous base and comp. image pair">&lt; Prev Pair</button>
-        <button id="move_to_next_pair" type="button" title="Move to next base and comp. image pair">Next Pair &gt;</button>
-      </span>
-    </div>
+              <div class="config_item" title="Toggle a horizontal reference line across the base and comp image">
+                <div class="title">Reference Line</div>
+                <div class="options">
+                  <input id="href_line_toggler" type="checkbox">
+                  <label for="href_line_toggler">Toggle</label>
+                </div>
+              </div>
 
-    <div class="control_block">
-      <span class="title">Settings</span>
+              <div class="config_item" title="Change the images in base or comp set.">
+                <div class="title">Update</div>
+                <div class="options">
+                  <button id="base_load_images" type="button">Change Base</button>
+                  <button id="comp_load_images" type="button">Change Comp</button>
+                </div>
+              </div>
 
-      <span class="row">
-        <select name="toggle_speed" id="toggle_speed">
-          <option value="600">Toggle Speed: Slow</option>
-          <option value="300">Toggle Speed: Medium</option>
-          <option value="150">Toggle Speed: Fast</option>
-        </select>
-      </span>
-
-      <span class="row">
-        <select name="zoom_level" id="zoom_level">
-          <option value="0.4">Zoom: 0.4X (shrink)</option>
-          <option value="0.8">Zoom: 0.8X (shrink)</option>
-          <option value="2.0">Zoom:   2X (magnify)</option>
-          <option value="3.0">Zoom:   3X (magnify)</option>
-          <option value="4.0">Zoom:   4X (magnify)</option>
-          <option value="8.0">Zoom:   8X (magnify)</option>
-        </select>
-      </span>
-
-    </div>
-
-    <div class="control_block">
-      <span class="title">Image Characteristics</span>
-
-      <span class="row">
-        <input name="algorithm_choice" value="ransac_dlt" type="radio" checked="checked">
-        <label for="ransac_dlt">Flat book pages</label>
-      </span>
-      <span class="row">
-        <input name="algorithm_choice" value="robust_ransac_tps" type="radio">
-        <label for="robust_ransac_tps">Curled book pages</label>
-      </span>
-    </div>
-
+            </div> <!-- end of config_container -->
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div id="message_panel" title="Shows help messages, program log, etc"></div>
@@ -143,22 +141,41 @@
     <!-- Content name, description and status -->
     <div id="content_label" class="row">
       <div class="img_label cell">
+        <div id="base_img_status" class="img_upload_status"></div>
         <label for="base_img_filename_list">Base&nbsp;</label>
         <button id="base_move_to_prev" type="button">&lt;</button>
         <select name="base_img_filename_list" id="base_img_filename_list">
         </select>
         <button id="base_move_to_next" type="button">&gt;</button>
+        <span class="nobreak">
+          <span id="base_flip_horizontal" class="text_button" title="Flip base image horizontally">&harr;</span>
+          <span id="base_flip_vertical" class="text_button" title="Flip base image vertically">&varr;</span>
+        </span>
+        <span class="nobreak">
+          <span id="base_rotate_-90" class="text_button" title="Rotate base image by 90 degree in anti-clockwise direction">&cularr;</span>
+          <span id="base_rotate_+90" class="text_button" title="Rotate base image by 90 degree in clockwise direction">&curarr;</span>
+        </span>
 
-        <div id="base_img_status" class="img_upload_status"></div>
       </div>
+
       <div class="vertical_img_separator_panel cell"></div>
+
       <div class="img_label cell">
+        <div id="comp_img_status" class="img_upload_status"></div>
         <label for="comp_img_filename_list">Comp.&nbsp;</label>
         <button id="comp_move_to_prev" type="button">&lt;</button>
         <select name="comp_img_filename_list" id="comp_img_filename_list">
         </select>
         <button id="comp_move_to_next" type="button">&gt;</button>
-        <div id="comp_img_status" class="img_upload_status"></div>
+
+        <span class="nobreak">
+          <span id="comp_flip_horizontal" class="text_button" title="Flip comp image horizontally">&harr;</span>
+          <span id="comp_flip_vertical" class="text_button" title="Flip comp image vertically">&varr;</span>
+        </span>
+        <span class="nobreak">
+          <span id="comp_rotate_-90" class="text_button" title="Rotate comp image by 90 degree in anti-clockwise direction">&cularr;</span>
+          <span id="comp_rotate_+90" class="text_button" title="Rotate comp image by 90 degree in clockwise direction">&curarr;</span>
+        </span>
       </div>
     </div>
 
@@ -251,30 +268,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Panel for content specific controls -->
-    <div id="content_control" class="row">
-      <div id="left_content_controls" class="img_control cell">
-        <input id="left_content_zoom" type="checkbox">
-        <label for="left_content_zoom">Zoom</label>
-        <input id="left_content_toggle" type="checkbox">
-        <label for="left_content_toggle">Toggle</label>
-        <span class="button_group_space1"></span>
-
-        <button id="base_load_images" type="button">Change Base Image Set</button>
-      </div>
-      <div class="vertical_separator_panel cell"></div>
-      <div id="right_content_controls" class="img_control cell">
-        <button id="comp_load_images" type="button">Change Comp. Image Set</button>
-
-        <span class="button_group_space1"></span>
-        <input id="right_content_toggle" type="checkbox">
-        <label for="right_content_toggle">Toggle</label>
-        <input id="right_content_zoom" type="checkbox">
-        <label for="right_content_zoom">Zoom</label>
-      </div>
-    </div>
-
   </div>
 </div>
 
