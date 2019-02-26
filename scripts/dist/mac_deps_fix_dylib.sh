@@ -10,6 +10,7 @@ DYLIB_DST="/Users/tlm/deps/clang/imcomp/cpack_mac_deps"
 #DYLIB_DST="/Users/tlm/dev/imcomp/bin"
 
 # copy dependencies
+cp /usr/local/opt/libtiff/lib/libtiff.5.dylib "$DYLIB_SRC/"
 cp /usr/local/opt/jpeg/lib/libjpeg.8.dylib "$DYLIB_SRC/"
 cp /usr/local/opt/libpng/lib/libpng16.16.dylib "$DYLIB_SRC/"
 cp /usr/local/opt/xz/lib/liblzma.5.dylib "$DYLIB_SRC/"
@@ -20,6 +21,12 @@ cp /Users/tlm/deps/clang/imcomp/tmp_libsrc/vlfeat-0.9.21/bin/maci64/libomp.dylib
 install_name_tool -id "libjpeg.8.dylib" "$DYLIB_SRC"/libjpeg.8.dylib
 install_name_tool -id "libpng16.16.dylib" "$DYLIB_SRC"/libpng16.16.dylib
 install_name_tool -id "liblzma.5.dylib" "$DYLIB_SRC"/liblzma.5.dylib
+install_name_tool -id "libtiff.5.dylib" "$DYLIB_SRC"/libtiff.5.dylib
+
+##
+## libtiff
+##
+install_name_tool -change /usr/local/opt/jpeg/lib/libjpeg.8.dylib "@rpath/libjpeg.8.dylib" "$DYLIB_SRC"/libtiff.5.dylib
 
 ##
 ## Magick++
@@ -33,6 +40,7 @@ install_name_tool -change "$DYLIB_SRC"/libMagickWand-6.Q8.5.dylib "@rpath/libMag
 install_name_tool -change /usr/local/opt/jpeg/lib/libjpeg.8.dylib "@rpath/libjpeg.8.dylib" "$DYLIB_SRC"/libMagick++-6.Q8.dylib
 install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib "@rpath/libpng16.16.dylib" "$DYLIB_SRC"/libMagick++-6.Q8.dylib
 install_name_tool -change /usr/local/opt/xz/lib/liblzma.5.dylib "@rpath/liblzma.5.dylib" "$DYLIB_SRC"/libMagick++-6.Q8.dylib
+install_name_tool -change /usr/local/opt/libtiff/lib/libtiff.5.dylib "@rpath/libtiff.5.dylib" "$DYLIB_SRC"/libMagick++-6.Q8.dylib
 
 ##
 ## MagickCore
@@ -43,6 +51,7 @@ install_name_tool -id libMagickCore-6.Q8.dylib "$DYLIB_SRC"/libMagickCore-6.Q8.d
 install_name_tool -change /usr/local/opt/jpeg/lib/libjpeg.8.dylib "@rpath/libjpeg.8.dylib" "$DYLIB_SRC"/libMagickCore-6.Q8.dylib
 install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib "@rpath/libpng16.16.dylib" "$DYLIB_SRC"/libMagickCore-6.Q8.dylib
 install_name_tool -change /usr/local/opt/xz/lib/liblzma.5.dylib "@rpath/liblzma.5.dylib" "$DYLIB_SRC"/libMagickCore-6.Q8.dylib
+install_name_tool -change /usr/local/opt/libtiff/lib/libtiff.5.dylib "@rpath/libtiff.5.dylib" "$DYLIB_SRC"/libMagickCore-6.Q8.dylib
 
 ##
 ## MagickWand
@@ -54,6 +63,7 @@ install_name_tool -change "$DYLIB_SRC"/libMagickCore-6.Q8.5.dylib "@rpath/libMag
 install_name_tool -change /usr/local/opt/jpeg/lib/libjpeg.8.dylib "@rpath/libjpeg.8.dylib" "$DYLIB_SRC"/libMagickWand-6.Q8.dylib
 install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib "@rpath/libpng16.16.dylib" "$DYLIB_SRC"/libMagickWand-6.Q8.dylib
 install_name_tool -change /usr/local/opt/xz/lib/liblzma.5.dylib "@rpath/liblzma.5.dylib" "$DYLIB_SRC"/libMagickWand-6.Q8.dylib
+install_name_tool -change /usr/local/opt/libtiff/lib/libtiff.5.dylib "@rpath/libtiff.5.dylib" "$DYLIB_SRC"/libMagickWand-6.Q8.dylib
 
 ##
 ## Boost libraries

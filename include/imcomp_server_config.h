@@ -5,7 +5,7 @@
 
 #define IMCOMP_SERVER_VERSION_MAJOR "2"
 #define IMCOMP_SERVER_VERSION_MINOR "0"
-#define IMCOMP_SERVER_VERSION_PATCH "4"
+#define IMCOMP_SERVER_VERSION_PATCH "5"
 #define IMCOMP_SERVER_URL "http://www.robots.ox.ac.uk/~vgg/software/imcomp/"
 
 #define IMCOMP_SERVER_AUTHOR_NAME "Abhishek Dutta"
