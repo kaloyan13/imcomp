@@ -1034,6 +1034,7 @@ _traherne_controller.prototype.transform_remote_file = function(d) {
       if ( this.m.via[ok.type].v.now.all_rid_list.length ) {
         this.m.via[ok.type].c.region_delete( this.m.via[ok.type].v.now.all_rid_list ); // delete all existing regions
       }
+      this.m.upload_scale[ok.type][ok.findex] = 1.0; // images retrived from server is used in original scale
       this.m.via[ok.type].c.load_file(ok.via_fid);
     }.bind(this), function(err) {
       console.log(err);
@@ -1041,12 +1042,6 @@ _traherne_controller.prototype.transform_remote_file = function(d) {
                         '[ ' + this.m.files[err.type][err.findex].name + ' ] ' +
                         '<span class="red">' + err.msg + '</span>.');
     }.bind(this));
-  }.bind(this));
-}
-
-_traherne_controller.prototype.rotate_remote_file = function(type, findex, via_fid, operation, param) {
-  return new Promise( function(ok_callback, err_callback) {
-
   }.bind(this));
 }
 
