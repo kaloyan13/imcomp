@@ -267,20 +267,20 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     im2.type(Magick::TrueColorType);
 
     Magick::Image im1_g = im1;
-    //im1_g.magick("pgm");
     im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
 
     Magick::Image im2_g = im2;
-    //im2_g.magick("pgm");
 
     vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
     vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
+    // images are converted to gray scale before processing
     compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
     //cout << "\nFilename = " << im1_fn << flush;
     //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
     //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
 
+    // images are converted to gray scale before processing
     compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
     //cout << "\nFilename = " << im2_fn << flush;
     //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;

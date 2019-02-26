@@ -54,9 +54,9 @@ function traherne_imcomp_user_interface() {
 var _traherne_about = {};
 _traherne_about.name = "Traherne Digital Collator";
 _traherne_about.shortname = "traherne";
-_traherne_about.version = "2.0.4";
+_traherne_about.version = "2.0.5";
 _traherne_about.date_first_release  = "June 01, 2017";
-_traherne_about.date_current_release  = "";
+_traherne_about.date_current_release  = "Feb. 2019";
 _traherne_about.author_name  = "Abhishek Dutta";
 _traherne_about.author_email = "adutta@robots.ox.ac.uk";
 

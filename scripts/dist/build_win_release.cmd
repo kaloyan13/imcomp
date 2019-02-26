@@ -11,7 +11,7 @@ SET CURRENT_PATH=%cd%
 
 SET RELEASE_PACKAGE_NAME="Traherne"
 SET RELEASE_PACKAGE_DESCRIPTION="Traherne Digital Collator"
-SET IMCOMP_SERVER_VERSION_PATCH="4" REM Traherne user interface version
+SET IMCOMP_SERVER_VERSION_PATCH="5" REM Traherne user interface version
 
 SET BUILD_BASE_FOLDER="C:\Users\tlm\build\imcomp\release"
 SET CMAKE_EXEC="C:\Program Files\CMake\bin\cmake.exe"

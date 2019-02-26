@@ -3,6 +3,10 @@ Note: version A.B.C corresponds to:
   B : the minor version number of imcomp server
   C : the version number for client user interfaces of imcomp and traherne
 
+## [traherne-2.0.5] - February 26, 2019
+ * fixed issue with rotated images (see https://gitlab.com/vgg/imcomp/issues/5)
+ * 
+
 ## [traherne-2.0.4] - February 20, 2019
  * users can upload and view TIF files (Traherne automatically converts TIF to JPEG and does not require browser's support for TIF images)
  * improved top toolbar (better organized and more clear)

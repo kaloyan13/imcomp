@@ -642,7 +642,7 @@ _traherne_model.prototype.compare_img_pair = function(compare_task) {
           err_callback();
         }
       } catch(e) {
-        var msg = 'exception occured while communicating with server';
+        var msg = 'error parsing the server response';
         this.set_compare_status('ERR', msg);
         err_callback();
       }
