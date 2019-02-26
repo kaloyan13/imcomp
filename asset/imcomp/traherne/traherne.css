@@ -176,7 +176,7 @@ body {
     text-overflow: ellipsis;
 }
 .img_label select {
-    max-width: 80%; /* squash large filenames */
+    max-width: 50%; /* squash large filenames */
 }
 
 .centered_text {
