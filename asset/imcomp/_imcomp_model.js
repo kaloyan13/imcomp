@@ -187,23 +187,23 @@ _imcomp_model.prototype.add_images = function(user_selected_files) {
       // add images to via
       var via_promises = { 'base':[], 'comp':[] };
       for( type in this.c.type_list ) {
-	for ( i = 0; i < n; ++i ) {
-	  console.log('[' + i + '] VIA Adding local file to ' + type + ' : ' + this.files[i].name);
-	  via_promises[type].push( this.via[type].m.add_file_local(this.files[i]) );
-	}
+      	for ( i = 0; i < n; ++i ) {
+      	  console.log('[' + i + '] VIA Adding local file to ' + type + ' : ' + this.files[i].name);
+      	  via_promises[type].push( this.via[type].m.add_file_local(this.files[i]) );
+      	}
       }
       Promise.all(via_promises['base']).then( function(base_via_fileid) {
-	this.fid_to_via_fileid['base'] = base_via_fileid;
-	Promise.all(via_promises['comp']).then( function(comp_via_fileid) {
-	  this.fid_to_via_fileid['comp'] = comp_via_fileid;
-	  this.c.on_filelist_update();
-	}.bind(this), function(err) {
-	  console.log('failed to add images to comp VIA');
-	  console.log(err);
-	});
+      	this.fid_to_via_fileid['base'] = base_via_fileid;
+      	Promise.all(via_promises['comp']).then( function(comp_via_fileid) {
+      	  this.fid_to_via_fileid['comp'] = comp_via_fileid;
+      	  this.c.on_filelist_update();
+      	}.bind(this), function(err) {
+      	  console.log('failed to add images to comp VIA');
+      	  console.log(err);
+      	});
       }.bind(this), function(err) {
-	console.log('failed to add images to base VIA');
-	console.log(err);
+      	console.log('failed to add images to base VIA');
+      	console.log(err);
       });
     }
   }.bind(this), function(error) {

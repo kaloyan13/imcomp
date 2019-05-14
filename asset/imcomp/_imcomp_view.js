@@ -161,6 +161,34 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
     this.theme.ZOOM_LEVEL = e.target.value;
     this.c.zoom_update_level();
   }.bind(this), false);
+
+  // for files panel drag and drop
+  document.getElementById('files_panel').addEventListener('dragstart', function(e) {
+    e.dataTransfer.setData("text", e.target.id);
+    console.log('id is ' + e.target.id);
+  }.bind(this), false);
+
+  document.getElementById( 'right_content_container' ).addEventListener('dragover', function(e) {
+    e.preventDefault();
+  }.bind(this), false);
+
+  document.getElementById( 'left_content_container' ).addEventListener('dragover', function(e) {
+    e.preventDefault();
+  }.bind(this), false);
+
+  document.getElementById('right_content_container').addEventListener('drop', function(e) {
+    e.preventDefault();
+    var fileid = e.dataTransfer.getData("text");
+    console.log('fileid in right content container is ' + fileid);
+    this.c.file_dropped(fileid, 'comp');
+  }.bind(this), false);
+
+  document.getElementById('left_content_container').addEventListener('drop', function(e) {
+    e.preventDefault();
+    var fileid = e.dataTransfer.getData("text");
+    console.log('fileid in left content container is ' + fileid);
+    this.c.file_dropped(fileid, 'base');
+  }.bind(this), false);
 }
 
 _imcomp_view.prototype.msg = function(msg, t) {

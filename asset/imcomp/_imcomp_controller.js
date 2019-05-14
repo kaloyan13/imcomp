@@ -121,6 +121,10 @@ _imcomp_controller.prototype.update_files = function(e) {
   this.m.add_images(e.target.files);
 }
 
+_imcomp_controller.prototype.file_dropped = function(fileid, type) {
+  this.m.via[type].c.load_file( fileid );
+}
+
 _imcomp_controller.prototype.move_to_next = function(type) {
   var n = this.m.files.length;
   if( n > 0 ) {
@@ -164,7 +168,7 @@ _imcomp_controller.prototype.on_filelist_update = function(type) {
 
   show_message('Added [' + this.m.file_count + '] files');
 
-  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP2);
+  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3);
 }
 
 _imcomp_controller.prototype.update_view_filelist = function(type) {

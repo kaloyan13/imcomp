@@ -1415,7 +1415,7 @@ _via_view.prototype.init = function( via_ctrl, view_panel, message_panel ) {
     this.message_panel = message_panel;
   }
 
-  this.view_panel.innerHTML = '';
+  // this.view_panel.innerHTML = '';
 
   this.init_local_file_selector();
   this.register_ui_action_handlers();
@@ -2096,9 +2096,9 @@ _via_ctrl.prototype.keydown_handler = function(e) {
 ///
 _via_ctrl.prototype.mousemove_handler = function(e) {
   e.stopPropagation();
-
   var x1 = e.offsetX;
   var y1 = e.offsetY;
+
   this.v.last.mousemove.x = x1;
   this.v.last.mousemove.y = y1;
 
