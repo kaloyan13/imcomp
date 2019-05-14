@@ -8,9 +8,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 var IMCOMP_PANEL_NAME = { STEP1:'step1',
-			  STEP2:'step2',
-			  STEP3:'step3'
-                        };
+			  									STEP2:'step2',
+			  									STEP3:'step3',
+                          STEP4:'step4'};
+
 var IMCOMP_THEME_MESSAGE_TIMEOUT_MS    = 6000;
 
 var _imcomp_about = {};
@@ -102,7 +103,7 @@ function _imcomp_set_panel_content(panel_id) {
     cs.appendChild( _imcomp_get_comparison_settings_default_settings_option() );
     _imcomp_get_comparison_settings_onchange_algname();
   }
-  
+
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {
     var img_index = 0;
     console.log(_imcomp.c.type_list)
@@ -115,6 +116,23 @@ function _imcomp_set_panel_content(panel_id) {
       _imcomp.c.content_selector_set_state(type, sid_suffix, true);
       _imcomp.c.enable_switch(type, '_zoom');
     }
+
+		// show all uploaded files in the files panel
+		var fp = document.getElementById('files_panel');
+	  for ( var i = 0; i < _imcomp.m.files.length; i++ ) {
+			var fr = new FileReader();
+			// same for base and comp
+			fr.fid = _imcomp.m.fid_to_via_fileid.base[i];
+	    fr.addEventListener( 'load', function(e) {
+	    	var img = document.createElement('img');
+				img.setAttribute('draggable', true);
+				img.setAttribute('id', e.currentTarget.fid);
+	    	img.setAttribute('src', e.currentTarget.result);
+	    	fp.appendChild(img);
+	    }.bind(this));
+
+	    fr.readAsDataURL( _imcomp.m.files[i] );
+	  }
   }
 }
 
@@ -152,7 +170,7 @@ function _imcomp_get_comparison_settings_onchange_algname() {
   var p2 = document.createElement('p');
   p2.innerHTML = 'Developer and Maintainer: ' + _imcomp_algname_list[algindex].author_name.join(', ');
   algdesc.appendChild(p2);
-  
+
   var div = document.createElement('div');
   div.classList.add('row');
   div.classList.add('alg_description');
@@ -176,7 +194,7 @@ function _imcomp_get_comparison_settings_onchange_value(e) {
 
 function _imcomp_get_comparison_settings_onchange_default_settings(e) {
   var cs = document.getElementById('comparison_settings');
-  
+
   // remove existing options (if any)
   var existing_options = cs.getElementsByClassName('comparison_alg_config');
   while ( existing_options.length ) {
@@ -212,7 +230,7 @@ function _imcomp_get_comparison_settings_onchange_default_settings(e) {
       input.setAttribute('data-alg-index', algindex);
       input.setAttribute('data-config-index', i);
       input.addEventListener('change', _imcomp_get_comparison_settings_onchange_value);
-      
+
       span2 = document.createElement('span');
       span2.classList.add('value');
       span2.appendChild(input);
@@ -247,7 +265,7 @@ function _imcomp_get_comparison_settings_algname_list() {
   var sel = document.createElement('select');
   sel.setAttribute('id', 'algname_list');
   sel.addEventListener('change', _imcomp_get_comparison_settings_onchange_algname);
-  
+
   var o, n, i;
   n = _imcomp_algname_list.length;
   for ( i = 0; i < n; ++i ) {
