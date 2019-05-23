@@ -17,6 +17,26 @@
   <button id="step3_button" class="step3_button_color panel_selector_button" onclick="_imcomp_set_panel('step3')">3. Compare and Visualize Results</button>
 </div> -->
 
+<div class="top_panel">
+  <div class="top_right" id="top_right">
+    <div class="zoom_items" title="Show magnifying glass when mouse is hovered over images">
+      <input id="left_content_zoom" type="checkbox">
+      <label for="left_content_zoom">Zoom</label>
+      <div class="options">
+        <select name="zoom_level" id="zoom_level">
+          <option value="0.4">0.4X (shrink)</option>
+          <option value="0.8">0.8X (shrink)</option>
+          <option value="2.0" selected="selected">2X (magnify)</option>
+          <option value="3.0">3X (magnify)</option>
+          <option value="4.0">4X (magnify)</option>
+          <option value="8.0">8X (magnify)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="top_left"></div>
+</div>
+
 <!-- content updated by imcomp.js -->
 <div id="step1_panel" class="panel_content step1_content_color">
   <div class="step1_text">
@@ -30,14 +50,14 @@
 <div id="step2_panel" class="panel_content step2_content_color">
   <div id="comparison_settings">
   </div>
-  <p><button onclick="_imcomp_set_panel('step3')">Next</button></p>
+  <p><button onclick="_imcomp_set_panel('step3', false)">Next</button></p>
 </div>
 
 <!-- Panel to visualize image comparison result -->
 <div id="step3_panel" class="panel_content step3_content_color">
   <div class="control_panel">
     <div id="horizontal_line" class="horizontal_ref_line display-none" title="Click on the line to hide this reference line"></div>
-    <button id="compare_base_comp" title="Compare Image-A and Image-B">Compare A/B</button>
+    <!-- <button id="compare_base_comp" title="Compare Image-A and Image-B">Compare A/B</button> -->
 
     <button id="move_to_prev_pair" title="Move to previous base and comp. image pair" class="space">&lt; Prev Pair</button>
     <button id="move_to_next_pair" title="Move to next base and comp. image pair">Next Pair &gt;</button>
@@ -62,6 +82,35 @@
   </div>
 
   <div id="files_panel"></div>
+
+  <div id="results_tabs_panel">
+    <span id="results_tabs_default" class="results_tab">default</span>
+    <span id="results_tabs_overlay" class="results_tab">overlay</span>
+    <span id="results_tabs_diff" class="results_tab">difference</span>
+    <span id="results_tabs_toggle" class="results_tab">Toggle</span>
+    <span id="results_tabs_slide" class="results_tab">Fade</span>
+  </div>
+
+  <!-- tools specific to the tabs above -->
+  <div id="tab_tools_panel" class="tab_tools_panel">
+    <div class="toggle_controls">
+      <select name="toggle_speed" id="toggle_speed">
+        <option value="1000">Speed: Very Slow</option>
+        <option value="600">Speed: Slow</option>
+        <option value="300">Speed: Medium</option>
+        <option value="150">Speed: Fast</option>
+        <option value="100">Speed: Very Fast</option>
+      </select>
+      <input id="left_content_toggle" type="checkbox">
+      <label for="left_content_toggle">Base</label>
+      <input id="right_content_toggle" type="checkbox">
+      <label for="right_content_toggle">Comp</label>
+    </div>
+    <div class="slide_controls">
+      <label for="left_content_zoom">Slide Value</label>
+      <input id="base_comp_fader" type="range" min="1" max="100" value="50" class="base_comp_fader">
+    </div>
+  </div>
 
   <!-- Content name, description and status -->
   <div id="middle_panel">
@@ -90,24 +139,24 @@
     <div id="content_selector" class="row">
       <div id="left_content_selector" class="centered_text cell">
       	<span class="nobreak">
-                <input type="radio" name="left_content_option" id="left_content_base_via" class="content_selector">
-                <label for="left_content_base_via">Image-A (full image)</label>
+          <input type="radio" name="left_content_option" id="left_content_base_via" class="content_selector">
+          <label for="left_content_base_via">Image-A (full image)</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="left_content_option" id="left_content_base_crop" class="content_selector">
-                <label for="left_content_base_crop">Image-A (cropped)</label>
+          <input type="radio" name="left_content_option" id="left_content_base_crop" class="content_selector">
+          <label for="left_content_base_crop">Image-A (cropped)</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="left_content_option" id="left_content_base_comp_overlap" class="content_selector">
-                <label for="left_content_base_comp_overlap">Overlap</label>
+          <input type="radio" name="left_content_option" id="left_content_base_comp_overlap" class="content_selector">
+          <label for="left_content_base_comp_overlap">Overlap</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="left_content_option" id="left_content_comp_crop_tx" class="content_selector">
-                <label for="left_content_comp_crop_tx">Image-B.</label>
+          <input type="radio" name="left_content_option" id="left_content_comp_crop_tx" class="content_selector">
+          <label for="left_content_comp_crop_tx">Image-B.</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="left_content_option" id="left_content_base_comp_diff" class="content_selector">
-                <label for="left_content_base_comp_diff">Diff</label>
+          <input type="radio" name="left_content_option" id="left_content_base_comp_diff" class="content_selector">
+          <label for="left_content_base_comp_diff">Diff</label>
       	</span>
       </div>
 
@@ -115,20 +164,20 @@
 
       <div id="right_content_selector" class="centered_text cell">
       	<span class="nobreak">
-                <input type="radio" name="right_content_option" id="right_content_comp_via" class="content_selector">
-                <label for="right_content_comp_via">Image-B (full image)</label>
+          <input type="radio" name="right_content_option" id="right_content_comp_via" class="content_selector">
+          <label for="right_content_comp_via">Image-B (full image)</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="right_content_option" id="right_content_comp_crop_tx" class="content_selector">
-                <label for="right_content_comp_crop_tx">Image-B (cropped)</label>
+          <input type="radio" name="right_content_option" id="right_content_comp_crop_tx" class="content_selector">
+          <label for="right_content_comp_crop_tx">Image-B (cropped)</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="right_content_option" id="right_content_base_comp_overlap" class="content_selector">
-                <label for="right_content_base_comp_overlap">Overlap</label>
+          <input type="radio" name="right_content_option" id="right_content_base_comp_overlap" class="content_selector">
+          <label for="right_content_base_comp_overlap">Overlap</label>
       	</span>
       	<span class="nobreak">
-                <input type="radio" name="right_content_option" id="right_content_base_crop" class="content_selector">
-                <label for="right_content_base_crop">Image-A (cropped)</label>
+          <input type="radio" name="right_content_option" id="right_content_base_crop" class="content_selector">
+          <label for="right_content_base_crop">Image-A (cropped)</label>
       	</span>
       </div>
     </div>
@@ -136,42 +185,42 @@
     <!-- Content panel: display images and annotation window to the user -->
     <div id="content_panel" class="row">
       <div id="left_content" class="cell">
-      	<div id="left_content_container" draggable="true">
-                <!-- Note:
-                     * the parent of via_panel should have user-defined dimensions
-                     * the parent should have "display: inline-block; position: relative"
-                  -->
-                <div id="left_content_via_panel" class="content" draggable="false"></div>
-                <div id="left_content_img_panel" class="content"  draggable="false">
-                  <div id="left_content_image_top_panel"></div>
-                  <div id="left_content_image_zoom_panel">
-                    <!-- dymanically added when zoom is enabled
-                         <img id="left_content_image_zoom" src="">
-                         -->
-                  </div>
-                  <img id="left_content_image" src="">
-                </div>
+      	<div id="left_content_container" class="non_draggable">
+          <!-- Note:
+               * the parent of via_panel should have user-defined dimensions
+               * the parent should have "display: inline-block; position: relative"
+            -->
+          <div id="left_content_via_panel" class="content" draggable="false"></div>
+          <div id="left_content_img_panel" class="content"  draggable="false">
+            <div id="left_content_image_top_panel"></div>
+            <div id="left_content_image_zoom_panel">
+              <!-- dymanically added when zoom is enabled
+                   <img id="left_content_image_zoom" src="">
+                   -->
+            </div>
+            <img id="left_content_image" src="">
+          </div>
       	</div>
       </div>
       <div id="ref_line_container" class="vertical_img_separator_panel cell" title="Click to show or hide a horizontal reference line">&nbsp;</div>
       <div id="right_content" class="cell">
-      	<div id="right_content_container" draggable="true">
-                <!-- Note:
-                     * the parent of via_panel should have user-defined dimensions
-                     * the parent should have "display: inline-block; position: relative"
-                  -->
-                <div id="right_content_via_panel" class="content" draggable="false"></div>
-                <div id="right_content_img_panel" class="content" draggable="false">
-                  <div id="right_content_image_top_panel"></div>
-                  <div id="right_content_image_zoom_panel">
-                    <!-- dymanically added when zoom is enabled
-                         <img id="right_content_image_zoom" src="">
-                         -->
-                  </div>
-                  <div>
-                    <img id="right_content_image" src="">
-                  </div>
-                </div>
+      	<div id="right_content_container" class="non_draggable">
+          <!-- Note:
+               * the parent of via_panel should have user-defined dimensions
+               * the parent should have "display: inline-block; position: relative"
+            -->
+          <div id="right_content_via_panel" class="content" draggable="false"></div>
+          <div id="right_content_img_panel" class="content" draggable="false">
+            <div id="right_content_image_top_panel"></div>
+            <div id="right_content_image_zoom_panel">
+              <!-- dymanically added when zoom is enabled
+                   <img id="right_content_image_zoom" src="">
+                   -->
+            </div>
+            <div>
+              <img id="right_content_image" src="">
+            </div>
+          </div>
       	</div>
       </div>
     </div>
@@ -195,13 +244,32 @@
       </div>
     </div>
   </div> <!-- end of middle panel -->
-  <div id="compare_panel">
-    <button id="back_home" type="button">back</button>
-    <button id="compare_images" type="button">compare</button>
+
+  <div id="results_save_panel">
+    <button id="results_home" type="button" onclick="_imcomp_set_panel('step1', true)">home</button>
+    <button id="results_back" type="button" onclick="_imcomp_set_panel('step3', true)">back</button>
+    <button id="save_result" type="button" onclick="">save</button>
+  </div>
+
+  <div id="compare_panel" class="compare_panel">
+    <button id="compare_panel_back" type="button" onclick="_imcomp_set_panel('step1', true)">back</button>
+    <button id="compare_base_comp" type="button" >compare</button>
   </div>
 </div><!-- end of step 3 panel -->
 
-<div class="bottom"><a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/">Image Comparator</a> is an open source project developed and maintained by the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>.</div>
+<!-- <div id="step4_panel" class="panel_content step4_content_color">
+  <div id="display_modes">
+    <button id="result_default_mode" type="button" focus="true">default</button>
+    <button id="result_overlay_mode" type="button">overlay</button>
+    <button id="result_difference_mode" type="button">difference</button>
+    <button id="result_toggle_mode" type="button">toggle</button>
+    <button id="result_slide_mode" type="button">slide</button>
+  </div>
+  <div id="result_display">
+  </div>
+</div> -->
+
+<!-- <div class="bottom"><a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/">Image Comparator</a> is an open source project developed and maintained by the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>.</div> -->
 
 <!-- to show status messages -->
 <div id="message_panel">

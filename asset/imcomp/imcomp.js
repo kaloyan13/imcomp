@@ -50,16 +50,24 @@ function _imcomp_init() {
   console.log('Initializing imcomp ...');
   init_message_panel();
   _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1);
-  show_message('Image Comparator ' + _imcomp_about.version)
+  show_message('Image Comparator ' + _imcomp_about.version);
 }
 
-function _imcomp_set_panel(panel_id) {
+// sets the right panel based on panel_id
+// is_navigation is true if we are navigating back and forth using back or home buttons
+function _imcomp_set_panel(panel_id, is_navigation) {
+
+	if ( panel_id === IMCOMP_PANEL_NAME.STEP1 ) {
+		document.getElementById('top_right').style.display = 'none';
+	}
+
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {
     if ( _imcomp.m.file_count < 2 ) {
       show_message('To compare, you must add at least two images!');
       _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1);
       return;
     }
+		document.getElementById('top_right').style.display = '';
   }
 
   // update all buttons
@@ -86,7 +94,7 @@ function _imcomp_set_panel(panel_id) {
   for ( i = 0; i < n; ++i ) {
     if ( clist[i].id.startsWith(panel_id) ) {
       clist[i].style.display = 'block';
-      _imcomp_set_panel_content(panel_id);
+      _imcomp_set_panel_content(panel_id, is_navigation);
       //console.log('showing content ' + clist[i].id);
     } else {
       clist[i].style.display = 'none';
@@ -95,7 +103,7 @@ function _imcomp_set_panel(panel_id) {
   }
 }
 
-function _imcomp_set_panel_content(panel_id) {
+function _imcomp_set_panel_content(panel_id, is_navigation) {
   if ( panel_id === IMCOMP_PANEL_NAME.STEP2 ) {
     var cs = document.getElementById('comparison_settings');
     cs.innerHTML = '';
@@ -119,21 +127,31 @@ function _imcomp_set_panel_content(panel_id) {
 
 		// show all uploaded files in the files panel
 		var fp = document.getElementById('files_panel');
-	  for ( var i = 0; i < _imcomp.m.files.length; i++ ) {
-			var fr = new FileReader();
-			// same for base and comp
-			fr.fid = _imcomp.m.fid_to_via_fileid.base[i];
-	    fr.addEventListener( 'load', function(e) {
-	    	var img = document.createElement('img');
-				img.setAttribute('draggable', true);
-				img.setAttribute('id', e.currentTarget.fid);
-	    	img.setAttribute('src', e.currentTarget.result);
-	    	fp.appendChild(img);
-	    }.bind(this));
+		if ( !is_navigation ) {
+		  for ( var i = 0; i < _imcomp.m.files.length; i++ ) {
+				var fr = new FileReader();
+				// same for base and comp
+				fr.fid = _imcomp.m.fid_to_via_fileid.base[i];
+				fr.f_idx = i;
+		    fr.addEventListener( 'load', function(e) {
+		    	var img = document.createElement('img');
+					img.setAttribute('draggable', true);
+					// img.setAttribute('id', e.currentTarget.fid);
+					img.setAttribute('id', 'files_panel_file_' + e.currentTarget.f_idx);
+		    	img.setAttribute('src', e.currentTarget.result);
+		    	fp.appendChild(img);
+		    }.bind(this));
 
-	    fr.readAsDataURL( _imcomp.m.files[i] );
+		    fr.readAsDataURL( _imcomp.m.files[i] );
+			}
 	  }
+		_imcomp.c.format_comparison_page();
   }
+	// result of comparison panel
+	if (panel_id === IMCOMP_PANEL_NAME.STEP4 ) {
+		_imcomp.c.enable_results_tabs();
+		_imcomp.c.format_results_page();
+	}
 }
 
 function _imcomp_get_comparison_settings_onchange_algname() {

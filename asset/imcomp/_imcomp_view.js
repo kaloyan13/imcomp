@@ -82,6 +82,8 @@ function _imcomp_view() {
     case 'compare_base_comp':
       this.c.compare_base_comp();
       break;
+    case 'save_result':
+      this.c.save_result();
 
     default:
       console.log('_via_view: handler unknown for event: ' + e.currentTarget);
@@ -188,6 +190,16 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
     var fileid = e.dataTransfer.getData("text");
     console.log('fileid in left content container is ' + fileid);
     this.c.file_dropped(fileid, 'base');
+  }.bind(this), false);
+
+  document.getElementById('save_result').addEventListener('click', this, false);
+
+  // visualize sliding between right and left images
+  document.getElementById('base_comp_fader').addEventListener('input', function(e) {
+    this.c.update_base_comp_fader(e);
+  }.bind(this), false);
+  document.getElementById('base_comp_fader').addEventListener('change', function(e) {
+    this.c.update_base_comp_fader(e);
   }.bind(this), false);
 }
 
