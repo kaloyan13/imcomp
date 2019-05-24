@@ -201,6 +201,21 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   document.getElementById('base_comp_fader').addEventListener('change', function(e) {
     this.c.update_base_comp_fader(e);
   }.bind(this), false);
+
+  // slide action in result visualisation
+  document.getElementById('slider').addEventListener('mousedown', function(e) {
+    e.stopPropagation();
+    this.c.slider_mousedown_handler(e);
+  }.bind(this), false);
+  document.getElementById('slider').addEventListener('mousemove', function(e) {
+    e.stopPropagation();
+    // e.preventDefault();
+    this.c.slider_mousemove_handler(e);
+  }.bind(this), false);
+  document.getElementById('slider').addEventListener('mouseup', function(e) {
+    e.stopPropagation();
+    this.c.slider_mouseup_handler(e);
+  }.bind(this), false);
 }
 
 _imcomp_view.prototype.msg = function(msg, t) {

@@ -40,11 +40,6 @@ function _imcomp_controller() {
   this.type_description = {'base':'Base', 'comp':'Comp.'};
 
   this.state = {};
-/*
-  this.now = {};
-  this.now.base = {};
-  this.now.comp = {};
-*/
 
   this.config = {};
   this.config.upload = {};
@@ -62,8 +57,10 @@ function _imcomp_controller() {
   this.compare_config = {};
   this.compare_config.algname = 'ransac_dlt'; // {ransac_dlt, robust_ransac_tps}
 
-
   this.ref_line = {};
+
+  this.results = {}
+  this.results.is_slider_pressed = false;
 }
 
 function _imcomp_compare_instance(findex1, findex2) {
@@ -406,27 +403,69 @@ _imcomp_controller.prototype.enable_results_tabs = function() {
 }
 
 _imcomp_controller.prototype.results_tab_event_handler = function(e) {
+  e.stopPropagation();
   this.deactivate_results_tabs();
   e.target.classList.add('active');
   // always display the result in base
   var container_type = 'base';
 
   // display tab specific tools
-  if (e.target.id === 'results_tabs_toggle' ||
-      e.target.id === 'results_tabs_slide') {
-    document.getElementById('tab_tools_panel').style.display = '';
-  } else {
-    document.getElementById('tab_tools_panel').style.display = 'none';
-  }
-  if (e.target.id === 'results_tabs_slide') {
-    var slide_elem = document.getElementById('base_comp_fader');
-    console.log(slide_elem.value);
-    document.getElementById('base_comp_fader').value = "0";
-  }
+  switch ( e.target.id ) {
+    case 'results_tabs_toggle':
+      document.getElementById('tab_tools_panel').style.display = '';
+      // choose suffix as per traherne
+      var sid_suffix = this.get_sid_suffix_for_results_tab(e);
+      this.set_content(container_type, sid_suffix);
+      break;
 
-  // choose suffix as per traherne
-  var sid_suffix = this.get_sid_suffix_for_results_tab(e);
-  this.set_content(container_type, sid_suffix);
+    case 'results_tabs_fade':
+      document.getElementById('tab_tools_panel').style.display = '';
+      var slide_elem = document.getElementById('base_comp_fader');
+      document.getElementById('base_comp_fader').value = "0";
+      // choose suffix as per traherne
+      var sid_suffix = this.get_sid_suffix_for_results_tab(e);
+      this.set_content(container_type, sid_suffix);
+      break;
+
+    case 'results_tabs_slide':
+      // var lcp = document.getElementById('left_content_img_panel');
+      // this.hide_element(lcp);
+      // var img_base = document.getElementById('slide_base_img');
+      // img_base.src = this.get_content_url('base', 'base_crop');
+
+      var img_overlay = document.getElementById('slide_overlay_img');
+      img_overlay.src = this.get_content_url('comp', 'comp_crop_tx');
+
+      var base_div = document.getElementById('left_content_img_panel');
+      var w = base_div.offsetWidth;
+      var h = base_div.offsetHeight;
+      base_div.classList.add('img-comp-img');
+      base_div.style.position = 'absolute';
+
+      var overlay_div = document.getElementById('slide_overlay');
+      overlay_div.classList.add('display-inline-block');
+      console.log('overlay widht is ' + w);
+      overlay_div.style.width = (w / 2) + "px";
+
+      // position slider and bind its actions
+      var slider = document.getElementById('slider');
+      slider.classList.remove('display-none');
+      slider.style.top = (h / 2) - (slider.offsetHeight / 2) + "px";
+      slider.style.left = (w / 2) - (slider.offsetWidth / 2) + "px";
+
+      // bind slider actions
+
+
+      // look nicely
+      document.getElementById('left_content_container').style.textAlign = 'left';
+      e.stopPropagation();
+      break;
+    default:
+      document.getElementById('tab_tools_panel').style.display = 'none';
+      // choose suffix as per traherne
+      var sid_suffix = this.get_sid_suffix_for_results_tab(e);
+      this.set_content(container_type, sid_suffix);
+  }
 }
 
 _imcomp_controller.prototype.deactivate_results_tabs = function () {
@@ -450,7 +489,7 @@ _imcomp_controller.prototype.get_sid_suffix_for_results_tab = function(e) {
   case 'results_tabs_diff':
     sid_suffix = 'base_comp_diff';
     break;
-  case 'results_tabs_slide':
+  case 'results_tabs_fade':
     sid_suffix = 'base_crop';
     break;
   default:
@@ -830,15 +869,15 @@ _imcomp_controller.prototype.init_ref_line = function() {
       this.ref_line_position(this.ref_line.current_y);
     }
   }.bind(this), false);
-  
+
   var parent = document.getElementById('ref_line_container');
   parent.addEventListener('mouseup', function(e) {
     var y = e.offsetY;
-   
+
     this.ref_line_position(y);
     this.show_element(this.ref_line.hline);
   }.bind(this), false);
-  
+
   var hline = document.getElementById('horizontal_line');
   hline.addEventListener('mouseup', function(e) {
     this.hide_element(this.ref_line.hline);
@@ -852,6 +891,7 @@ _imcomp_controller.prototype.init_ref_line = function() {
 ///
 _imcomp_controller.prototype.zoom_event_handler = function(e) {
   var id = e.target.id;
+  // var type = this.get_container_type(id);
   for ( var type in this.type_list ) {
     if( this.v.now[type].sid_suffix.endsWith('_via') ) {
       if( e.target.checked ) {
@@ -1002,15 +1042,6 @@ _imcomp_controller.prototype.save_result = function() {
   var w1 = im1.naturalWidth;
   var h1 = im1.naturalHeight;
 
-  // var im2 = document.getElementById( this.type_list['comp'] + '_image' );
-  // var fn2 = this.m.files['comp'][this.v.now['comp'].findex].name;
-  // var w2 = im2.naturalWidth;
-  // var h2 = im2.naturalHeight;
-
-  // if ( h1 !== h2 ) {
-  //   console.log('Both images must have same height');
-  // }
-
   var vpad = 60;
   var offset = 10;
 
@@ -1062,6 +1093,39 @@ _imcomp_controller.prototype.save_result = function() {
   });
 
   a.dispatchEvent(event);
+}
+
+_imcomp_controller.prototype.slider_mousedown_handler = function(e) {
+  console.log('slider mouse down ');
+  this.results.is_slider_pressed = true;
+}
+
+_imcomp_controller.prototype.slider_mousemove_handler = function(e) {
+  console.log(this.results.is_slider_pressed);
+  if ( this.results.is_slider_pressed ) {
+    // console.log('slider mouse moved');
+    // console.log(e);
+    var slider = document.getElementById('slider');
+    var overlay_div = document.getElementById('slide_overlay');
+
+    var x_offset = e.offsetX;
+    console.log('offset x is: ' + e.offsetX);
+    // if offset is less than 10, slider is moving left else right
+    var dx = x_offset - 10;
+    console.log('dx is: ' + dx);
+    // move the slider
+    slider.style.left = Math.round(parseFloat(slider.style.left) + dx) + "px";
+    console.log('slider left is: ' + slider.style.left );
+    // resize the overlay
+    console.log(overlay_div.style.width);
+    overlay_div.style.width = Math.round(parseFloat(overlay_div.style.width) + dx) + "px";
+  }
+}
+
+_imcomp_controller.prototype.slider_mouseup_handler = function(e) {
+  console.log('slider mouse up');
+  this.results.is_slider_pressed = false;
+  console.log(this.results.is_slider_pressed);
 }
 
 _imcomp_controller.prototype.get_canvas_for_content_url = function(content_url, alpha) {

@@ -88,7 +88,8 @@
     <span id="results_tabs_overlay" class="results_tab">overlay</span>
     <span id="results_tabs_diff" class="results_tab">difference</span>
     <span id="results_tabs_toggle" class="results_tab">Toggle</span>
-    <span id="results_tabs_slide" class="results_tab">Fade</span>
+    <span id="results_tabs_fade" class="results_tab">Fade</span>
+    <span id="results_tabs_slide" class="results_tab">Slide</span>
   </div>
 
   <!-- tools specific to the tabs above -->
@@ -187,19 +188,25 @@
       <div id="left_content" class="cell">
       	<div id="left_content_container" class="non_draggable">
           <!-- Note:
-               * the parent of via_panel should have user-defined dimensions
-               * the parent should have "display: inline-block; position: relative"
-            -->
+           * the parent of via_panel should have user-defined dimensions
+           * the parent should have "display: inline-block; position: relative"
+          -->
           <div id="left_content_via_panel" class="content" draggable="false"></div>
-          <div id="left_content_img_panel" class="content"  draggable="false">
+          <div id="left_content_img_panel" class="content img-comp-img"  draggable="false">
             <div id="left_content_image_top_panel"></div>
             <div id="left_content_image_zoom_panel">
               <!-- dymanically added when zoom is enabled
-                   <img id="left_content_image_zoom" src="">
-                   -->
+                <img id="left_content_image_zoom" src="">
+              -->
             </div>
             <img id="left_content_image" src="">
           </div>
+
+          <div id="slider" class="img-comp-slider display-none"></div>
+          <div id="slide_overlay" class="content img-comp-img">
+            <img id="slide_overlay_img" src="">
+          </div>
+
       	</div>
       </div>
       <div id="ref_line_container" class="vertical_img_separator_panel cell" title="Click to show or hide a horizontal reference line">&nbsp;</div>
