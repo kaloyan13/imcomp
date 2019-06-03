@@ -495,8 +495,8 @@ body {
   z-index:9;
   cursor: ew-resize;
   /*set the appearance of the slider:*/
-  width: 20px;
-  height: 20px;
+  width: 40px;
+  height: 40px;
   background-color: #2196F3;
   opacity: 0.7;
   border-radius: 50%;

@@ -390,6 +390,7 @@ _imcomp_controller.prototype.format_results_page = function() {
   document.getElementById('left_content_container').style.textAlign = 'center';
   // default settings
   this.set_content('base', 'base_crop');
+  this.set_toggle('base');
   this.deactivate_results_tabs();
   document.getElementById('results_tabs_default').classList.add('active');
 }
@@ -411,11 +412,22 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
 
   // display tab specific tools
   switch ( e.target.id ) {
+    case 'results_tabs_default':
+      // toggle at medium speed by default
+      // choose suffix as per traherne
+      document.getElementById('tab_tools_panel').style.display = 'none';
+      var sid_suffix = this.get_sid_suffix_for_results_tab(e);
+      this.set_content(container_type, sid_suffix);
+      this.set_toggle('base');
+      this.remove_slider();
+      break;
+
     case 'results_tabs_toggle':
       document.getElementById('tab_tools_panel').style.display = '';
       // choose suffix as per traherne
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
+      this.remove_slider();
       break;
 
     case 'results_tabs_fade':
@@ -425,47 +437,57 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       // choose suffix as per traherne
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
+      this.clear_toggle('base');
+      this.remove_slider();
       break;
 
     case 'results_tabs_slide':
-      // var lcp = document.getElementById('left_content_img_panel');
-      // this.hide_element(lcp);
-      // var img_base = document.getElementById('slide_base_img');
-      // img_base.src = this.get_content_url('base', 'base_crop');
-
-      var img_overlay = document.getElementById('slide_overlay_img');
-      img_overlay.src = this.get_content_url('comp', 'comp_crop_tx');
-
-      var base_div = document.getElementById('left_content_img_panel');
-      var w = base_div.offsetWidth;
-      var h = base_div.offsetHeight;
-      base_div.classList.add('img-comp-img');
-      base_div.style.position = 'absolute';
-
-      var overlay_div = document.getElementById('slide_overlay');
-      overlay_div.classList.add('display-inline-block');
-      console.log('overlay widht is ' + w);
-      overlay_div.style.width = (w / 2) + "px";
-
-      // position slider and bind its actions
-      var slider = document.getElementById('slider');
-      slider.classList.remove('display-none');
-      slider.style.top = (h / 2) - (slider.offsetHeight / 2) + "px";
-      slider.style.left = (w / 2) - (slider.offsetWidth / 2) + "px";
-
-      // bind slider actions
-
-
-      // look nicely
+      this.clear_toggle('base');
+      this.add_slider();
       document.getElementById('left_content_container').style.textAlign = 'left';
       e.stopPropagation();
       break;
-    default:
+
+    default: // overlay and difference views
+      this.clear_toggle('base');
+      this.remove_slider();
       document.getElementById('tab_tools_panel').style.display = 'none';
       // choose suffix as per traherne
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
   }
+}
+
+_imcomp_controller.prototype.remove_slider = function () {
+  var overlay_div = document.getElementById('slide_overlay');
+  overlay_div.classList.remove('display-inline-block');
+  overlay_div.classList.add('display-none');
+  var slider = document.getElementById('slider');
+  slider.classList.add('display-none');
+}
+
+_imcomp_controller.prototype.add_slider = function () {
+  var img_overlay = document.getElementById('slide_overlay_img');
+  img_overlay.src = this.get_content_url('comp', 'comp_crop_tx');
+
+  var left_img = document.getElementById('left_content_image');
+  left_img.src = this.get_content_url('base', 'base_crop');
+
+  var base_div = document.getElementById('left_content_img_panel');
+  var w = base_div.offsetWidth;
+  var h = base_div.offsetHeight;
+  base_div.classList.add('img-comp-img');
+  base_div.style.position = 'absolute';
+
+  var overlay_div = document.getElementById('slide_overlay');
+  overlay_div.classList.add('display-inline-block');
+  overlay_div.style.width = (w / 2) + "px";
+
+  // position slider and bind its actions
+  var slider = document.getElementById('slider');
+  slider.classList.remove('display-none');
+  slider.style.top = (h / 2) - (slider.offsetHeight / 2) + "px";
+  slider.style.left = (w / 2) - (slider.offsetWidth / 2) + "px";
 }
 
 _imcomp_controller.prototype.deactivate_results_tabs = function () {
@@ -668,9 +690,6 @@ _imcomp_controller.prototype.get_content_url = function(type, sid_suffix) {
   case 'base_comp_diff':
     content_url = this.compare.result.response.file1_file2_diff;
     break;
-  // case 'base_comp_toggle':
-  //   content_url = this.compare.result.response.file1_file2_overlap;
-  //   break;
   }
   return content_url;
 }
@@ -1101,23 +1120,22 @@ _imcomp_controller.prototype.slider_mousedown_handler = function(e) {
 }
 
 _imcomp_controller.prototype.slider_mousemove_handler = function(e) {
-  console.log(this.results.is_slider_pressed);
   if ( this.results.is_slider_pressed ) {
-    // console.log('slider mouse moved');
-    // console.log(e);
     var slider = document.getElementById('slider');
     var overlay_div = document.getElementById('slide_overlay');
+    var slider_left = Math.round(parseFloat(slider.style.left));
 
-    var x_offset = e.offsetX;
-    console.log('offset x is: ' + e.offsetX);
-    // if offset is less than 10, slider is moving left else right
-    var dx = x_offset - 10;
-    console.log('dx is: ' + dx);
-    // move the slider
-    slider.style.left = Math.round(parseFloat(slider.style.left) + dx) + "px";
-    console.log('slider left is: ' + slider.style.left );
-    // resize the overlay
-    console.log(overlay_div.style.width);
+    // check slider is not move beyond base width
+    var base_w = document.getElementById('left_content_image').offsetWidth;
+    var max_margin = Math.round(base_w - (slider.offsetWidth / 2));
+    if ( slider_left  >  max_margin ) {
+      overlay_div.style.width = base_w + "px";
+      return;
+    }
+
+    // move the slider and resize overlay
+    var dx = e.offsetX - (slider.offsetWidth / 2);
+    slider.style.left = (slider_left + dx) + "px";
     overlay_div.style.width = Math.round(parseFloat(overlay_div.style.width) + dx) + "px";
   }
 }

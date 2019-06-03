@@ -49,7 +49,7 @@ _imcomp.init();
 function _imcomp_init() {
   console.log('Initializing imcomp ...');
   init_message_panel();
-  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1);
+  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
   show_message('Image Comparator ' + _imcomp_about.version);
 }
 
@@ -64,7 +64,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {
     if ( _imcomp.m.file_count < 2 ) {
       show_message('To compare, you must add at least two images!');
-      _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1);
+      _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
       return;
     }
 		document.getElementById('top_right').style.display = '';
@@ -95,10 +95,8 @@ function _imcomp_set_panel(panel_id, is_navigation) {
     if ( clist[i].id.startsWith(panel_id) ) {
       clist[i].style.display = 'block';
       _imcomp_set_panel_content(panel_id, is_navigation);
-      //console.log('showing content ' + clist[i].id);
     } else {
       clist[i].style.display = 'none';
-      //console.log('hiding content ' + clist[i].id);
     }
   }
 }
