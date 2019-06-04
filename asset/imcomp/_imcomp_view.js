@@ -194,7 +194,7 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
 
   document.getElementById('save_result').addEventListener('click', this, false);
 
-  // visualize sliding between right and left images
+  // fade between right and left images
   document.getElementById('base_comp_fader').addEventListener('input', function(e) {
     this.c.update_base_comp_fader(e);
   }.bind(this), false);
@@ -215,6 +215,16 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   document.getElementById('slider').addEventListener('mouseup', function(e) {
     e.stopPropagation();
     this.c.slider_mouseup_handler(e);
+  }.bind(this), false);
+
+  // hover to switch between base and compared images
+  document.getElementById('left_content_image').addEventListener('mouseover', function(e) {
+    e.stopPropagation();
+    this.c.hover_to_right(e);
+  }.bind(this), false);
+  document.getElementById('left_content_image').addEventListener('mouseleave', function(e) {
+    e.stopPropagation();
+    this.c.hover_to_left(e);
   }.bind(this), false);
 }
 

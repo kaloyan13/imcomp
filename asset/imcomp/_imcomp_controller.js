@@ -61,6 +61,7 @@ function _imcomp_controller() {
 
   this.results = {}
   this.results.is_slider_pressed = false;
+  this.results.active_tab = 'default';
 }
 
 function _imcomp_compare_instance(findex1, findex2) {
@@ -387,7 +388,6 @@ _imcomp_controller.prototype.format_results_page = function() {
   document.getElementById('results_save_panel').style.display = 'block';
   document.getElementById('right_content').style.display = 'none';
   document.getElementById('ref_line_container').style.display = 'none';
-  document.getElementById('left_content_container').style.textAlign = 'center';
   // default settings
   this.set_content('base', 'base_crop');
   this.set_toggle('base');
@@ -409,12 +409,14 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
   e.target.classList.add('active');
   // always display the result in base
   var container_type = 'base';
+  var target_id = e.target.id;
+  this.results.active_tab = target_id.replace('results_tabs_', '');
+  // document.getElementById('left_content_container').style.textAlign = 'left';
 
   // display tab specific tools
-  switch ( e.target.id ) {
+  switch ( target_id ) {
     case 'results_tabs_default':
       // toggle at medium speed by default
-      // choose suffix as per traherne
       document.getElementById('tab_tools_panel').style.display = 'none';
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
@@ -424,7 +426,6 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
 
     case 'results_tabs_toggle':
       document.getElementById('tab_tools_panel').style.display = '';
-      // choose suffix as per traherne
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       this.remove_slider();
@@ -434,7 +435,6 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       document.getElementById('tab_tools_panel').style.display = '';
       var slide_elem = document.getElementById('base_comp_fader');
       document.getElementById('base_comp_fader').value = "0";
-      // choose suffix as per traherne
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       this.clear_toggle('base');
@@ -442,10 +442,18 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_slide':
+      document.getElementById('tab_tools_panel').style.display = 'none';
       this.clear_toggle('base');
       this.add_slider();
-      document.getElementById('left_content_container').style.textAlign = 'left';
       e.stopPropagation();
+      break;
+
+    case 'results_tabs_hover':
+      document.getElementById('tab_tools_panel').style.display = 'none';
+      this.clear_toggle('base');
+      this.remove_slider();
+      var sid_suffix = this.get_sid_suffix_for_results_tab(e);
+      this.set_content(container_type, sid_suffix);
       break;
 
     default: // overlay and difference views
@@ -1185,4 +1193,20 @@ _imcomp_controller.prototype.update_base_comp_fader = function(e) {
   // draw left image and right image on to the result canvas
   var left_elem = document.getElementById('left_content_image');
   left_elem.setAttribute('src', res_img.src);
+}
+
+_imcomp_controller.prototype.hover_to_right = function(e) {
+  if ( this.results.active_tab !== 'hover' ) {
+    return;
+  }
+  var left_img_div = document.getElementById('left_content_image');
+  left_img_div.src = this.get_content_url('comp', 'comp_crop_tx');
+}
+
+_imcomp_controller.prototype.hover_to_left = function(e) {
+  if ( this.results.active_tab !== 'hover' ) {
+    return;
+  }
+  var left_img_div = document.getElementById('left_content_image');
+  left_img_div.src = this.get_content_url('base', 'base_crop');
 }
