@@ -20,8 +20,8 @@
 <div class="top_panel">
   <div class="top_right" id="top_right">
     <div class="zoom_items" title="Show magnifying glass when mouse is hovered over images">
-      <input id="left_content_zoom" type="checkbox">
       <label for="left_content_zoom">Zoom</label>
+      <input id="left_content_zoom" type="checkbox">
       <div class="options">
         <select name="zoom_level" id="zoom_level">
           <option value="0.4">0.4X (shrink)</option>
@@ -95,7 +95,9 @@
 
   <!-- tools specific to the tabs above -->
   <div id="tab_tools_panel" class="tab_tools_panel">
-    <div class="toggle_controls">
+    <div id="toggle_controls" class="toggle_controls">
+      <label for="left_content_toggle">Enable</label>
+      <input id="left_content_toggle" type="checkbox">
       <select name="toggle_speed" id="toggle_speed">
         <option value="1000">Speed: Very Slow</option>
         <option value="600">Speed: Slow</option>
@@ -103,15 +105,14 @@
         <option value="150">Speed: Fast</option>
         <option value="100">Speed: Very Fast</option>
       </select>
-      <input id="left_content_toggle" type="checkbox">
-      <label for="left_content_toggle">Base</label>
-      <input id="right_content_toggle" type="checkbox">
-      <label for="right_content_toggle">Comp</label>
+      <!-- <input id="right_content_toggle" type="checkbox">
+      <label for="right_content_toggle">Comp</label> -->
     </div>
-    <div class="slide_controls">
+    <div id="fade_controls" class="slide_controls">
       <label for="base_comp_fader">Left</label>
       <input id="base_comp_fader" type="range" min="1" max="100" value="50" class="base_comp_fader">
       <label for="base_comp_fader">Right</label>
+      <p>value: <span id="base_comp_fader_value"></span></p>
     </div>
   </div>
 

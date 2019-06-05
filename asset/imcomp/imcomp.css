@@ -129,6 +129,11 @@ body {
   height: 6rem;
   float: right;
 }
+.top_right select {
+  width: 12rem;
+  height: 1.5rem;
+  margin: 2px;
+}
 
 #step1_panel {
   text-align: center;
@@ -195,7 +200,8 @@ body {
   display:block;
   padding-bottom:1rem;
   width: 100%;
-  height: 200px;
+  height: auto;
+  max-height: 200px;
   overflow: scroll;
   border: 1px solid #cccccc;
 }
@@ -269,6 +275,17 @@ body {
   padding: 1px;
   border: 1px solid;
   text-align: center;
+  justify-content: center;
+}
+
+.tab_tools_panel .toggle_controls select {
+  width: 12rem;
+  height: 1.5rem;
+}
+
+.tab_tools_panel .toggle_controls input[type=checkbox]
+{
+  transform: scale(2);
 }
 
 .img_label {
@@ -346,6 +363,8 @@ body {
   text-align: right !important;
   padding: 0 !important;
   margin: 0 !important;
+  display: flex;
+  justify-content: center;
 }
 #left_content img {
   display: block;
@@ -385,6 +404,9 @@ body {
     z-index: 1000;
     top: 0;
     width: 100%;
+}
+#left_content_image * {
+  margin: auto;
 }
 
 /* comp panel */
@@ -495,8 +517,8 @@ body {
   z-index:9;
   cursor: ew-resize;
   /*set the appearance of the slider:*/
-  width: 40px;
-  height: 40px;
+  width: 20px;
+  height: 20px;
   background-color: #2196F3;
   opacity: 0.7;
   border-radius: 50%;
