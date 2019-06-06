@@ -214,13 +214,8 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   }.bind(this), false);
 
   // hover to switch between base and compared images
-  document.getElementById('left_content_image').addEventListener('mouseover', function(e) {
-    e.stopPropagation();
-    this.c.hover_to_right(e);
-  }.bind(this), false);
-  document.getElementById('left_content_image').addEventListener('mouseleave', function(e) {
-    e.stopPropagation();
-    this.c.hover_to_left(e);
+  document.getElementById('left_content_image').addEventListener('mousemove', function(e) {
+    this.c.hover_right_left(e);
   }.bind(this), false);
 }
 

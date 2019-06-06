@@ -1165,7 +1165,7 @@ _imcomp_controller.prototype.slider_mousemove_handler = function(e) {
     // checks
     var base_width = document.getElementById('left_content_img_panel').offsetWidth;
     if (cursor_position < 0) cursor_position = 0;
-    if (cursor_position > base_width) cursor_position = width;
+    if (cursor_position > base_width) cursor_position = base_width;
 
     // slide overlay div
     var slider = document.getElementById('slider');
@@ -1188,18 +1188,20 @@ _imcomp_controller.prototype.update_base_comp_fader = function(e) {
   img.style.opacity = (0.01 * slider_val);
 }
 
-_imcomp_controller.prototype.hover_to_right = function(e) {
-  if ( this.results.active_tab !== 'hover' ) {
-    return;
-  }
-  var left_img_div = document.getElementById('left_content_image');
-  left_img_div.src = this.get_content_url('comp', 'comp_crop_tx');
-}
+_imcomp_controller.prototype.hover_right_left = function(e) {
+  if ( this.results.active_tab !== 'hover' ) { return; }
 
-_imcomp_controller.prototype.hover_to_left = function(e) {
-  if ( this.results.active_tab !== 'hover' ) {
-    return;
-  }
+  // get the mouse coordinates wrt the image
+  var rect = e.target.getBoundingClientRect();
+  var x = Math.round(e.clientX - rect.left);
+
   var left_img_div = document.getElementById('left_content_image');
-  left_img_div.src = this.get_content_url('base', 'base_crop');
+  var base_width = document.getElementById('left_content_img_panel').offsetWidth;
+  var base_width = left_img_div.offsetWidth;
+  // if we are more than half the image distance, we switch to left image
+  if ( x < (base_width / 2) ) {
+    left_img_div.src = this.get_content_url('base', 'base_crop');
+  } else {
+    left_img_div.src = this.get_content_url('comp', 'comp_crop_tx');
+  }
 }
