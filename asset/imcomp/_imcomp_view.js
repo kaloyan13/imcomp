@@ -139,7 +139,17 @@ _imcomp_view.prototype.select_local_files = function() {
 }
 
 _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
+  // step 1 panel for files upload
   document.getElementById( 'add_images').addEventListener('click', this, false);
+  document.getElementById('step1_panel').addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }.bind(this), false);
+  document.getElementById('step1_panel').addEventListener('drop', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.c.update_dropped_files(e);
+  }.bind(this), false);
 
   for( var type in this.c.type_list ) {
     document.getElementById( type + '_move_to_prev').addEventListener('click', this, false);

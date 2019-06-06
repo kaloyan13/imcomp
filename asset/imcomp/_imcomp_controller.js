@@ -113,10 +113,12 @@ _imcomp_controller.prototype.reset_controller_state = function(type) {
 }
 
 _imcomp_controller.prototype.update_files = function(e) {
-  console.log('adding files')
-  console.log(e.target.files)
   //this.reset_controller_state(type);
   this.m.add_images(e.target.files);
+}
+
+_imcomp_controller.prototype.update_dropped_files = function(e) {
+  this.m.add_images(e.dataTransfer.files);
 }
 
 _imcomp_controller.prototype.file_dropped = function(img_elem_id, type) {
@@ -168,9 +170,12 @@ _imcomp_controller.prototype.move_to_prev_pair = function() {
 
 _imcomp_controller.prototype.on_filelist_update = function(type) {
   var p = document.getElementById('step1_file_added_count');
-  p.innerHTML = this.m.file_count + ' files selected';
+  p.innerHTML = this.m.file_count + ' files uploaded';
 
-  show_message('Added [' + this.m.file_count + '] files');
+  if ( this.m.file_count > 1 ) {
+    document.getElementById('step1_files_added_nav').classList.remove('display-none');
+  }
+  show_message('Added [' + this.m.file_count + '] files. Drag and drop images from top to compare.');
 
   _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3);
 }
@@ -390,6 +395,7 @@ _imcomp_controller.prototype.format_results_page = function() {
   document.getElementById('results_save_panel').style.display = 'block';
   document.getElementById('right_content').style.display = 'none';
   document.getElementById('ref_line_container').style.display = 'none';
+  document.getElementById('left_content').title = "Result of your comparison";
   // default settings
   this.set_content('base', 'base_crop');
   this.set_toggle('base');

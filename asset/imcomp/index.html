@@ -40,10 +40,13 @@
 <!-- content updated by imcomp.js -->
 <div id="step1_panel" class="panel_content step1_content_color">
   <div class="step1_text">
-    <button id="add_images" type="button">Click here</button><span> to add images <br/> or <br/> drag and drop images here</span>
+    <button id="add_images" type="button">Click here</button><span> to upload images <br/> or <br/> drag and drop images here</span>
   </div>
     <p id="step1_file_added_count"></p>
-    <p>Note: Using this tool, you can compare any pair of images from the set of images that you select here.</p>
+    <div id="step1_files_added_nav" class="display-none">
+      <button type="button" name="button" onclick="_imcomp_set_panel('step3', true)">Next</button>
+    </div>
+    <p>Note: Using this tool, you can compare any pair of images from the set of images that you upload here.</p>
 </div>
 
 <!-- Panel to configure image comparison algorithm -->
@@ -81,7 +84,7 @@
     </select>
   </div>
 
-  <div id="files_panel"></div>
+  <div id="files_panel" title="All uploaded images"></div>
 
   <div id="results_tabs_panel">
     <span id="results_tabs_default" class="results_tab">default</span>
@@ -117,7 +120,7 @@
   </div>
 
   <!-- Content name, description and status -->
-  <div id="middle_panel">
+  <div id="middle_panel" class="non_draggable" draggable="false">
     <div id="content_label" class="row">
       <div class="img_label cell">
       	<label for="base_img_filename_list">Image-A&nbsp;</label>
@@ -187,9 +190,9 @@
     </div>
 
     <!-- Content panel: display images and annotation window to the user -->
-    <div id="content_panel" class="row">
-      <div id="left_content" class="cell">
-      	<div id="left_content_container" class="non_draggable">
+    <div id="content_panel" class="non_draggable row" draggable="false">
+      <div id="left_content" class="cell non_draggable" title="First image chosen from above for comparison ">
+      	<div id="left_content_container" class="non_draggable" draggable="false">
           <!-- Note:
            * the parent of via_panel should have user-defined dimensions
            * the parent should have "display: inline-block; position: relative"
@@ -213,7 +216,7 @@
       	</div>
       </div>
       <div id="ref_line_container" class="vertical_img_separator_panel cell" title="Click to show or hide a horizontal reference line">&nbsp;</div>
-      <div id="right_content" class="cell">
+      <div id="right_content" class="cell" title="Second image chosen from above for comparison">
       	<div id="right_content_container" class="non_draggable">
           <!-- Note:
                * the parent of via_panel should have user-defined dimensions
