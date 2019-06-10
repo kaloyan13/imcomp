@@ -47,7 +47,7 @@ function _imcomp_controller() {
   this.config.imcomp_server_upload_uri = "/imcomp/_upload";
   this.config.imcomp_server_compare_uri = "/imcomp/_compare";
 
-  this.compare = {}
+  this.compare = {};
   this.compare.is_ongoing = false;
   this.compare.start_time = {};
   this.compare.end_time = {};
@@ -59,9 +59,15 @@ function _imcomp_controller() {
 
   this.ref_line = {};
 
-  this.results = {}
+  // everything to do with results visualization
+  this.results = {};
   this.results.is_slider_pressed = false;
   this.results.active_tab = 'default';
+
+  // eveything to do with the toolbar on top
+  this.toolbar = {};
+  this.toolbar.zoom_enabled = false;
+  this.toolbar.current_page = 'home'; // home | compare | result
 }
 
 function _imcomp_compare_instance(findex1, findex2) {
@@ -277,7 +283,7 @@ _imcomp_controller.prototype.is_upload_resize_req = function(findex, w, h) {
 /// Comparison of Base and Comp. pair
 ///
 _imcomp_controller.prototype.compare_base_comp = function() {
-  console.log('comparing')
+  console.log('comparing');
   // sanity checks
   for( type in this.type_list ) {
     if( this.m.file_count[type] === 0 ) {
@@ -292,7 +298,7 @@ _imcomp_controller.prototype.compare_base_comp = function() {
   }
 
   if( this.compare.is_ongoing ) {
-    this.show_message('Please wait, compare process is <span class="blue">ongoing</span> ...');
+    show_message('Please wait, compare process is <span class="blue">ongoing</span> ...');
     return;
   }
 
@@ -371,6 +377,7 @@ _imcomp_controller.prototype.on_compare_success = function() {
   this.enable_results_tabs();
   this.format_results_page();
   this.enable_all_content_selectors();
+  this.toolbar.current_page = 'result';
 }
 
 _imcomp_controller.prototype.format_comparison_page = function() {
@@ -382,8 +389,6 @@ _imcomp_controller.prototype.format_comparison_page = function() {
   document.getElementById('tab_tools_panel').classList.add('display-none');
   document.getElementById('toggle_controls').classList.add('display-none');
   document.getElementById('fade_controls').classList.add('display-none');
-	// disable the results save panel
-	document.getElementById('results_save_panel').style.display = 'none';
 	document.getElementById('results_tabs_panel').style.display = 'none';
 }
 
@@ -392,7 +397,6 @@ _imcomp_controller.prototype.format_results_page = function() {
   document.getElementById('files_panel').style.display = 'none';
   document.getElementById('compare_panel').style.display = 'none';
   document.getElementById('results_tabs_panel').style.display = 'block';
-  document.getElementById('results_save_panel').style.display = 'block';
   document.getElementById('right_content').style.display = 'none';
   document.getElementById('ref_line_container').style.display = 'none';
   document.getElementById('left_content').title = "Result of your comparison";
@@ -1092,9 +1096,71 @@ _imcomp_controller.prototype.image_zoom_mousemove_handler = function(e) {
 /// Results Manipulation.
 /// Deal with results such as saving, exporting as json (in future), etc
 ///
-_imcomp_controller.prototype.save_result = function() {
+_imcomp_controller.prototype.slider_mousedown_handler = function(e) {
+  this.results.is_slider_pressed = true;
+}
+
+_imcomp_controller.prototype.slider_mousemove_handler = function(e) {
+  if ( this.results.is_slider_pressed ) {
+    var overlay_div = document.getElementById('slide_overlay');
+    var overlay_div_position = overlay_div.getBoundingClientRect();
+    // cursor position relative to the overlay div
+    var cursor_position = e.pageX - overlay_div_position.left;
+    // consider any page scrolling
+    cursor_position = cursor_position - window.pageXOffset;
+
+    // checks
+    var base_width = document.getElementById('left_content_img_panel').offsetWidth;
+    if (cursor_position < 0) cursor_position = 0;
+    if (cursor_position > base_width) cursor_position = base_width;
+
+    // slide overlay div
+    var slider = document.getElementById('slider');
+    overlay_div.style.width = cursor_position + "px";
+    slider.style.left = overlay_div.offsetWidth - (slider.offsetWidth / 2) + "px";
+  }
+}
+
+_imcomp_controller.prototype.slider_mouseup_handler = function() {
+  if ( this.results.is_slider_pressed ) {
+    this.results.is_slider_pressed = false;
+  }
+}
+
+_imcomp_controller.prototype.update_base_comp_fader = function(e) {
+  var slider_val = e.target.value;
+  document.getElementById('base_comp_fader_value').innerHTML = slider_val;
+  var overlay_div = document.getElementById('slide_overlay');
+  var img = overlay_div.getElementsByTagName('img')[0];
+  img.style.opacity = (0.01 * slider_val);
+}
+
+_imcomp_controller.prototype.hover_right_left = function(e) {
+  if ( this.results.active_tab !== 'hover' ) { return; }
+
+  // get the mouse coordinates wrt the image
+  var rect = e.target.getBoundingClientRect();
+  var x = Math.round(e.clientX - rect.left);
+
+  var left_img_div = document.getElementById('left_content_image');
+  var base_width = document.getElementById('left_content_img_panel').offsetWidth;
+  var base_width = left_img_div.offsetWidth;
+  // if we are more than half the image distance, we switch to left image
+  if ( x < (base_width / 2) ) {
+    left_img_div.src = this.get_content_url('base', 'base_crop');
+  } else {
+    left_img_div.src = this.get_content_url('comp', 'comp_crop_tx');
+  }
+}
+
+
+///
+/// Toolbar on top handlers.
+/// All the logic for icons in the toolsbar
+///
+_imcomp_controller.prototype.toolbar_save_handler = function(e) {
   if ( this.v.now['base'].sid_suffix.endsWith('_via') ) {
-    this.show_message('Switch to <span class="blue">cropped, overlap or diff</span> mode to save visualisations.');
+    show_message('Please compare first to save visualisation of results.');
     return;
   }
   var im1 = document.getElementById( this.type_list['base'] + '_image' );
@@ -1155,59 +1221,53 @@ _imcomp_controller.prototype.save_result = function() {
   a.dispatchEvent(event);
 }
 
-_imcomp_controller.prototype.slider_mousedown_handler = function(e) {
-  this.results.is_slider_pressed = true;
-}
-
-_imcomp_controller.prototype.slider_mousemove_handler = function(e) {
-  if ( this.results.is_slider_pressed ) {
-    var overlay_div = document.getElementById('slide_overlay');
-    var overlay_div_position = overlay_div.getBoundingClientRect();
-    // cursor position relative to the overlay div
-    var cursor_position = e.pageX - overlay_div_position.left;
-    // consider any page scrolling
-    cursor_position = cursor_position - window.pageXOffset;
-
-    // checks
-    var base_width = document.getElementById('left_content_img_panel').offsetWidth;
-    if (cursor_position < 0) cursor_position = 0;
-    if (cursor_position > base_width) cursor_position = base_width;
-
-    // slide overlay div
-    var slider = document.getElementById('slider');
-    overlay_div.style.width = cursor_position + "px";
-    slider.style.left = overlay_div.offsetWidth - (slider.offsetWidth / 2) + "px";
-  }
-}
-
-_imcomp_controller.prototype.slider_mouseup_handler = function() {
-  if ( this.results.is_slider_pressed ) {
-    this.results.is_slider_pressed = false;
-  }
-}
-
-_imcomp_controller.prototype.update_base_comp_fader = function(e) {
-  var slider_val = e.target.value;
-  document.getElementById('base_comp_fader_value').innerHTML = slider_val;
-  var overlay_div = document.getElementById('slide_overlay');
-  var img = overlay_div.getElementsByTagName('img')[0];
-  img.style.opacity = (0.01 * slider_val);
-}
-
-_imcomp_controller.prototype.hover_right_left = function(e) {
-  if ( this.results.active_tab !== 'hover' ) { return; }
-
-  // get the mouse coordinates wrt the image
-  var rect = e.target.getBoundingClientRect();
-  var x = Math.round(e.clientX - rect.left);
-
-  var left_img_div = document.getElementById('left_content_image');
-  var base_width = document.getElementById('left_content_img_panel').offsetWidth;
-  var base_width = left_img_div.offsetWidth;
-  // if we are more than half the image distance, we switch to left image
-  if ( x < (base_width / 2) ) {
-    left_img_div.src = this.get_content_url('base', 'base_crop');
+_imcomp_controller.prototype.toolbar_zoom_handler = function(e) {
+  // toggle zoom enable/disable
+  if ( this.toolbar.zoom_enabled ) {
+    this.toolbar.zoom_enabled = false;
+    e.currentTarget.children[0].style.fill = 'black';
   } else {
-    left_img_div.src = this.get_content_url('comp', 'comp_crop_tx');
+    this.toolbar.zoom_enabled = true;
+    e.currentTarget.children[0].style.fill = 'red';
+  }
+
+  for ( var type in this.type_list ) {
+    if( this.v.now[type].sid_suffix.endsWith('_via') ) {
+      if( this.toolbar.zoom_enabled ) {
+        this.v.now[type].zoom.is_enabled = true;
+        this.m.via[type].v.zoom.scale = this.v.theme.ZOOM_LEVEL;
+        this.m.via[type].c.zoom_activate();
+      } else {
+        this.v.now[type].zoom.is_enabled = false;
+        this.m.via[type].c.zoom_deactivate();
+      }
+    } else {
+      if( this.toolbar.zoom_enabled ) {
+        // enable image zoom
+        this.enable_image_zoom(type);
+      } else {
+        this.disable_image_zoom(type);
+      }
+    }
+  }
+}
+
+_imcomp_controller.prototype.toolbar_back_handler = function(e) {
+  if ( this.toolbar.current_page === "home" ) {return;}
+  if ( this.toolbar.current_page === "compare" ) {
+    _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, true);
+    this.toolbar.current_page = "home";
+  }
+  if ( this.toolbar.current_page === "result" ) {
+    _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, true);
+    this.toolbar.current_page = "compare";
+  }
+}
+
+_imcomp_controller.prototype.toolbar_forward_handler = function(e) {
+  if ( this.toolbar.current_page === "result" ) {return;}
+  if ( this.toolbar.current_page === "compare" ) {
+    this.compare_base_comp();
+    this.toolbar.current_page = "result";
   }
 }

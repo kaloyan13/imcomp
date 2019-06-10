@@ -59,6 +59,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
 
 	if ( panel_id === IMCOMP_PANEL_NAME.STEP1 ) {
 		document.getElementById('top_right').style.display = 'none';
+		document.getElementById('step1_text').style.border = '';
 	}
 
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {

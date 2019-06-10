@@ -82,8 +82,6 @@ function _imcomp_view() {
     case 'compare_base_comp':
       this.c.compare_base_comp();
       break;
-    case 'save_result':
-      this.c.save_result();
 
     default:
       console.log('_via_view: handler unknown for event: ' + e.currentTarget);
@@ -139,16 +137,41 @@ _imcomp_view.prototype.select_local_files = function() {
 }
 
 _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
+  // all tools in toolsbar at the top
+  document.getElementById('icon_zoomin_div').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.toolbar_zoom_handler(e);
+  }.bind(this), false);
+  document.getElementById('icon_save_div').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.toolbar_save_handler(e);
+  }.bind(this), false);
+  document.getElementById('icon_back_div').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.toolbar_back_handler(e);
+  }.bind(this), false);
+  document.getElementById('icon_forward_div').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.toolbar_forward_handler(e);
+  }.bind(this), false);
+
+
   // step 1 panel for files upload
   document.getElementById( 'add_images').addEventListener('click', this, false);
-  document.getElementById('step1_panel').addEventListener('dragover', function(e) {
+  document.getElementById('step1_text').addEventListener('dragover', function(e) {
     e.preventDefault();
     e.stopPropagation();
+    e.target.style.border = 'dotted';
   }.bind(this), false);
-  document.getElementById('step1_panel').addEventListener('drop', function(e) {
+  document.getElementById('step1_text').addEventListener('drop', function(e) {
     e.preventDefault();
     e.stopPropagation();
     this.c.update_dropped_files(e);
+  }.bind(this), false);
+  document.getElementById('step1_text').addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.target.style.border = '';
   }.bind(this), false);
 
   for( var type in this.c.type_list ) {
@@ -201,8 +224,6 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
     console.log('fileid in left content container is ' + fileid);
     this.c.file_dropped(fileid, 'base');
   }.bind(this), false);
-
-  document.getElementById('save_result').addEventListener('click', this, false);
 
   // fade between right and left images
   document.getElementById('base_comp_fader').addEventListener('input', function(e) {

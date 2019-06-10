@@ -58,6 +58,17 @@ body {
     color:#808080;
 }
 
+.top_left_logo {
+  position: relative;
+  text-decoration: none;
+  font-size: 50px;
+  display: inline-block;
+}
+.top_left_logo a {
+  text-decoration: none;
+  color: #673AB7;
+}
+
 .step1_button_color {
     background-color:#673AB7;
     color:white;
@@ -115,7 +126,7 @@ body {
 .top_panel {
   margin:0.5rem 1rem;
   padding: 0.2rem;
-  height: 5rem;
+  height: 4rem;
   border: 1px solid;
 }
 .top_left {
@@ -124,7 +135,7 @@ body {
   float: right;
 }
 .top_right {
-  width: 60%;
+  width: 55%;
   /* border: 1px solid; */
   border: 1px;
   height: 4.5rem;
@@ -154,6 +165,9 @@ body {
   color: white;
   cursor: pointer;
   font-size: 18px;
+}
+.step1_panel_note {
+  font-size: small;
 }
 
 #step3_panel .control_panel {
@@ -204,7 +218,8 @@ body {
   width: 100%;
   height: auto;
   max-height: 200px;
-  overflow: scroll;
+  overflow: auto;
+  scroll: auto;
   border: 1px solid #cccccc;
 }
 #files_panel img {
@@ -349,10 +364,25 @@ body {
 }
 
 #message_panel {
-    display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center;
+    display:block;
+    width:100%;
+    position:fixed;
+    bottom:0px;
+    z-index:9999;
+    text-align:center;
+    margin: 10px;
 }
 #message_panel .content {
-    display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;
+    display:inline;
+    margin:auto;
+    background-color:#000000;
+    color:#ffff00;
+    font-size:large;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    line-height:2rem;
+    padding: 0.5rem 2rem;
 }
 
 /* misc. */
@@ -529,4 +559,43 @@ body {
 .img-comp-container {
   position: relative;
   /* height: 200px; /*should be the same height as the images*/
+}
+
+/* toolbar  icons on top */
+.toolbar {
+  display:flex;
+  flex-direction: row;
+  margin-left:0.1rem;
+}
+.toolbar svg {
+  fill:black;
+  margin: 0.2rem 0.1rem;
+  height:2rem;
+  -moz-user-select:none;
+  -webkit-user-select:none;
+  -ms-user-select:none;
+}
+.toolbar svg:hover {
+  fill:yellow;
+  cursor:pointer;
+}
+.toolbar svg:active {
+  fill:blue;
+}
+.toolbar ul {
+  display:inline-block;
+  padding:0.2rem;
+  margin:0;
+}
+.toolbar li {
+  display: inline-block;
+  display:inline;
+  float:left;
+  padding:0rem 0.3rem;
+  border:1px
+  solid white;
+}
+.toolbar li:hover {
+  color:red;
+  cursor:pointer;
 }
