@@ -23,6 +23,12 @@
       <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
       <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z"/>
     </symbol>
+    <symbol id="icon_zoomout">
+      <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z"></path>
+    </symbol>
+    <symbol id="icon_magnify">
+      <path d="M20.194,3.46c-4.613-4.613-12.121-4.613-16.734,0c-4.612,4.614-4.612,12.121,0,16.735   c4.108,4.107,10.506,4.547,15.116,1.34c0.097,0.459,0.319,0.897,0.676,1.254l6.718,6.718c0.979,0.977,2.561,0.977,3.535,0   c0.978-0.978,0.978-2.56,0-3.535l-6.718-6.72c-0.355-0.354-0.794-0.577-1.253-0.674C24.743,13.967,24.303,7.57,20.194,3.46z    M18.073,18.074c-3.444,3.444-9.049,3.444-12.492,0c-3.442-3.444-3.442-9.048,0-12.492c3.443-3.443,9.048-3.443,12.492,0   C21.517,9.026,21.517,14.63,18.073,18.074z"></path>
+    </symbol>
     <symbol id="icon_save">
         <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"></path>
     </symbol>
@@ -70,10 +76,21 @@
           <use xlink:href="#icon_zoomin"></use><title>Magnifying glass to zoom in</title>
         </svg>
       </div>
+      <div id="icon_zoomout_div">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_zoomout"></use><title>Magnifying glass to zoom in</title>
+        </svg>
+      </div>
+      <div id="icon_magnify_div">
+        <svg viewbox="0 0 42 42">
+          <use xlink:href="#icon_magnify"></use><title>Magnifying glass to zoom in</title>
+        </svg>
+      </div>
     </div>
   </div>
   <div class="top_left_logo">
-    <a href="http://0.0.0.0:9972/imcomp/index.html" title="Image Comparator">ImComp</a>
+    <a href="http://129.67.94.191:9972/imcomp/index.html" title="Image Comparator">ImComp</a>
+    <!-- <a href="http://0.0.0.0:9972/imcomp/index.html" title="Image Comparator">ImComp</a> -->
   </div>
 </div>
 
@@ -107,11 +124,11 @@
 
     <button id="move_to_prev_pair" title="Move to previous base and comp. image pair" class="space">&lt; Prev Pair</button>
     <button id="move_to_next_pair" title="Move to next base and comp. image pair">Next Pair &gt;</button>
-    <select name="toggle_speed" id="toggle_speed" class="space">
+    <!-- <select name="toggle_speed" id="toggle_speed" class="space">
       <option value="600">Toggle Speed: Slow</option>
       <option value="300">Toggle Speed: Medium</option>
       <option value="150">Toggle Speed: Fast</option>
-    </select>
+    </select> -->
     <select name="zoom_level" id="zoom_level" title="Level of magnification" >
       <option value="0.4">Zoom: 0.4X (shrink)</option>
       <option value="0.8">Zoom: 0.8X (shrink)</option>
@@ -136,14 +153,12 @@
     <span id="results_tabs_toggle" class="results_tab" title="Toggle between the left and right images at custom speed">Toggle</span>
     <span id="results_tabs_fade" class="results_tab" title="Seamlessly transition from left image to right image">Fade</span>
     <span id="results_tabs_slide" class="results_tab" title="Slide between the left and right images">Slide</span>
-    <span id="results_tabs_hover" class="results_tab" title="Hover the mouse over the image to switch between left and right images">Hover</span>
+    <span id="results_tabs_hover" class="results_tab" title="Move the mouse over the image from left to right to switch between images">Hover</span>
   </div>
 
   <!-- tools specific to the tabs above -->
   <div id="tab_tools_panel" class="tab_tools_panel">
     <div id="toggle_controls" class="toggle_controls">
-      <label for="left_content_toggle">Enable</label>
-      <input id="left_content_toggle" type="checkbox">
       <select name="toggle_speed" id="toggle_speed">
         <option value="1000">Speed: Very Slow</option>
         <option value="600">Speed: Slow</option>
@@ -305,20 +320,6 @@
     <button id="compare_base_comp" type="button" title="Compare the two chosen images">compare</button>
   </div>
 </div><!-- end of step 3 panel -->
-
-<!-- <div id="step4_panel" class="panel_content step4_content_color">
-  <div id="display_modes">
-    <button id="result_default_mode" type="button" focus="true">default</button>
-    <button id="result_overlay_mode" type="button">overlay</button>
-    <button id="result_difference_mode" type="button">difference</button>
-    <button id="result_toggle_mode" type="button">toggle</button>
-    <button id="result_slide_mode" type="button">slide</button>
-  </div>
-  <div id="result_display">
-  </div>
-</div> -->
-
-<!-- <div class="bottom"><a href="http://www.robots.ox.ac.uk/~vgg/software/imcomp/">Image Comparator</a> is an open source project developed and maintained by the <a href="http://www.robots.ox.ac.uk/~vgg/">Visual Geometry Group</a>.</div> -->
 
 <!-- to show status messages -->
 <div id="message_panel">

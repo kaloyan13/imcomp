@@ -69,6 +69,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       return;
     }
 		document.getElementById('top_right').style.display = '';
+		show_message('Please draw a region with your mouse on the left image and click compare. Or click compare to compare the whole image.');
   }
 
   // update all buttons

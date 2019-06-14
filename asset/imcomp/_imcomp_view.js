@@ -138,9 +138,9 @@ _imcomp_view.prototype.select_local_files = function() {
 
 _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   // all tools in toolsbar at the top
-  document.getElementById('icon_zoomin_div').addEventListener('click', function(e) {
+  document.getElementById('icon_magnify_div').addEventListener('click', function(e) {
     e.stopPropagation();
-    this.c.toolbar_zoom_handler(e);
+    this.c.toolbar_magnify_handler(e);
   }.bind(this), false);
   document.getElementById('icon_save_div').addEventListener('click', function(e) {
     e.stopPropagation();
@@ -153,6 +153,14 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   document.getElementById('icon_forward_div').addEventListener('click', function(e) {
     e.stopPropagation();
     this.c.toolbar_forward_handler(e);
+  }.bind(this), false);
+  document.getElementById('icon_zoomin_div').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.toolbar_zoomin_handler(e);
+  }.bind(this), false);
+  document.getElementById('icon_zoomout_div').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.toolbar_zoomout_handler(e);
   }.bind(this), false);
 
 
@@ -190,6 +198,7 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
 
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
+    this.c.reset_all_toggle();
   }.bind(this), false);
 
   document.getElementById( 'zoom_level').addEventListener('change', function(e) {

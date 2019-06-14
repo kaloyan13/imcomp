@@ -63,6 +63,8 @@ function _imcomp_controller() {
   this.results = {};
   this.results.is_slider_pressed = false;
   this.results.active_tab = 'default';
+  this.results.canvas_width = 0;
+  this.results.canvas_height = 0;
 
   // eveything to do with the toolbar on top
   this.toolbar = {};
@@ -292,15 +294,38 @@ _imcomp_controller.prototype.compare_base_comp = function() {
     }
   }
 
-  if( !this.is_base_region_selected() ) {
-    show_message('To compare, you must <span class="blue">select a region</span> in the base image. Keeping the right mouse button pressed on the base image, drag mouse cursor to select a region.');
-    return;
-  }
-
   if( this.compare.is_ongoing ) {
     show_message('Please wait, compare process is <span class="blue">ongoing</span> ...');
     return;
   }
+
+
+  if( !this.is_base_region_selected() ) {
+    show_message('Comparing images as no regions were selected.');
+    // choose the entire image as a region and compare
+    var x0 = 0;
+    var y0 = 0;
+    // var x1 = this.m.via['base'].v.now.tform.content_width;
+    // var y1 = this.m.via['base'].v.now.tform.content_height;
+    var x1 = this.m.via['base'].v.now.tform.width;
+    var y1 = this.m.via['base'].v.now.tform.height;
+    var via = this.m.via['base'];
+    // create new points for mouse down and up
+    via.v.last.mousedown = new _via_point(x0, y0);
+    via.v.nvertex.push( x0 );
+    via.v.nvertex.push( y0 );
+    via.v.last.mouseup = new _via_point(x1, y1);
+    via.v.nvertex.push( x1 );
+    via.v.nvertex.push( y1 );
+    via.c.add_region_from_nvertex();
+    via.v.nvertex.splice(0);
+  }
+  // some logging
+  var c = new _imcomp_compare_instance(findex1, findex2);
+  console.log('via base is: ');
+  console.log(this.m.via['base']);
+  // console.log(this.m.via['base'].v.now.tform.content_width);
+  // console.log(this.m.via['base'].v.now.tform.content_height);
 
   var findex1 = this.v.now['base'].findex;
   var findex2 = this.v.now['comp'].findex;
@@ -327,13 +352,14 @@ _imcomp_controller.prototype.compare_base_comp = function() {
           exp_comp_time = 10;
           break;
       }
-      show_message('Comparing ... (Please wait, it takes around ' + exp_comp_time + ' sec. to complete, larger regions may take longer to complete)')
+      if ( !this.is_base_region_selected() ) {
+        show_message('Comparing selected region in images... Please wait. (Larger regions mean longer time)');
+      } else {
+        show_message('Comparing images... Please wait. (Larger images mean longer time)');
+      }
+
     }.bind(this));
-    // @todo: fixme
-    // note: the err_callback() is defined in _imcomp_model.prototype.add_images()
   }.bind(this));
-  // @todo: fixme
-  // note: the err_callback() is defined in _imcomp_model.prototype.add_images()
 }
 
 _imcomp_controller.prototype.is_base_region_selected = function() {
@@ -378,6 +404,10 @@ _imcomp_controller.prototype.on_compare_success = function() {
   this.format_results_page();
   this.enable_all_content_selectors();
   this.toolbar.current_page = 'result';
+  // store the width and height for resetting zoom
+  var img_div = document.getElementById('left_content_image');
+  this.results.canvas_width = img_div.style.width;
+  this.results.canvas_height = img_div.style.width;
 }
 
 _imcomp_controller.prototype.format_comparison_page = function() {
@@ -443,6 +473,7 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       document.getElementById('toggle_controls').classList.remove('display-none');
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
+      this.set_toggle('base');
       this.remove_slider_elem();
       this.remove_overlay_elem();
       break;
@@ -459,11 +490,19 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       this.remove_overlay_elem();
       this.remove_slider_elem();
       this.add_fader_overlay();
+      // reset any zoom done before
+      var base_img = document.getElementById('left_content_image');
+      base_img.style.width = this.results.canvas_width;
+      base_img.style.height = this.results.canvas_height;
       break;
 
     case 'results_tabs_slide':
       this.clear_toggle('base');
       this.add_slider_overlay();
+      // reset any zoom done before
+      var base_img = document.getElementById('left_content_image');
+      base_img.style.width = this.results.canvas_width;
+      base_img.style.height = this.results.canvas_height;
       e.stopPropagation();
       break;
 
@@ -497,6 +536,9 @@ _imcomp_controller.prototype.add_fader_overlay = function() {
   var overlay_img = document.getElementById('slide_overlay_img');
   overlay_img.style.opacity = 0.5;
   overlay_img.src = this.get_content_url('comp', 'comp_crop_tx');
+  // reset any slide done before
+  overlay_img.style.width = this.results.canvas_width;
+  overlay_img.style.height = this.results.canvas_height;
 }
 
 _imcomp_controller.prototype.remove_overlay_elem = function() {
@@ -839,6 +881,15 @@ _imcomp_controller.prototype.set_toggle = function(type) {
   _imcomp_toggle_timer[type] = setInterval( function() {
     this.toggle_content(type, toggle_url_list);
   }.bind(this), this.v.theme.TOGGLE_SPEED);
+}
+
+_imcomp_controller.prototype.reset_all_toggle = function() {
+  for( var type in this.type_list ) {
+    // only reset the existing toggles
+    if( _imcomp_toggle_timer[type] > 0 ) {
+      this.set_toggle(type);
+    }
+  }
 }
 
 _imcomp_controller.prototype.toggle_content = function(type, toggle_url_list) {
@@ -1221,7 +1272,7 @@ _imcomp_controller.prototype.toolbar_save_handler = function(e) {
   a.dispatchEvent(event);
 }
 
-_imcomp_controller.prototype.toolbar_zoom_handler = function(e) {
+_imcomp_controller.prototype.toolbar_magnify_handler = function(e) {
   // toggle zoom enable/disable
   if ( this.toolbar.zoom_enabled ) {
     this.toolbar.zoom_enabled = false;
@@ -1270,4 +1321,28 @@ _imcomp_controller.prototype.toolbar_forward_handler = function(e) {
     this.compare_base_comp();
     this.toolbar.current_page = "result";
   }
+}
+
+_imcomp_controller.prototype.toolbar_zoomin_handler = function(e) {
+  var base_img = document.getElementById('left_content_image');
+  if ( this.results.active_tab === 'fade' || this.results.active_tab === 'slide' ) {
+    base_img.style.width = this.results.canvas_width;
+    base_img.style.height = this.results.canvas_height;
+    show_message('Cannot zoom in fade or slide mode!');
+    return;
+  }
+  base_img.style.width = Math.round(base_img.offsetWidth * 1.1) + 'px';
+  base_img.style.height = Math.round(base_img.offsetHeight * 1.1) + 'px';
+}
+
+_imcomp_controller.prototype.toolbar_zoomout_handler = function(e) {
+  var base_img = document.getElementById('left_content_image');
+  if ( this.results.active_tab === 'fade' || this.results.active_tab === 'slide' ) {
+    base_img.style.width = this.results.canvas_width;
+    base_img.style.height = this.results.canvas_height;
+    show_message('Cannot zoom in fade or slide mode!');
+    return;
+  }
+  base_img.style.width = Math.round(base_img.offsetWidth * 0.9) + 'px';
+  base_img.style.height = Math.round(base_img.offsetHeight * 0.9) + 'px';
 }
