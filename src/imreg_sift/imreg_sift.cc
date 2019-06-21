@@ -68,7 +68,10 @@ double imreg_sift::clamp(double v, double min, double max) {
   }
 }
 
-void imreg_sift::compute_sift_features(const Magick::Image& img, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose) {
+void imreg_sift::compute_sift_features(const Magick::Image& img,
+                                       vector<VlSiftKeypoint>& keypoint_list,
+                                       vector< vector<vl_uint8> >& descriptor_list,
+                                       bool verbose) {
   vl_bool  err    = VL_ERR_OK ;
 
   // algorithm parameters based on vlfeat-0.9.20/toolbox/sift/vl_sift.c
@@ -126,7 +129,7 @@ void imreg_sift::compute_sift_features(const Magick::Image& img, vector<VlSiftKe
   }
 
   /* ...............................................................
-   *                                             Process each octave
+   * Process each octave
    * ............................................................ */
   i     = 0 ;
   first = 1 ;
@@ -206,7 +209,10 @@ void imreg_sift::compute_sift_features(const Magick::Image& img, vector<VlSiftKe
     }
 }
 
-void imreg_sift::get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1, vector< vector<vl_uint8> >& descriptor_list2, std::vector< std::pair<uint32_t, uint32_t> > &putative_matches, float threshold) {
+void imreg_sift::get_putative_matches(vector< vector<vl_uint8> >& descriptor_list1,
+                                      vector< vector<vl_uint8> >& descriptor_list2,
+                                      std::vector< std::pair<uint32_t,uint32_t> >& putative_matches,
+                                      float threshold) {
   size_t n1 = descriptor_list1.size();
   size_t n2 = descriptor_list2.size();
 
@@ -290,14 +296,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     float threshold = 1.5f;
     std::vector< std::pair<uint32_t, uint32_t> > putative_matches;
     get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
-
-    /*
-      cout << "\nShowing putative matches :" << flush;
-      for( size_t i=0; i<putative_matches.size(); i++ ) {
-      cout << "[" << putative_matches[i].first << ":" << putative_matches[i].second << "], " << flush;
-      }
-    */
-
     size_t n_match = putative_matches.size();
     fp_match_count = n_match;
     //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
@@ -404,7 +402,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
         max_score = score;
         best_inliers_index.swap(inliers_index);
       }
-    }
+    } // end RANSAC_ITER_COUNT loop
 
     if( max_score < 3 ) {
       message = "Failed to find a suitable transformation";
@@ -423,9 +421,11 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     Matrix<double, 3, 3> Hopt_norm, H;
     dlt(X, Y, Hopt_norm);
-    H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform; // see Hartley and Zisserman p.109
+    // see Hartley and Zisserman p.109
+    H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform;
     H = H / H(2,2);
-    Hopt = H; // Hopt is the reference variable passed to this method
+    // Hopt is the reference variable passed to this method
+    Hopt = H;
 
     // im1 crop
     Magick::Image im1_crop(im1);
@@ -437,70 +437,38 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     im2_crop.crop( cropRect1 );
     //im2_crop.write( im2_crop_fn );
 
-    // im2 crop and transform
-    Magick::Image im2t_crop( im1_crop.size(), "white");
-    //cout << "\nTransforming image ..." << flush;
-    double x0,x1,y0,y1;
-    double x, y, homogeneous_norm;
-    double dx0, dx1, dy0, dy1;
-    double fxy0, fxy1;
-    double fxy_red, fxy_green, fxy_blue;
-    double xi, yi;
-    Magick::Image overlap(im1_crop.size(), "white");
-    //cout << "\nTransforming im2 ... " << flush;
+    /*
+      apply Homography to im2 in order to visualize it along with im1.
+    */
+    Matrix<double, 3, 3> Hinv = H.inverse();
+    Magick::Image im2t_crop(im2);
+    // some simple affine tralsformations for testing:
+    // Magick::DrawableAffine affine(1.0,  1.0, 0, 0, 0.0, 0.0); // example: identity transform
+    // Magick::DrawableAffine hinv_affine(1,1,.3,0,0,0); // simple shearing
+    // Magick::DrawableAffine hinv_affine(1,-1,0,0,0,0); // flip
+    // Magick::DrawableAffine hinv_affine(1,0.5,0,0,0,0); // scale
 
-    for(unsigned int j=0; j<im2t_crop.rows(); j++) {
-      for(unsigned int i=0; i<im2t_crop.columns(); i++) {
-        xi = ((double) i) + 0.5; // center of pixel
-        yi = ((double) j) + 0.5; // center of pixel
-        x = H(0,0) * xi + H(0,1) * yi + H(0,2);
-        y = H(1,0) * xi + H(1,1) * yi + H(1,2);
-        homogeneous_norm = H(2,0) * xi + H(2,1) * yi + H(2,2);
-        x = x / homogeneous_norm;
-        y = y / homogeneous_norm;
+    // set rotation as per Hinv
+    Magick::DrawableAffine hinv_affine(Hinv(0,0), Hinv(1,1), Hinv(1,0), Hinv(0,1), 0, 0);
 
-        // neighbourhood of xh
-        x0 = ((int) x);
-        x1 = x0 + 1;
-        dx0 = x - x0;
-        dx1 = x1 - x;
+    // set translation and resizing using viewport function.
+    // See: http://www.imagemagick.org/discourse-server/viewtopic.php?f=27&t=33029#p157520.
+    // As we need to render the image on a webpage canvas, we need to resize the
+    // width and height of im2. Then offset in x and y direction based on the translation
+    // computed by Homography (H and Hinv matrices).
+    string op_w_h_and_offsets = std::to_string(xu-xl) +
+                                "x" +
+                                std::to_string(yu-yl) +
+                                "-" + to_string((int) Hinv(0,2)) +
+                                "-" + to_string((int) Hinv(1,2));
+    im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+    im2t_crop.affineTransform(hinv_affine);
 
-        y0 = ((int) y);
-        y1 = y0 + 1;
-        dy0 = y - y0;
-        dy1 = y1 - y;
-
-        Magick::ColorRGB fx0y0 = im2.pixelColor(x0, y0);
-        Magick::ColorRGB fx1y0 = im2.pixelColor(x1, y0);
-        Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
-        Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
-
-        // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
-        fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1
-        fxy1 = dx1 * fx0y1.red() + dx0 * fx1y1.red(); // note: x1 - x0 = 1
-        fxy_red = dy1 * fxy0 + dy0 * fxy1;
-
-        fxy0 = dx1 * fx0y0.green() + dx0 * fx1y0.green(); // note: x1 - x0 = 1
-        fxy1 = dx1 * fx0y1.green() + dx0 * fx1y1.green(); // note: x1 - x0 = 1
-        fxy_green = dy1 * fxy0 + dy0 * fxy1;
-
-        fxy0 = dx1 * fx0y0.blue() + dx0 * fx1y0.blue(); // note: x1 - x0 = 1
-        fxy1 = dx1 * fx0y1.blue() + dx0 * fx1y1.blue(); // note: x1 - x0 = 1
-        fxy_blue = dy1 * fxy0 + dy0 * fxy1;
-
-        Magick::ColorRGB fxy(fxy_red, fxy_green, fxy_blue);
-        im2t_crop.pixelColor(i, j, fxy);
-
-        // overlap
-        Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
-        double red_avg = (c1.red() + fxy_red) / (2.0f);
-        double green_avg = (c1.green() + fxy_green) / (2.0f);
-        double blue_avg = (c1.blue() + fxy_blue) / (2.0f);
-        overlap.pixelColor(i, j, Magick::ColorRGB(red_avg, green_avg, blue_avg));
-      }
-    }
-    im2t_crop.write( im2_tx_fn );
-    overlap.write(overlap_image_fn);
+    // save result
+    im2t_crop.write(im2_tx_fn);
+    // TODO: find a way to create a good overlap image. For now use im2t_crop
+    // overlap.write(overlap_image_fn);
+    im2t_crop.write(overlap_image_fn);
 
     // difference image
     Magick::Image cdiff(im1_crop.size(), "black");
@@ -604,7 +572,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     im2.type(Magick::TrueColorType);
 
     Magick::Image im1_g = im1;
-    im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
+    im1_g.crop(Magick::Geometry(xu-xl, yu-yl, xl, yl));
 
     Magick::Image im2_g = im2;
 
@@ -721,7 +689,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     //cout << "\nrobust match pairs = " << fp_match_count << flush;
 
     // bin each correspondence pair into cells dividing the original image into KxK cells
-    unsigned int POINTS_PER_CELL = 1; // a single point in each cell ensures that no two control points are very close
+    // a single point in each cell ensures that no two control points are very close
+    unsigned int POINTS_PER_CELL = 1;
     unsigned int n_cell_w, n_cell_h;
 
     if( im1.rows() > 500 ) {
@@ -785,7 +754,6 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
 
     for( size_t i=0; i<n_cp; ++i ) {
       unsigned long match_idx = sel_best_robust_match_idx.at(i);
-
       cp1(0,i) = pts1(0, match_idx ); cp1(1,i) = pts1(1, match_idx );
       cp2(0,i) = pts2(0, match_idx ); cp2(1,i) = pts2(1, match_idx );
     }
