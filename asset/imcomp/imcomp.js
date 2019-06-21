@@ -101,6 +101,8 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       clist[i].style.display = 'none';
     }
   }
+	// highlight instructions for the page
+	_imcomp.c.brighten_instructions(panel_id);
 }
 
 function _imcomp_set_panel_content(panel_id, is_navigation) {

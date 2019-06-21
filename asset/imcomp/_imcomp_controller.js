@@ -430,11 +430,17 @@ _imcomp_controller.prototype.format_results_page = function() {
   document.getElementById('right_content').style.display = 'none';
   document.getElementById('ref_line_container').style.display = 'none';
   document.getElementById('left_content').title = "Result of your comparison";
+  this.brighten_instructions('step4');
+  var cp_header = document.getElementsByClassName('contents_panel_header')[0];
+  cp_header.classList.add('display-none');
+  var fp_header = document.getElementsByClassName('files_panel_header')[0];
+  fp_header.classList.add('display-none');
   // default settings
   this.set_content('base', 'base_crop');
   this.set_toggle('base');
   this.deactivate_results_tabs();
   document.getElementById('results_tabs_default').classList.add('active');
+  document.getElementById('left_content_container').style.overflow = 'auto';
 }
 
 _imcomp_controller.prototype.enable_results_tabs = function() {
@@ -442,6 +448,28 @@ _imcomp_controller.prototype.enable_results_tabs = function() {
   var tabs = rt.getElementsByClassName('results_tab');
   for (var i=0; i < tabs.length; i++ ) {
     tabs[i].addEventListener('click', this.results_tab_event_handler.bind(this), false);
+  }
+}
+
+_imcomp_controller.prototype.brighten_instructions = function(panel_id) {
+  console.log('in brighten panel id is: ' + panel_id);
+  switch (panel_id) {
+    case 'step1':
+      document.getElementById('instruction_step1').style.opacity = '1.0';
+      document.getElementById('instruction_step2').style.opacity = '0.5';
+      document.getElementById('instruction_step3').style.opacity = '0.5';
+      break;
+    case 'step3':
+      document.getElementById('instruction_step1').style.opacity = '0.5';
+      document.getElementById('instruction_step2').style.opacity = '1.0';
+      document.getElementById('instruction_step3').style.opacity = '0.5';
+      break;
+    case 'step4':
+  		document.getElementById('instruction_step1').style.opacity = '0.5';
+  		document.getElementById('instruction_step2').style.opacity = '0.5';
+  		document.getElementById('instruction_step3').style.opacity = '1.0';
+      break;
+    default:
   }
 }
 
@@ -746,7 +774,7 @@ _imcomp_controller.prototype.set_content = function(type, sid_suffix) {
 
     if( sid_suffix === 'base_comp_diff') {
       //this.show_message('In the difference image, color code is as follows: <span style="color: #0072b2">base image</span> and <span style="color: #d55e00">comp. image</span>');
-      show_message('In the difference image, color code is as follows: <span style="color: blue">base image</span> and <span style="color: red">comp. image</span>');
+      show_message('In the difference image, <span style="color: blue">blue</span> is for left image and <span style="color: red">red</span> is for right image');
     }
   }
   this.enable_switch(type, '_zoom');
@@ -983,14 +1011,6 @@ _imcomp_controller.prototype.init_ref_line = function() {
       // update the ref_line
       this.ref_line_position(this.ref_line.current_y);
     }
-  }.bind(this), false);
-
-  var parent = document.getElementById('ref_line_container');
-  parent.addEventListener('mouseup', function(e) {
-    var y = e.offsetY;
-
-    this.ref_line_position(y);
-    this.show_element(this.ref_line.hline);
   }.bind(this), false);
 
   var hline = document.getElementById('horizontal_line');
@@ -1312,6 +1332,10 @@ _imcomp_controller.prototype.toolbar_back_handler = function(e) {
   if ( this.toolbar.current_page === "result" ) {
     _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, true);
     this.toolbar.current_page = "compare";
+    // remove all divs that could have been added in results page
+    this.remove_overlay_elem();
+    this.remove_slider_elem();
+    document.getElementById('left_content_container').style.overflow = '';
   }
 }
 

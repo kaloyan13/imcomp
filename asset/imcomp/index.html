@@ -11,12 +11,6 @@
 </head>
 
 <body onload="_imcomp_init()">
-<!-- <div class="top">
-  <button id="step1_button" class="step1_button_color panel_selector_button" onclick="_imcomp_set_panel('step1')">1. Select Images to Compare</button>
-  <button id="step2_button" class="step2_button_color panel_selector_button" onclick="_imcomp_set_panel('step2')">2. Set Comparison Settings</button>
-  <button id="step3_button" class="step3_button_color panel_selector_button" onclick="_imcomp_set_panel('step3')">3. Compare and Visualize Results</button>
-</div> -->
-
 <svg style="display:none;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
     <symbol id="icon_zoomin">
@@ -44,7 +38,6 @@
     <symbol id="icon_home">
       <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
     </symbol>
-
   </defs>
 </svg>
 
@@ -73,25 +66,36 @@
       </div>
       <div id="icon_zoomin_div">
         <svg viewbox="0 0 24 24">
-          <use xlink:href="#icon_zoomin"></use><title>Magnifying glass to zoom in</title>
+          <use xlink:href="#icon_zoomin"></use><title>zoom in</title>
         </svg>
       </div>
       <div id="icon_zoomout_div">
         <svg viewbox="0 0 24 24">
-          <use xlink:href="#icon_zoomout"></use><title>Magnifying glass to zoom in</title>
+          <use xlink:href="#icon_zoomout"></use><title>zoom out</title>
         </svg>
       </div>
       <div id="icon_magnify_div">
         <svg viewbox="0 0 42 42">
-          <use xlink:href="#icon_magnify"></use><title>Magnifying glass to zoom in</title>
+          <use xlink:href="#icon_magnify"></use><title>Magnifying glass to zoom within an image</title>
         </svg>
       </div>
     </div>
   </div>
   <div class="top_left_logo">
-    <a href="http://129.67.94.191:9972/imcomp/index.html" title="Image Comparator">ImComp</a>
+    <a href="http://129.67.94.191:9972/imcomp/index.html" title="Image Comparator">Image Comparator</a>
     <!-- <a href="http://0.0.0.0:9972/imcomp/index.html" title="Image Comparator">ImComp</a> -->
   </div>
+</div>
+
+<div class="instructions">
+  <!-- <button id="step1_button" class="step1_button_color panel_selector_button" onclick="_imcomp_set_panel('step1')">1. Select Images to Compare</button>
+  <button id="step2_button" class="step2_button_color panel_selector_button" onclick="_imcomp_set_panel('step2')">2. Set Comparison Settings</button>
+  <button id="step3_button" class="step3_button_color panel_selector_button" onclick="_imcomp_set_panel('step3')">3. Compare and Visualize Results</button> -->
+  <div id="instruction_step1" class="instruction_step1">Upload all images for comparison by clicking below or by dragging and dropping below</div>
+  <div class="right_arrow"> <span>&#10230;</span> </div>
+  <div id="instruction_step2" class="instruction_step2">Drag and drop images from the files panel to the view panel and click compare to compare them</div>
+  <div class="right_arrow"> <span>&#10230;</span> </div>
+  <div id="instruction_step3" class="instruction_step3">Visualize and save the comparison results</div>
 </div>
 
 <!-- content updated by imcomp.js -->
@@ -118,6 +122,9 @@
 
 <!-- Panel to visualize image comparison result -->
 <div id="step3_panel" class="panel_content step3_content_color">
+  <div id="compare_panel" class="compare_panel">
+    <button id="compare_base_comp" type="button" title="Compare the two chosen images">compare</button>
+  </div>
   <div class="control_panel">
     <div id="horizontal_line" class="horizontal_ref_line display-none" title="Click on the line to hide this reference line"></div>
     <!-- <button id="compare_base_comp" title="Compare Image-A and Image-B">Compare A/B</button> -->
@@ -144,6 +151,9 @@
     </select>
   </div>
 
+  <div class="files_panel_header">
+    Files Panel
+  </div>
   <div id="files_panel" title="All uploaded images"></div>
 
   <div id="results_tabs_panel">
@@ -178,6 +188,9 @@
   </div>
 
   <!-- Content name, description and status -->
+  <div class="contents_panel_header">
+    View Panel
+  </div>
   <div id="middle_panel" class="non_draggable" draggable="false">
     <div id="content_label" class="row">
       <div class="img_label cell">
@@ -316,9 +329,6 @@
     </div>
   </div> <!-- end of middle panel -->
 
-  <div id="compare_panel" class="compare_panel">
-    <button id="compare_base_comp" type="button" title="Compare the two chosen images">compare</button>
-  </div>
 </div><!-- end of step 3 panel -->
 
 <!-- to show status messages -->
