@@ -618,10 +618,21 @@ body {
   display:block;
   vertical-align:middle;
 }
-.img-comp-slider {
+.img-comp-hor-slider {
   position: absolute;
   z-index:9;
   cursor: ew-resize;
+  /*set the appearance of the slider:*/
+  width: 20px;
+  height: 20px;
+  background-color: #2196F3;
+  opacity: 0.7;
+  border-radius: 50%;
+}
+.img-comp-vert-slider {
+  position: absolute;
+  z-index:9;
+  cursor: ns-resize;
   /*set the appearance of the slider:*/
   width: 20px;
   height: 20px;

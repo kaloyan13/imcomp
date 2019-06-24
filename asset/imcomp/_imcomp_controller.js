@@ -61,7 +61,8 @@ function _imcomp_controller() {
 
   // everything to do with results visualization
   this.results = {};
-  this.results.is_slider_pressed = false;
+  this.results.is_hor_slider_pressed  = false;
+  this.results.is_vert_slider_pressed = false;
   this.results.active_tab = 'default';
   this.results.canvas_width = 0;
   this.results.canvas_height = 0;
@@ -492,23 +493,25 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       this.set_toggle('base');
-      this.remove_slider_elem();
+      this.remove_slider_elem('all');
       this.remove_overlay_elem();
       break;
 
     case 'results_tabs_toggle':
       document.getElementById('tab_tools_panel').classList.remove('display-none');
       document.getElementById('toggle_controls').classList.remove('display-none');
+      document.getElementById('slide_controls').classList.add('display-none');
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       this.set_toggle('base');
-      this.remove_slider_elem();
+      this.remove_slider_elem('all');
       this.remove_overlay_elem();
       break;
 
     case 'results_tabs_fade':
       document.getElementById('tab_tools_panel').classList.remove('display-none');
       document.getElementById('fade_controls').classList.remove('display-none');
+      document.getElementById('slide_controls').classList.add('display-none');
       var slide_elem = document.getElementById('base_comp_fader');
       document.getElementById('base_comp_fader').value = 50;
       document.getElementById('base_comp_fader_value').innerHTML = 50;
@@ -516,7 +519,7 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       this.set_content(container_type, sid_suffix);
       this.clear_toggle('base');
       this.remove_overlay_elem();
-      this.remove_slider_elem();
+      this.remove_slider_elem('all');
       this.add_fader_overlay();
       // reset any zoom done before
       var base_img = document.getElementById('left_content_image');
@@ -525,8 +528,12 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_slide':
+    document.getElementById('tab_tools_panel').classList.remove('display-none');
+    document.getElementById('slide_controls').classList.remove('display-none');
+    document.getElementById('slide_radio_horizontal').checked = true;
       this.clear_toggle('base');
-      this.add_slider_overlay();
+      this.add_hor_slider_overlay();
+      // this.add_vert_slider_overlay();
       // reset any zoom done before
       var base_img = document.getElementById('left_content_image');
       base_img.style.width = this.results.canvas_width;
@@ -537,7 +544,7 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
     case 'results_tabs_hover':
       this.clear_toggle('base');
       this.remove_overlay_elem();
-      this.remove_slider_elem();
+      this.remove_slider_elem('all');
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       break;
@@ -545,7 +552,7 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
     default: // overlay and difference views
       this.clear_toggle('base');
       this.remove_overlay_elem();
-      this.remove_slider_elem();
+      this.remove_slider_elem('all');
       // choose suffix as per traherne
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
@@ -557,11 +564,11 @@ _imcomp_controller.prototype.add_fader_overlay = function() {
   base_div.classList.add('img-comp-img');
   base_div.style.position = 'absolute';
 
-  var overlay_div = document.getElementById('slide_overlay');
+  var overlay_div = document.getElementById('hor_slide_overlay');
   overlay_div.classList.add('display-inline-block');
   overlay_div.style.width = base_div.offsetWidth + "px";
 
-  var overlay_img = document.getElementById('slide_overlay_img');
+  var overlay_img = document.getElementById('hor_slide_overlay_img');
   overlay_img.style.opacity = 0.5;
   overlay_img.src = this.get_content_url('comp', 'comp_crop_tx');
   // reset any slide done before
@@ -570,18 +577,31 @@ _imcomp_controller.prototype.add_fader_overlay = function() {
 }
 
 _imcomp_controller.prototype.remove_overlay_elem = function() {
-  var overlay_div = document.getElementById('slide_overlay');
-  overlay_div.classList.remove('display-inline-block');
-  overlay_div.classList.add('display-none');
+  var hor_overlay_div = document.getElementById('hor_slide_overlay');
+  var vert_overlay_div = document.getElementById('vert_slide_overlay');
+  hor_overlay_div.classList.remove('display-inline-block');
+  hor_overlay_div.classList.add('display-none');
+  vert_overlay_div.classList.remove('display-inline-block');
+  vert_overlay_div.classList.add('display-none');
 }
 
-_imcomp_controller.prototype.remove_slider_elem = function () {
-  var slider = document.getElementById('slider');
-  slider.classList.add('display-none');
+_imcomp_controller.prototype.remove_slider_elem = function (elem) {
+  var hor_slider = document.getElementById('horizontal_slider');
+  var vert_slider = document.getElementById('vertical_slider');
+  if (elem === 'horizontal') {
+    hor_slider.classList.add('display-none');
+  }
+  if (elem === 'vertical') {
+    vert_slider.classList.add('display-none');
+  }
+  if (elem === 'all') {
+    hor_slider.classList.add('display-none');
+    vert_slider.classList.add('display-none');
+  }
 }
 
-_imcomp_controller.prototype.add_slider_overlay = function () {
-  var img_overlay = document.getElementById('slide_overlay_img');
+_imcomp_controller.prototype.add_hor_slider_overlay = function () {
+  var img_overlay = document.getElementById('hor_slide_overlay_img');
   img_overlay.src = this.get_content_url('comp', 'comp_crop_tx');
   img_overlay.style.opacity = 1.0;
 
@@ -594,12 +614,37 @@ _imcomp_controller.prototype.add_slider_overlay = function () {
   base_div.classList.add('img-comp-img');
   base_div.style.position = 'absolute';
 
-  var overlay_div = document.getElementById('slide_overlay');
+  var overlay_div = document.getElementById('hor_slide_overlay');
   overlay_div.classList.add('display-inline-block');
   overlay_div.style.width = (w / 2) + "px";
 
   // position slider and bind its actions
-  var slider = document.getElementById('slider');
+  var slider = document.getElementById('horizontal_slider');
+  slider.classList.remove('display-none');
+  slider.style.top = (h / 2) - (slider.offsetHeight / 2) + "px";
+  slider.style.left = (w / 2) - (slider.offsetWidth / 2) + "px";
+}
+
+_imcomp_controller.prototype.add_vert_slider_overlay = function () {
+  var img_overlay = document.getElementById('vert_slide_overlay_img');
+  img_overlay.src = this.get_content_url('comp', 'comp_crop_tx');
+  img_overlay.style.opacity = 1.0;
+
+  var left_img = document.getElementById('left_content_image');
+  left_img.src = this.get_content_url('base', 'base_crop');
+
+  var base_div = document.getElementById('left_content_img_panel');
+  var w = base_div.offsetWidth;
+  var h = base_div.offsetHeight;
+  base_div.classList.add('img-comp-img');
+  base_div.style.position = 'absolute';
+
+  var overlay_div = document.getElementById('vert_slide_overlay');
+  overlay_div.classList.add('display-inline-block');
+  overlay_div.style.height = (h / 2) + "px";
+
+  // position slider and bind its actions
+  var slider = document.getElementById('vertical_slider');
   slider.classList.remove('display-none');
   slider.style.top = (h / 2) - (slider.offsetHeight / 2) + "px";
   slider.style.left = (w / 2) - (slider.offsetWidth / 2) + "px";
@@ -1167,13 +1212,17 @@ _imcomp_controller.prototype.image_zoom_mousemove_handler = function(e) {
 /// Results Manipulation.
 /// Deal with results such as saving, exporting as json (in future), etc
 ///
-_imcomp_controller.prototype.slider_mousedown_handler = function(e) {
-  this.results.is_slider_pressed = true;
+_imcomp_controller.prototype.hor_slider_mousedown_handler = function(e) {
+  this.results.is_hor_slider_pressed = true;
+}
+
+_imcomp_controller.prototype.vert_slider_mousedown_handler = function(e) {
+  this.results.is_vert_slider_pressed = true;
 }
 
 _imcomp_controller.prototype.slider_mousemove_handler = function(e) {
-  if ( this.results.is_slider_pressed ) {
-    var overlay_div = document.getElementById('slide_overlay');
+  if ( this.results.is_hor_slider_pressed ) {
+    var overlay_div = document.getElementById('hor_slide_overlay');
     var overlay_div_position = overlay_div.getBoundingClientRect();
     // cursor position relative to the overlay div
     var cursor_position = e.pageX - overlay_div_position.left;
@@ -1186,22 +1235,58 @@ _imcomp_controller.prototype.slider_mousemove_handler = function(e) {
     if (cursor_position > base_width) cursor_position = base_width;
 
     // slide overlay div
-    var slider = document.getElementById('slider');
+    var slider = document.getElementById('horizontal_slider');
     overlay_div.style.width = cursor_position + "px";
     slider.style.left = overlay_div.offsetWidth - (slider.offsetWidth / 2) + "px";
+  }
+
+  if ( this.results.is_vert_slider_pressed ) {
+    var overlay_div = document.getElementById('vert_slide_overlay');
+    var overlay_div_position = overlay_div.getBoundingClientRect();
+    // cursor position relative to the overlay div
+    var cursor_position = e.pageY - overlay_div_position.top;
+    // consider any page scrolling
+    cursor_position = cursor_position - window.pageYOffset;
+
+    // checks
+    var base_height = document.getElementById('left_content_img_panel').offsetHeight;
+    if (cursor_position < 0) cursor_position = 0;
+    if (cursor_position > base_height) cursor_position = base_height;
+
+    // slide overlay div
+    var slider = document.getElementById('vertical_slider');
+    overlay_div.style.height = cursor_position + "px";
+    slider.style.top = overlay_div.offsetHeight - (slider.offsetHeight / 2) + "px";
   }
 }
 
 _imcomp_controller.prototype.slider_mouseup_handler = function() {
-  if ( this.results.is_slider_pressed ) {
-    this.results.is_slider_pressed = false;
+  if ( this.results.is_hor_slider_pressed ) {
+    this.results.is_hor_slider_pressed = false;
+  }
+  if ( this.results.is_vert_slider_pressed ) {
+    this.results.is_vert_slider_pressed = false;
+  }
+}
+
+_imcomp_controller.prototype.slider_switch_radio_handler = function(e) {
+  console.log('radio value: ' + e.target.value);
+  if ( e.target.value === 'horizontal' ) {
+    this.remove_slider_elem('vertical');
+    this.remove_overlay_elem();
+    this.add_hor_slider_overlay();
+  }
+  if ( e.target.value === 'vertical' ) {
+    this.remove_slider_elem('horizontal');
+    this.remove_overlay_elem();
+    this.add_vert_slider_overlay();
   }
 }
 
 _imcomp_controller.prototype.update_base_comp_fader = function(e) {
   var slider_val = e.target.value;
   document.getElementById('base_comp_fader_value').innerHTML = slider_val;
-  var overlay_div = document.getElementById('slide_overlay');
+  var overlay_div = document.getElementById('hor_slide_overlay');
   var img = overlay_div.getElementsByTagName('img')[0];
   img.style.opacity = (0.01 * slider_val);
 }
@@ -1334,7 +1419,7 @@ _imcomp_controller.prototype.toolbar_back_handler = function(e) {
     this.toolbar.current_page = "compare";
     // remove all divs that could have been added in results page
     this.remove_overlay_elem();
-    this.remove_slider_elem();
+    this.remove_slider_elem('all');
     document.getElementById('left_content_container').style.overflow = '';
   }
 }

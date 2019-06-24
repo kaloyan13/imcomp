@@ -179,11 +179,17 @@
       <!-- <input id="right_content_toggle" type="checkbox">
       <label for="right_content_toggle">Comp</label> -->
     </div>
-    <div id="fade_controls" class="slide_controls">
+    <div id="fade_controls">
       <label for="base_comp_fader">Left</label>
       <input id="base_comp_fader" type="range" min="1" max="100" value="50" class="base_comp_fader">
       <label for="base_comp_fader">Right</label>
       <p>value: <span id="base_comp_fader_value"></span></p>
+    </div>
+    <div id="slide_controls">
+      <input id="slide_radio_horizontal"type="radio" name="slide_radio" value="horizontal">
+      <label for="slide_radio_horizontal">Horizontal</label>
+      <input id="slide_radio_vertical"type="radio" name="slide_radio" value="vertical">
+      <label for="slide_radio_vertical">Vertical</label>
     </div>
   </div>
 
@@ -279,9 +285,13 @@
             <img id="left_content_image" src="">
           </div>
 
-          <div id="slider" class="img-comp-slider display-none"></div>
-          <div id="slide_overlay" class="content img-comp-img">
-            <img id="slide_overlay_img" src="">
+          <div id="horizontal_slider" class="img-comp-hor-slider display-none"></div>
+          <div id="vertical_slider" class="img-comp-vert-slider display-none"></div>
+          <div id="hor_slide_overlay" class="content img-comp-img">
+            <img id="hor_slide_overlay_img" src="">
+          </div>
+          <div id="vert_slide_overlay" class="content img-comp-img">
+            <img id="vert_slide_overlay_img" src="">
           </div>
 
       	</div>

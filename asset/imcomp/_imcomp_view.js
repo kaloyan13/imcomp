@@ -240,10 +240,22 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   }.bind(this), false);
 
   // slide action in result visualisation
-  document.getElementById('slider').addEventListener('mousedown', function(e) {
+  document.getElementById('horizontal_slider').addEventListener('mousedown', function(e) {
     e.stopPropagation();
-    this.c.slider_mousedown_handler(e);
+    this.c.hor_slider_mousedown_handler(e);
   }.bind(this), false);
+  document.getElementById('vertical_slider').addEventListener('mousedown', function(e) {
+    e.stopPropagation();
+    this.c.vert_slider_mousedown_handler(e);
+  }.bind(this), false);
+  var slide_radio = document.getElementsByName('slide_radio');
+  for ( i=0; i < slide_radio.length; i++ ) {
+    slide_radio[i].addEventListener('change', function(e) {
+      e.stopPropagation();
+      this.c.slider_switch_radio_handler(e);
+    }.bind(this), false);
+  }
+
   // once the slider is pressed, we can move the mouse anywhere on the window to slide.
   // so binding the slider move event at the window level.
   window.addEventListener('mousemove', function(e) {
