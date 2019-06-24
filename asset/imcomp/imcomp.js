@@ -128,6 +128,8 @@ function _imcomp_set_panel_content(panel_id, is_navigation) {
     }
 
 		// show all uploaded files in the files panel
+		document.getElementById('files_panel_header').classList.remove('display-none');
+		document.getElementById('contents_panel_header').classList.remove('display-none');
 		var fp = document.getElementById('files_panel');
 		if ( !is_navigation ) {
 		  for ( var i = 0; i < _imcomp.m.files.length; i++ ) {
