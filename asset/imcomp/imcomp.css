@@ -268,7 +268,9 @@ body {
 }
 
 .results_tab.active {
-  border-top: 3px solid #673AB7;
+  /* border-top: 3px solid #673AB7; */
+  color: white;
+  background-color: #673AB7;
 }
 
 #results_save_panel {
