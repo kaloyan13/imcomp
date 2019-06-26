@@ -90,7 +90,6 @@ _imcomp_controller.prototype.init = function( imcomp_model, imcomp_view ) {
   this.disable_all_switches('_zoom');
   this.init_ref_line();
 
-
   /*
   // for debugging zoom feature
   for( type in this.type_list ) {
@@ -171,6 +170,7 @@ _imcomp_controller.prototype.move_to_next_pair = function() {
     this.move_to_next(type);
   }
 }
+
 _imcomp_controller.prototype.move_to_prev_pair = function() {
   for( var type in this.type_list ) {
     this.move_to_prev(type);
@@ -180,6 +180,9 @@ _imcomp_controller.prototype.move_to_prev_pair = function() {
 _imcomp_controller.prototype.on_filelist_update = function(type) {
   var p = document.getElementById('step1_file_added_count');
   p.innerHTML = this.m.file_count + ' files uploaded';
+  if ( this.m.file_count < 2 ) {
+    p.innerHTML += '  <span style="color:red;">(To compare, you must add at least 2 files)</span>';
+  }
 
   if ( this.m.file_count > 1 ) {
     document.getElementById('step1_files_added_nav').classList.remove('display-none');
@@ -413,7 +416,6 @@ _imcomp_controller.prototype.on_compare_success = function() {
 
 _imcomp_controller.prototype.format_comparison_page = function() {
 	// make sure items we disable are visible
-	document.getElementById('compare_panel').style.display = '';
 	document.getElementById('ref_line_container').style.display = '';
 	document.getElementById('right_content').style.display = '';
   document.getElementById('files_panel').style.display = '';
@@ -421,12 +423,14 @@ _imcomp_controller.prototype.format_comparison_page = function() {
   document.getElementById('toggle_controls').classList.add('display-none');
   document.getElementById('fade_controls').classList.add('display-none');
 	document.getElementById('results_tabs_panel').style.display = 'none';
+
+  document.getElementById('top_panel').classList.remove('display-none');
+  document.getElementById('banner').style.display = 'none';
 }
 
 _imcomp_controller.prototype.format_results_page = function() {
   // remove files panel, compare buttons panel and add results tabs to show results
   document.getElementById('files_panel').style.display = 'none';
-  document.getElementById('compare_panel').style.display = 'none';
   document.getElementById('results_tabs_panel').style.display = 'block';
   document.getElementById('right_content').style.display = 'none';
   document.getElementById('ref_line_container').style.display = 'none';
@@ -442,6 +446,9 @@ _imcomp_controller.prototype.format_results_page = function() {
   this.deactivate_results_tabs();
   document.getElementById('results_tabs_default').classList.add('active');
   document.getElementById('left_content_container').style.overflow = 'auto';
+
+  document.getElementById('top_panel').classList.remove('display-none');
+  document.getElementById('banner').classList.add('display-none');
 }
 
 _imcomp_controller.prototype.enable_results_tabs = function() {
@@ -456,19 +463,19 @@ _imcomp_controller.prototype.brighten_instructions = function(panel_id) {
   console.log('in brighten panel id is: ' + panel_id);
   switch (panel_id) {
     case 'step1':
-      document.getElementById('instruction_step1').style.opacity = '1.0';
-      document.getElementById('instruction_step2').style.opacity = '0.5';
-      document.getElementById('instruction_step3').style.opacity = '0.5';
+      document.getElementById('instruction_step1').classList.add('instruction_active');
+      document.getElementById('instruction_step2').classList.remove('instruction_active');
+      document.getElementById('instruction_step3').classList.remove('instruction_active');
       break;
     case 'step3':
-      document.getElementById('instruction_step1').style.opacity = '0.5';
-      document.getElementById('instruction_step2').style.opacity = '1.0';
-      document.getElementById('instruction_step3').style.opacity = '0.5';
+      document.getElementById('instruction_step1').classList.remove('instruction_active');
+      document.getElementById('instruction_step2').classList.add('instruction_active');
+      document.getElementById('instruction_step3').classList.remove('instruction_active');
       break;
     case 'step4':
-  		document.getElementById('instruction_step1').style.opacity = '0.5';
-  		document.getElementById('instruction_step2').style.opacity = '0.5';
-  		document.getElementById('instruction_step3').style.opacity = '1.0';
+      document.getElementById('instruction_step1').classList.remove('instruction_active');
+      document.getElementById('instruction_step2').classList.remove('instruction_active');
+      document.getElementById('instruction_step3').classList.add('instruction_active');
       break;
     default:
   }

@@ -34,6 +34,7 @@
 // @date        Nov 2017
 //
 ////////////////////////////////////////////////////////////////////////////////
+// 'use strict';
 
 function _imcomp_model() {
   this.via = {};
@@ -42,7 +43,7 @@ function _imcomp_model() {
   this.file_count = 0;
   this.fid_to_index = {};
   this.index_to_fid = {};
-  this.fid_to_via_fileid = {};
+  this.fid_to_via_fileid = { 'base':{}, 'comp':{} };
 
   this.upload = [];
   this.upload_scale = {};
@@ -68,7 +69,7 @@ _imcomp_model.prototype.reset_model_state = function( type ) {
   this.via[type].init(via_panel);
   this.init_via_hooks(type);
 
-  this.file_count[type] = 0;
+  this.file_count = 0;
 }
 
 // ensures that only one region is present at any given time
@@ -142,60 +143,50 @@ _imcomp_model.prototype.clear_images = function() {
 
 _imcomp_model.prototype.add_images = function(user_selected_files) {
   console.log('add_images()')
-  this.clear_images();
-  this.files = Array.from(user_selected_files);
-
-  // sort files based on filename
-  this.files.sort(
-    function(a,b) {
-      if( a.name < b.name ) {
-        return -1;
-      }
-      if( a.name > b.name ) {
-        return 1;
-      }
-      return 0;
-    }
-  );
-
-  var n = this.files.length;
+  //this.clear_images();
+  var start = this.files.length;
+  for ( var i = 0; i < user_selected_files.length; ++i ) {
+    this.files.push(user_selected_files[i])
+  }
+  var end = this.files.length;
 
   // @todo: this can be avoided in Promise.all() can operate on this.upload[type]
   //var upload_promises = [];
-  var i;
-  for( i = 0; i < n; i++ ) {
+
+  for( var i = start; i < end; i++ ) {
     // upload image to server
     this.upload_status[i] = {};
     this.set_upload_status(i, '...', 'Queued for upload');
     this.upload[i] = this.upload_file(i);
     //upload_promises.push( this.upload[type][i] ); // @todo: avoid
   }
-  console.log(this.upload);
+
   Promise.all( this.upload ).then( function(result) {
     var n = result.length;
     var i, fid, type;
-    for ( i = 0; i < n; ++i ) {
+    for ( i = start; i < end; ++i ) {
       fid = result[i];
       this.fid_to_index[fid] = i;
       this.index_to_fid[i] = fid;
       this.file_count = this.file_count + 1;
     }
-    console.log('result count = ' + result.length + ', {' + result + '}');
-    console.log('added ' + result.length + ' images');
 
     if ( this.file_count ) {
       // add images to via
       var via_promises = { 'base':[], 'comp':[] };
       for( type in this.c.type_list ) {
-      	for ( i = 0; i < n; ++i ) {
-      	  console.log('[' + i + '] VIA Adding local file to ' + type + ' : ' + this.files[i].name);
+      	for ( var i = start; i < end; ++i ) {
       	  via_promises[type].push( this.via[type].m.add_file_local(this.files[i]) );
       	}
       }
       Promise.all(via_promises['base']).then( function(base_via_fileid) {
-      	this.fid_to_via_fileid['base'] = base_via_fileid;
+        for ( var i = start; i < end; ++i ) {
+          this.fid_to_via_fileid['base'][i] = base_via_fileid[i - start]
+        }
       	Promise.all(via_promises['comp']).then( function(comp_via_fileid) {
-      	  this.fid_to_via_fileid['comp'] = comp_via_fileid;
+          for ( i = start; i < end; ++i ) {
+            this.fid_to_via_fileid['comp'][i] = comp_via_fileid[i - start]
+          }
       	  this.c.on_filelist_update();
       	}.bind(this), function(err) {
       	  console.log('failed to add images to comp VIA');

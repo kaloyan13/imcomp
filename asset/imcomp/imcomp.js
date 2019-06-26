@@ -40,6 +40,24 @@ function _imcomp_user_interface() {
     this.m.init( this.c );
     this.v.init( this.c );
     this.c.init( this.m, this.v );
+
+		/*
+		// // DEBUG:
+		console.log('************************************ _imcomp_set_panel ACTIVE')
+		_imcomp.m.file_count = 3;
+	  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3);
+		document.getElementById('compare_panel').style.display = '';
+		document.getElementById('ref_line_container').style.display = '';
+		document.getElementById('right_content').style.display = '';
+	  document.getElementById('files_panel').style.display = '';
+	  document.getElementById('tab_tools_panel').classList.add('display-none');
+	  document.getElementById('toggle_controls').classList.add('display-none');
+	  document.getElementById('fade_controls').classList.add('display-none');
+		document.getElementById('results_tabs_panel').style.display = 'none';
+
+	  document.getElementById('top_panel').classList.remove('display-none');
+	  document.getElementById('banner').style.display = 'none';
+		*/
   }
 }
 
@@ -63,6 +81,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
 	}
 
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {
+
     if ( _imcomp.m.file_count < 2 ) {
       show_message('To compare, you must add at least two images!');
       _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
