@@ -137,7 +137,7 @@ _imcomp_view.prototype.select_local_files = function() {
 }
 
 _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
-  // all tools in toolsbar at the top
+  // all tools, dropdowns and buttons in toolsbar at the top
   document.getElementById('icon_magnify_div').addEventListener('click', function(e) {
     e.stopPropagation();
     this.c.toolbar_magnify_handler(e);
@@ -162,7 +162,9 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
     e.stopPropagation();
     this.c.toolbar_zoomout_handler(e);
   }.bind(this), false);
-
+  document.getElementById('trnasformation_select').addEventListener('change', function(e) {
+    this.c.algorithm_change_handler(e);
+  }.bind(this), false);
 
   // step 1 panel for files upload
   document.getElementById( 'add_images').addEventListener('click', this, false);

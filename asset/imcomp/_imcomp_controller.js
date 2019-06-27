@@ -53,9 +53,7 @@ function _imcomp_controller() {
   this.compare.end_time = {};
   this.compare.promise = {};  // promise to current compare operation
   this.compare.result = {};
-
-  this.compare_config = {};
-  this.compare_config.algname = 'ransac_dlt'; // {ransac_dlt, robust_ransac_tps}
+  this.compare.algorithm = {};
 
   this.ref_line = {};
 
@@ -345,17 +343,7 @@ _imcomp_controller.prototype.compare_base_comp = function() {
       c.scale2 = this.m.upload_scale[c.findex2];
       this.compare.is_ongoing = true;
       this.compare.promise = this.m.compare_img_pair(c);
-      var exp_comp_time;
-      //var algname = document.querySelector('input[name="algorithm_choice"]:checked').value;
-      var algname = this.compare_config.algname;
-      switch(algname) {
-        case 'ransac_dlt':
-          exp_comp_time = 5;
-          break;
-        case 'robust_ransac_tps':
-          exp_comp_time = 10;
-          break;
-      }
+
       if ( !this.is_base_region_selected() ) {
         show_message('Comparing selected region in images... Please wait. (Larger regions mean longer time)');
       } else {
@@ -1461,4 +1449,21 @@ _imcomp_controller.prototype.toolbar_zoomout_handler = function(e) {
   }
   base_img.style.width = Math.round(base_img.offsetWidth * 0.9) + 'px';
   base_img.style.height = Math.round(base_img.offsetHeight * 0.9) + 'px';
+}
+
+_imcomp_controller.prototype.algorithm_change_handler = function(e) {
+  switch (e.target.value) {
+    case 'identity':
+    case 'translation':
+    case 'affine':
+      this.compare.algorithm = 'ransac_dlt';
+      break;
+    case 'tps':
+      console.log('setting algname to tps');
+      this.compare.algorithm = 'robust_ransac_tps';
+      break;
+    case 'perspective':
+    default: // affine
+      this.compare.algorithm = 'ransac_dlt';
+  }
 }

@@ -402,8 +402,7 @@ _imcomp_model.prototype.compare_img_pair = function(c) {
       }
     }
     args.push('region=' + c.region1.join(','));
-    //var algname = document.querySelector('input[name="algorithm_choice"]:checked').value;
-    var algname = this.c.compare_config.algname;
+    var algname = this.c.compare.algorithm;
     args.push('algname=' + algname);
 
     var cr = new XMLHttpRequest();
