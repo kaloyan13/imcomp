@@ -42,10 +42,13 @@
 </svg>
 
 <div class="imcomp_container">
-  <div id="banner" class="banner"><a href="index.html">Image Comparator</a></div>
+  <!-- <div id="banner" class="banner"><a href="index.html">Image Comparator</a></div> -->
+  <div id="banner" class="banner">
+    <img href="index.html" src="demo/banner_full_1.jpg" alt="img">
+  </div>
 
   <div id="top_panel" class="top_panel display-none">
-    <div id="top_left_logo" class="top_left_logo"><a href="index.html">Image Comparator</a></div>
+    <!-- <div id="top_left_logo" class="top_left_logo"><a href="index.html">Image Comparator</a></div> -->
     <div class="top_right" id="top_right">
       <div class="toolbar">
         <div id="icon_home_div" onclick="_imcomp_set_panel('step1', true)">
@@ -91,7 +94,7 @@
     <option value="translation">Translation</option>
     <option value="affine">Affine</option>
     <option value="tps">Thin Plate Spline</option>
-    <option value="projective">Projective</option>
+    <!-- <option value="projective">Projective</option> -->
   </select>
     <div class="compare_panel">
       <button id="compare_base_comp" type="button" title="Compare the two chosen images">compare</button>
@@ -117,6 +120,19 @@
     </div>
     <div id="step1_text" class="step1_text">
       <button id="add_images" type="button">Click here</button><span> to upload images <br/> or <br/> drag and drop images here</span>
+    </div>
+  </div>
+
+  <!-- <p>Click on the below sample image pairs to try them</p> -->
+  <div id="sample_images_div" class="sample_images_div">
+    <div id="sample_image_set_one" class="sample_images_set">
+      <img src="demo/painting_base.png" alt="img" height="150" >
+      <img src="demo/painting_comp.png" alt="img" height="150" >
+    </div>
+    <div class="demo_space"> </div>
+    <div id="sample_image_set_two" class="sample_images_set">
+      <img src="demo/portrait_base.png" alt="img" height="150" >
+      <img src="demo/portrait_comp.png" alt="img" height="150" >
     </div>
   </div>
 
@@ -180,8 +196,6 @@
           <option value="150">Speed: Fast</option>
           <option value="100">Speed: Very Fast</option>
         </select>
-        <!-- <input id="right_content_toggle" type="checkbox">
-        <label for="right_content_toggle">Comp</label> -->
       </div>
       <div id="fade_controls">
         <label for="base_comp_fader">Left</label>

@@ -1058,7 +1058,7 @@ _via_model.prototype.add_file_local = function(file) {
   var count      = 1;
   var filesource = 'local';
   var filetype   = file.type.substr(0, 5);
-  var filecontent= file
+  var filecontent= file;
 
   return new Promise( function(ok_callback, err_callback) {
     this.add_file(filename, filesize, frame, count, filesource, filetype, filecontent).then( function(fileid) {
@@ -2655,7 +2655,7 @@ _via_ctrl.prototype.set_now_file = function( fileid ) {
         this.v.now.content = document.createElement('img');
         this.v.now.content.setAttribute('id', fileid);
         this.v.now.content.addEventListener('load', function() {
-	  ok_callback();
+	         ok_callback();
         }, false);
 
         break;
@@ -2665,7 +2665,7 @@ _via_ctrl.prototype.set_now_file = function( fileid ) {
         this.v.now.content.setAttribute('autoplay', 'true');
         this.v.now.content.setAttribute('loop', 'true');
         this.v.now.content.addEventListener('canplay', function() {
-	  ok_callback();
+	         ok_callback();
         }, false);
         break;
 

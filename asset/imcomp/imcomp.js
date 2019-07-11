@@ -45,7 +45,7 @@ function _imcomp_user_interface() {
 		// // DEBUG:
 		console.log('************************************ _imcomp_set_panel ACTIVE')
 		_imcomp.m.file_count = 3;
-	  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3);
+	  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, false);
 		document.getElementById('compare_panel').style.display = '';
 		document.getElementById('ref_line_container').style.display = '';
 		document.getElementById('right_content').style.display = '';
@@ -104,7 +104,6 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       blist[i].classList.add('stepn_button_deactivate');
       blist[i].classList.remove('stepn_button_activate');
       document.getElementById(panel_id + '_panel').style.display = 'none';
-      //console.log('deactivate ' + blist[i].id);
     }
   }
 
@@ -149,23 +148,36 @@ function _imcomp_set_panel_content(panel_id, is_navigation) {
 		// show all uploaded files in the files panel
 		document.getElementById('files_panel_header').classList.remove('display-none');
 		document.getElementById('contents_panel_header').classList.remove('display-none');
+		document.getElementById('sample_images_div').style.display = 'none';
 		var fp = document.getElementById('files_panel');
 		if ( !is_navigation ) {
-		  for ( var i = 0; i < _imcomp.m.files.length; i++ ) {
-				var fr = new FileReader();
-				// same for base and comp
-				fr.fid = _imcomp.m.fid_to_via_fileid.base[i];
-				fr.f_idx = i;
-		    fr.addEventListener( 'load', function(e) {
-		    	var img = document.createElement('img');
-					img.setAttribute('draggable', true);
-					// img.setAttribute('id', e.currentTarget.fid);
-					img.setAttribute('id', 'files_panel_file_' + e.currentTarget.f_idx);
-		    	img.setAttribute('src', e.currentTarget.result);
-		    	fp.appendChild(img);
-		    }.bind(this));
+				var start = _imcomp.m.files_upload_start;
+				var end   = _imcomp.m.files_upload_end;
 
-		    fr.readAsDataURL( _imcomp.m.files[i] );
+				for ( var i = start; i < end; i++ ) {
+					if (_imcomp.m.files_upload_mode[i] === 'user') {
+						var fr = new FileReader();
+						// same for base and comp
+						fr.fid = _imcomp.m.fid_to_via_fileid.base[i];
+						fr.f_idx = i;
+				    fr.addEventListener( 'load', function(e) {
+				    	var img = document.createElement('img');
+							img.setAttribute('draggable', true);
+							// img.setAttribute('id', e.currentTarget.fid);
+							img.setAttribute('id', 'files_panel_file_' + e.currentTarget.f_idx);
+				    	img.setAttribute('src', e.currentTarget.result);
+				    	fp.appendChild(img);
+				    }.bind(this));
+						// for the files panel images
+				    fr.readAsDataURL( _imcomp.m.files[i] );
+					} else { // demo images
+						console.log('appending demo images ');
+						var img = document.createElement('img');
+						img.setAttribute('draggable', true);
+						img.setAttribute('id', 'files_panel_file_' + i);
+						img.src = _imcomp.m.demo_files[i];
+						fp.appendChild(img);
+				}
 			}
 	  }
 		_imcomp.c.format_comparison_page();

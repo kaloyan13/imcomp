@@ -29,7 +29,7 @@ body {
 .imcomp_container {
   position:relative;
   display:grid;
-  grid-template-rows:auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   grid-row-gap:0.5em;
   padding:0.3em;
   background-color:#ffffff;
@@ -114,32 +114,11 @@ body {
 }
 .stepn_button_deactivate {
     opacity:0.4 !important;
-/*
-    background-color:#9E9E9E !important;
-    color:black !important;
-*/
 }
 
 .stepn_button_activate {
     opacity:1.0 !important;
 }
-
-/* .step1_content_color {
-    border-top: 1px solid;
-    b#673AB7 !important;
-} */
-
-/* .step2_content_color {
-    border-top: 5px solid #FFC107 !important;
-} */
-
-/* .step3_content_color {
-    border-top: 5px solid #673AB7 !important;
-} */
-
-/* .step4_content_color {
-    border-top: 5px solid #673AB7 !important;
-} */
 
 .panel_content {
   /* margin:0.5rem 0.5rem; */
@@ -155,16 +134,13 @@ body {
 }
 
 .banner {
-  font-size: 5em;
-  padding:1em 0;
-  display: block;
   text-align: center;
   background-color: #673AB7;
+  object-fit: cover;
 }
-.banner a {
-  text-decoration: none;
-  color: #673AB7;
-  color: white;
+.banner img {
+  /* object-fit: cover; */
+  width: 100%;
 }
 
 /* top panel for branding and global settings */
@@ -183,9 +159,18 @@ body {
   text-decoration: none;
   color:white;
 }
-.compare_panel { display:inline; margin-left:2em; }
-.compare_panel button { border:none; border-radius:0.5em; background-color:white; color:#673AB7; width:16em; font-size:1.4em; }
-
+.compare_panel {
+  display:inline;
+  margin-left:2em;
+}
+.compare_panel button {
+  border:none;
+  border-radius:0.5em;
+  background-color:white;
+  color:#673AB7;
+  width:16em;
+  font-size:1.4em;
+}
 /* toolbar  icons on top */
 .toolbar {
   display:inline !important;
@@ -215,7 +200,9 @@ body {
   height: 8rem;
   float: right;
 }
-.top_right { display:inline-block !important; }
+.top_right {
+  display:inline-block !important;
+}
 
 #step1_panel {
   margin-top: 0.5rem;
@@ -252,6 +239,27 @@ body {
 
 #step3_panel .control_panel .space {
   margin-left:2rem;
+}
+.sample_images_div {
+  height: 10rem;
+  border: 1px solid #673AB7;
+  display: flex;
+  /* grid-template-rows: 1fr 1fr 1fr; */
+  text-align: center;
+  width: 100%;
+  padding: 4px;
+}
+.demo_space {
+  width: 4rem;
+}
+/* .sample_images_div p {
+  width: 100%;
+  color: #673AB7;
+  font-size: larger;
+} */
+.sample_images_set {
+  cursor: pointer;
+  background: #673AB7;
 }
 
 #results_tabs_panel {

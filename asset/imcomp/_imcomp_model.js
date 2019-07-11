@@ -40,10 +40,15 @@ function _imcomp_model() {
   this.via = {};
 
   this.files = [];
+  this.demo_files = [];
   this.file_count = 0;
   this.fid_to_index = {};
   this.index_to_fid = {};
   this.fid_to_via_fileid = { 'base':{}, 'comp':{} };
+  // user uploaded or demo files
+  this.files_upload_mode = []; // "user"|"demo"
+  this.files_upload_start = 0;
+  this.files_upload_end = 0;
 
   this.upload = [];
   this.upload_scale = {};
@@ -142,13 +147,13 @@ _imcomp_model.prototype.clear_images = function() {
 }
 
 _imcomp_model.prototype.add_images = function(user_selected_files) {
-  console.log('add_images()')
-  //this.clear_images();
   var start = this.files.length;
+  this.files_upload_start = start;
   for ( var i = 0; i < user_selected_files.length; ++i ) {
-    this.files.push(user_selected_files[i])
+    this.files.push(user_selected_files[i]);
   }
   var end = this.files.length;
+  this.files_upload_end = end;
 
   // @todo: this can be avoided in Promise.all() can operate on this.upload[type]
   //var upload_promises = [];
@@ -157,8 +162,9 @@ _imcomp_model.prototype.add_images = function(user_selected_files) {
     // upload image to server
     this.upload_status[i] = {};
     this.set_upload_status(i, '...', 'Queued for upload');
+    this.files_upload_mode[i] = 'user';
+    // get the promise of a file upload
     this.upload[i] = this.upload_file(i);
-    //upload_promises.push( this.upload[type][i] ); // @todo: avoid
   }
 
   Promise.all( this.upload ).then( function(result) {
@@ -181,13 +187,13 @@ _imcomp_model.prototype.add_images = function(user_selected_files) {
       }
       Promise.all(via_promises['base']).then( function(base_via_fileid) {
         for ( var i = start; i < end; ++i ) {
-          this.fid_to_via_fileid['base'][i] = base_via_fileid[i - start]
+          this.fid_to_via_fileid['base'][i] = base_via_fileid[i - start];
         }
       	Promise.all(via_promises['comp']).then( function(comp_via_fileid) {
           for ( i = start; i < end; ++i ) {
-            this.fid_to_via_fileid['comp'][i] = comp_via_fileid[i - start]
+            this.fid_to_via_fileid['comp'][i] = comp_via_fileid[i - start];
           }
-      	  this.c.on_filelist_update();
+      	  this.c.on_filelist_update(false);
       	}.bind(this), function(err) {
       	  console.log('failed to add images to comp VIA');
       	  console.log(err);
@@ -314,8 +320,7 @@ _imcomp_model.prototype.upload_file = function(findex) {
                 console.log(msg);
               }
             }
-          }
-          catch(e) {
+          } catch(e) {
             var msg = 'Error uploading image! [exception occured]';
             console.log('error except');
             this.set_upload_status(findex, 'ERR', msg);
@@ -446,5 +451,115 @@ _imcomp_model.prototype.compare_img_pair = function(c) {
     cr.open('POST', this.c.config.imcomp_server_compare_uri + '?' + args.join('&'));
     cr.timeout = 40000; // 20 sec
     cr.send();
+  }.bind(this));
+}
+
+_imcomp_model.prototype.fetch_show_demo_pair = function (e) {
+  var start = this.files.length;
+  this.files_upload_start = start;
+  for ( var i = 0; i < this.demo_files.length; ++i ) {
+    console.log('file names are: ', this.demo_files[i].substring(6));
+    this.files.push(this.demo_files[i].substring(6));
+  }
+  var end = this.files.length;
+  this.files_upload_end = end;
+
+  for (var i = start; i < end ; i++) {
+    this.upload_status[i] = {};
+    this.set_upload_status(i, '...', 'Queued for upload');
+
+    this.files_upload_mode[i] = 'demo';
+    // upload the read file and get a unique string
+    this.upload[i] = this.read_and_upload_img(this.demo_files[i]);
+    console.log('upload promise is: ', this.upload[i]);
+  }
+  console.log('uppload done in read_img_file');
+
+  Promise.all( this.upload ).then( function(result) {
+    var n = result.length;
+    var i, fid, type;
+    for (i = 0; i < n; i++) {
+      fid = result[i];
+      this.fid_to_index[fid] = i;
+      this.index_to_fid[i] = fid;
+      this.file_count = this.file_count + 1;
+    }
+    // add images to via
+    if (this.file_count) {
+      console.log('in file count');
+      var via_promises = { 'base':[], 'comp':[] };
+      for( type in this.c.type_list ) {
+        for ( var i = start; i < end; ++i ) {
+          via_promises[type].push( this.via[type].m.add_file_from_url(this.demo_files[i], 'image'));
+        }
+      }
+      Promise.all(via_promises['base']).then( function(base_via_fileid) {
+        for ( var i = start; i < end; ++i ) {
+          this.fid_to_via_fileid['base'][i] = base_via_fileid[i];
+        }
+        Promise.all(via_promises['comp']).then( function(comp_via_fileid) {
+          for ( i = start; i < end; ++i ) {
+            this.fid_to_via_fileid['comp'][i] = comp_via_fileid[i];
+          }
+          // triggers the display of compare page with files panel and view panel
+          this.c.on_filelist_update(true);
+
+        }.bind(this), function(err) {
+          console.log('failed to add images to comp VIA');
+          console.log(err);
+        });
+      }.bind(this), function(err) {
+        console.log('failed to add images to base VIA');
+        console.log(err);
+      });
+    }
+  }.bind(this));
+
+}
+
+_imcomp_model.prototype.read_and_upload_img = function (url) {
+  // a chain of two promises. One to read demo file asynchronously.
+  // The read file is uploaded asynchronously to get a unique filename.
+  return new Promise(function(resolve, reject) {
+    var req = new XMLHttpRequest();
+    var read_response;
+    req.open('GET', url);
+    req.responseType = "arraybuffer";
+
+    req.onload = function() {
+      if (req.status == 200) {
+        read_response = req.response;
+        // pass on to next promise the response text
+        // console.log('resolving read_response', read_response);
+        resolve(read_response);
+      }
+      else {
+        reject(Error(req.statusText));
+      }
+    };
+    req.onerror = function() {
+      reject(Error("Network Error"));
+    };
+    req.send();
+  }).then(function (read_response) {
+    // as addEventListener is async, we need to wrap it around
+    // a promise
+    var p = new Promise(function (resolve, reject) {
+      var uploader = new XMLHttpRequest();
+      var upload_res;
+      uploader.addEventListener('load', function() {
+        upload_res = uploader.responseText;
+        var response = JSON.parse(upload_res);
+        console.log('upload_res is: ', upload_res);
+        resolve(response.fid);
+        console.log('in new promise', upload_res);
+      }.bind(this));
+
+      uploader.open('POST', this.c.config.imcomp_server_upload_uri, true);
+      uploader.setRequestHeader('Content-Type', 'application/octet-stream');
+      uploader.send(read_response);
+
+    }.bind(this)); // end of mew promise
+    return p;
   }.bind(this));
 }

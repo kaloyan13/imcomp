@@ -195,9 +195,9 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
 
   document.getElementById( 'move_to_prev_pair').addEventListener('click', this, false);
   document.getElementById( 'move_to_next_pair').addEventListener('click', this, false);
-
   document.getElementById( 'compare_base_comp').addEventListener('click', this, false);
 
+  // toggle speed change and zoom
   document.getElementById( 'toggle_speed').addEventListener('change', function(e) {
     this.theme.TOGGLE_SPEED = e.target.value;
     this.c.reset_all_toggle();
@@ -271,6 +271,17 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   document.getElementById('left_content_image').addEventListener('mousemove', function(e) {
     this.c.hover_right_left(e);
   }.bind(this), false);
+
+  // demo images in home page
+  document.getElementById('sample_image_set_one').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_two').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+
 }
 
 _imcomp_view.prototype.msg = function(msg, t) {

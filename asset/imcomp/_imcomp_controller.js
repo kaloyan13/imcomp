@@ -175,7 +175,7 @@ _imcomp_controller.prototype.move_to_prev_pair = function() {
   }
 }
 
-_imcomp_controller.prototype.on_filelist_update = function(type) {
+_imcomp_controller.prototype.on_filelist_update = function() {
   var p = document.getElementById('step1_file_added_count');
   p.innerHTML = this.m.file_count + ' files uploaded';
   if ( this.m.file_count < 2 ) {
@@ -187,7 +187,7 @@ _imcomp_controller.prototype.on_filelist_update = function(type) {
   }
   show_message('Added [' + this.m.file_count + '] files. Drag and drop images from top to compare.');
 
-  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3);
+  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, false);
 }
 
 _imcomp_controller.prototype.update_view_filelist = function(type) {
@@ -1466,4 +1466,16 @@ _imcomp_controller.prototype.algorithm_change_handler = function(e) {
     default: // affine
       this.compare.algorithm = 'ransac_dlt';
   }
+}
+
+_imcomp_controller.prototype.show_demo = function(e) {
+  // parent of the img element is the div wrapping it
+  if (e.target.parentNode.id === "sample_image_set_one") {
+    this.m.demo_files = ['demo/painting_base.png', 'demo/painting_comp.png'];
+  }
+  if (e.target.parentNode.id === "sample_image_set_two") {
+    this.m.demo_files = ['demo/portrait_base.png', 'demo/portrait_comp.png'];
+  }
+  console.log('set demo files to: ', this.m.demo_files);
+  this.m.fetch_show_demo_pair(e);
 }
