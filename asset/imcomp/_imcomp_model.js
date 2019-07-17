@@ -563,3 +563,32 @@ _imcomp_model.prototype.read_and_upload_img = function (url) {
     return p;
   }.bind(this));
 }
+
+//
+// Deal with caching mechanism
+//
+// _imcomp_model.prototype.compute_cache_features = function(file_idx) {
+//   var fid = this.index_to_fid[file_idx];
+//   var args = [];
+//   args.push('fid=' + fid);
+//   // args.push('temp=' + 0);
+//
+//   var p = new Promise(function (resolve, reject) {
+//     var cache_req = new XMLHttpRequest();
+//     var cache_res;
+//
+//     cache_req.addEventListener('load', function() {
+//       cache_res = cache_req.responseText;
+//       var response = JSON.parse(cache_res);
+//       console.log('cache_res fid is: ', response.fid);
+//       resolve(response);
+//       // console.log('response for cache request is: ', response);
+//     }.bind(this));
+//
+//     cache_req.open('POST', this.c.config.imcomp_cache_uri + '?' + args.join('&'));
+//     cache_req.setRequestHeader('Content-Type', 'application/octet-stream');
+//     cache_req.send();
+//
+//   }.bind(this));
+//
+// }

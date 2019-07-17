@@ -18,6 +18,8 @@
 #include "imcomp_server_config.h"
 #include "http_server/http_server.h"
 #include "imcomp/imcomp_request_handler.h"
+#include "imcomp/imcomp_cache.h"
+#include "imreg_sift/imreg_sift.h"
 
 #if defined(_WIN32) || defined(WIN32)
   #include <windows.h>
@@ -94,12 +96,18 @@ int main(int argc, char** argv) {
     boost::filesystem::remove_all( result_dir );
     boost::filesystem::create_directories(result_dir);
   }
+
+  // application level cache across all users of the application
+  // TODO: Disabled for now. Enable it as and when needed.
+  imcomp_cache* feat_cache = new imcomp_cache(10);
+
   // this is critical to avoid race conditions for imcomp_request_handler::instance()
-  imcomp_request_handler::instance()->init(upload_dir, result_dir, asset_dir);
+  imcomp_request_handler::instance()->init(upload_dir, result_dir, asset_dir, feat_cache);
 
   http_server server(address, port, thread_pool_size);
   std::ostringstream uri;
-  uri << "http://" << address << ":" << port << "/imcomp/traherne/index.html";
+  // uri << "http://" << address << ":" << port << "/imcomp/traherne/index.html";
+  uri << "http://" << address << ":" << port << "/imcomp/index.html";
 
   std::cout << "\n\nNotes:";
   std::cout << "\n  - To use the application, visit "

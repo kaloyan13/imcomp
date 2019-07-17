@@ -253,6 +253,104 @@ void imreg_sift::get_putative_matches(vector< vector<vl_uint8> >& descriptor_lis
   }
 }
 
+void imreg_sift::get_diff_image(Magick::Image& im1, Magick::Image& im2, Magick::Image& cdiff) {
+  Magick::Image im1g = im1;
+  // const Magick::Image im2g = im2; // for ImageMagick compare function
+  // const Magick:MetricType metric_type = 0;
+  Magick::Image im2g = im2;
+
+  im1g.type(Magick::GrayscaleType);
+  im2g.type(Magick::GrayscaleType);
+
+  high_resolution_clock::time_point before_percent = std::chrono::high_resolution_clock::now();
+
+  const vector<unsigned int> percentile = {5,25};
+  for (int i = 0 ; i < percentile.size() ; ++i) {
+    std::cout << "\n" << percentile[i] << ' ' << flush;
+  }
+
+  vector<double> im1_percentile_values = get_pixel_percentile(im1g, percentile);
+  vector<double> im2_percentile_values = get_pixel_percentile(im2g, percentile);
+
+  high_resolution_clock::time_point after_percent = std::chrono::high_resolution_clock::now();
+  cout << "\n after percent comp is: " << (duration_cast<duration<double>>(after_percent - before_percent)).count() << flush;
+
+  double px1, px2, sum;
+  double del1 = im1_percentile_values.at(0) - im1_percentile_values.at(1);
+  double del2 = im2_percentile_values.at(0) - im2_percentile_values.at(1);
+
+  cout << "\nWriting diff image ... " << flush;
+  for(unsigned int j=0; j<im1g.rows(); j++) {
+    for(unsigned int i=0; i<im1g.columns(); i++) {
+      Magick::ColorGray c1 = im1g.pixelColor(i,j);
+      Magick::ColorGray c2 = im2g.pixelColor(i,j);
+      px1 = ( c1.shade() - im1_percentile_values.at(1) ) / del1;
+      px2 = ( c2.shade() - im2_percentile_values.at(1) ) / del2;
+
+      sum = clamp(px1 + px2, 0.0, 1.0);
+      px1 = clamp(px1, 0.0, 1.0);
+      px2 = clamp(px2, 0.0, 1.0);
+
+      cdiff.pixelColor(i, j, Magick::ColorRGB(1.0 - px1, 1.0 - sum, 1.0 - px2));
+    }
+  }
+
+  // TODO: compare using the ImageMagick function instead of using our own implementation:
+  // double distortion = im1g.compare(im2g, Magick::MetricType::MeanSquaredErrorMetric);
+  // std::cout << "distortion returned is: " << distortion << flush;
+  // cdiff = im1g.compare(im2g, Magick::MetricType::MeanSquaredErrorMetric, &distortion);
+  // cdiff.magick("JPEG");
+  // cdiff.write("/home/shrinivasan/work/traherne/imcomp/temp_diff.jpg");
+  // high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();
+  // cout << "\n after diff comp in fn is: " << (duration_cast<duration<double>>(after_diff - after_percent)).count() << flush;
+}
+
+vector<double> imreg_sift::get_pixel_percentile(Magick::Image& img, const vector<unsigned int> percentile) {
+  size_t npixel = img.rows() * img.columns();
+  vector<double> pixel_values;
+  pixel_values.reserve(npixel);
+  for(unsigned int j=0; j<img.rows(); j++) {
+    for(unsigned int i=0; i<img.columns(); i++) {
+      Magick::ColorGray c = img.pixelColor(i,j);
+      pixel_values.push_back(c.shade());
+    }
+  }
+
+  //sort(pixel_values.begin(), pixel_values.end());
+  vector<double> percentile_values;
+  percentile_values.reserve(percentile.size());
+  for( size_t i = 0; i < percentile.size(); i++ ) {
+    double k = percentile.at(i);
+    // source: https://stackoverflow.com/a/28548904
+    auto nth = pixel_values.begin() + (k * pixel_values.size())/100;
+    std::nth_element(pixel_values.begin(), nth, pixel_values.end());
+    percentile_values.push_back( *nth );
+  }
+
+  return percentile_values;
+}
+
+
+bool imreg_sift::cache_img_with_fid(boost::filesystem::path upload_dir, string fid, imcomp_cache* cache) {
+  // compute sift features for the selected file
+  boost::filesystem::path fn = upload_dir / ( fid + ".jpg");
+  Magick::Image im; im.read( fn.string() );
+  im.type(Magick::TrueColorType);
+
+  // cache the image features
+  vector<VlSiftKeypoint> keypoints;
+  vector< vector<vl_uint8> > descriptors;
+  bool is_cached = cache->get(fid, keypoints, descriptors);
+  if ( !is_cached ) {
+    compute_sift_features(im, keypoints, descriptors, false);
+    cache->put(fid, keypoints, descriptors);
+    cout << "\n Successfully cached fid: " << fid << "features! " << flush;
+    cout << "\n first keypoint is: " << keypoints.at(1).x << " " << keypoints.at(1).y << flush;
+  }
+
+  return true;
+}
+
 void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             double xl, double xu, double yl, double yu,
                             MatrixXd& Hopt, size_t& fp_match_count,
@@ -260,10 +358,24 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             const char diff_image_fn[],
                             const char overlap_image_fn[],
                             bool& success,
-                            std::string& message) {
+                            std::string& message,
+                            imcomp_cache * cache) {
   try {
+    high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
     success = false;
     message = "";
+
+    string im1_file_name(im1_fn);
+    string im2_file_name(im2_fn);
+
+    string base_filename1 = im1_file_name.substr(im1_file_name.find_last_of("/\\") + 1);
+    std::string::size_type const p1(base_filename1.find_last_of('.'));
+    base_filename1 = base_filename1.substr(0, p1);
+
+    string base_filename2 = im2_file_name.substr(im2_file_name.find_last_of("/\\") + 1);
+    std::string::size_type const p2(base_filename2.find_last_of('.'));
+    base_filename2 = base_filename2.substr(0, p2);
 
     Magick::Image im1; im1.read( im1_fn );
     Magick::Image im2; im2.read( im2_fn );
@@ -280,17 +392,41 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
     vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
-    // images are converted to gray scale before processing
-    compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
-    //cout << "\nFilename = " << im1_fn << flush;
-    //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
-    //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
+    high_resolution_clock::time_point before_sift = std::chrono::high_resolution_clock::now();
+    cout << "\n time before sift computation: " << (duration_cast<duration<double>>(before_sift - start)).count() << flush;
 
-    // images are converted to gray scale before processing
+    // check cache before computing features
+    // TODO: Enable when we have a proper implementation of caching mechanism.
+    // Disabled for now.
+    // bool is_im1_cached = cache->get(base_filename1, keypoint_list1, descriptor_list1);
+    // if (is_im1_cached) {
+    //   cout << "\n using cached data for fid: " << base_filename1 << flush;
+    // }
+    // if (!is_im1_cached) {
+    //   // images are converted to gray scale before processing
+    //   compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
+    //   // cache for future use
+    //   cache->put(base_filename1, keypoint_list1, descriptor_list1);
+    //   cout << "\n successfully cached fid: " << base_filename1 << flush;
+    // }
+    // cout << "\n cached first keypoint is: " << keypoint_list1.at(1).x << " " << keypoint_list1.at(1).y << flush;
+    //
+    // bool is_im2_cached = cache->get(base_filename2, keypoint_list2, descriptor_list2);
+    // if (is_im2_cached) {
+    //   cout << "\n using cached data for fid: " << base_filename2 << flush;
+    // }
+    // if (!is_im2_cached) {
+    //   // images are converted to gray scale before processing
+    //   compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
+    //   // cache for future use
+    //   cache->put(base_filename2, keypoint_list2, descriptor_list2);
+    //   cout << "\n successfully cached fid: " << base_filename2 << flush;
+    // }
+    // cout << "\n second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << flush;
+
+    // compute SIFT features without caching
+    compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
     compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
-    //cout << "\nFilename = " << im2_fn << flush;
-    //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
-    //cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
 
     // use Lowe's 2nd nn test to find putative matches
     float threshold = 1.5f;
@@ -299,6 +435,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     size_t n_match = putative_matches.size();
     fp_match_count = n_match;
     //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
+    // high_resolution_clock::time_point after_putative_match = std::chrono::high_resolution_clock::now();
+    // cout << "\n time after putative match computation: " << (duration_cast<duration<double>>(after_putative_match - after_second_sift)).count() << flush;
 
     if( n_match < 9 ) {
       message = "Number of feature points that match are very low";
@@ -403,6 +541,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
         best_inliers_index.swap(inliers_index);
       }
     } // end RANSAC_ITER_COUNT loop
+    // high_resolution_clock::time_point after_ransac = std::chrono::high_resolution_clock::now();
+    // cout << "\n after ransac is: " << (duration_cast<duration<double>>(after_ransac - after_putative_match)).count() << flush;
 
     if( max_score < 3 ) {
       message = "Failed to find a suitable transformation";
@@ -470,10 +610,16 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // overlap.write(overlap_image_fn);
     im2t_crop.write(overlap_image_fn);
 
+    high_resolution_clock::time_point before_diff = std::chrono::high_resolution_clock::now();
+    // cout << "\n before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
+
     // difference image
     Magick::Image cdiff(im1_crop.size(), "black");
     get_diff_image(im1_crop, im2t_crop, cdiff);
     cdiff.write(diff_image_fn);
+
+    high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();
+    cout << "\n after diff image comp is: " << (duration_cast<duration<double>>(after_diff - before_diff)).count() << flush;
 
     success = true;
     message = "";
@@ -486,61 +632,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
   }
 }
 
-void imreg_sift::get_diff_image(Magick::Image& im1, Magick::Image& im2, Magick::Image& cdiff) {
-  Magick::Image im1g = im1;
-  Magick::Image im2g = im2;
-  im1g.type(Magick::GrayscaleType);
-  im2g.type(Magick::GrayscaleType);
-
-  const vector<unsigned int> percentile = {5,25};
-  vector<double> im1_percentile_values = get_pixel_percentile(im1g, percentile);
-  vector<double> im2_percentile_values = get_pixel_percentile(im2g, percentile);
-
-  double px1, px2, sum;
-  double del1 = im1_percentile_values.at(0) - im1_percentile_values.at(1);
-  double del2 = im2_percentile_values.at(0) - im2_percentile_values.at(1);
-
-  //cout << "\nWriting diff image ... " << flush;
-  for(unsigned int j=0; j<im1g.rows(); j++) {
-    for(unsigned int i=0; i<im1g.columns(); i++) {
-      Magick::ColorGray c1 = im1g.pixelColor(i,j);
-      Magick::ColorGray c2 = im2g.pixelColor(i,j);
-      px1 = ( c1.shade() - im1_percentile_values.at(1) ) / del1;
-      px2 = ( c2.shade() - im2_percentile_values.at(1) ) / del2;
-
-      sum = clamp(px1 + px2, 0.0, 1.0);
-      px1 = clamp(px1, 0.0, 1.0);
-      px2 = clamp(px2, 0.0, 1.0);
-
-      cdiff.pixelColor(i, j, Magick::ColorRGB(1.0 - px1, 1.0 - sum, 1.0 - px2));
-    }
-  }
-}
-
-vector<double> imreg_sift::get_pixel_percentile(Magick::Image& img, const vector<unsigned int> percentile) {
-  size_t npixel = img.rows() * img.columns();
-  vector<double> pixel_values;
-  pixel_values.reserve(npixel);
-  for(unsigned int j=0; j<img.rows(); j++) {
-    for(unsigned int i=0; i<img.columns(); i++) {
-      Magick::ColorGray c = img.pixelColor(i,j);
-      pixel_values.push_back(c.shade());
-    }
-  }
-
-  //sort(pixel_values.begin(), pixel_values.end());
-  vector<double> percentile_values;
-  percentile_values.reserve(percentile.size());
-  for( size_t i = 0; i < percentile.size(); i++ ) {
-    double k = percentile.at(i);
-    // source: https://stackoverflow.com/a/28548904
-    auto nth = pixel_values.begin() + (k * pixel_values.size())/100;
-    std::nth_element(pixel_values.begin(), nth, pixel_values.end());
-    percentile_values.push_back( *nth );
-  }
-
-  return percentile_values;
-}
 
 ///
 /// Robust matching and Thin Plate Spline based image registration
@@ -559,13 +650,26 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
                                    const char diff_image_fn[],
                                    const char overlap_image_fn[],
                                    bool& success,
-                                   std::string& message) {
+                                   std::string& message,
+                                   imcomp_cache * cache) {
   try {
-    //auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
+
     success = false;
     message = "";
     Magick::Image im1; im1.read( im1_fn );
     Magick::Image im2; im2.read( im2_fn );
+
+    string im1_file_name(im1_fn);
+    string im2_file_name(im2_fn);
+
+    string base_filename1 = im1_file_name.substr(im1_file_name.find_last_of("/\\") + 1);
+    std::string::size_type const p1(base_filename1.find_last_of('.'));
+    base_filename1 = base_filename1.substr(0, p1);
+
+    string base_filename2 = im2_file_name.substr(im2_file_name.find_last_of("/\\") + 1);
+    std::string::size_type const p2(base_filename2.find_last_of('.'));
+    base_filename2 = base_filename2.substr(0, p2);
 
     // to ensure that image pixel values are 8bit RGB
     im1.type(Magick::TrueColorType);
@@ -579,17 +683,39 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
     vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
-    //cout << "\nComputing SIFT features for im1 ..." << flush;
-    compute_sift_features(im1_g, keypoint_list1, descriptor_list1);
-    //cout << "\nFilename = " << filename1 << flush;
-    //cout << "\n  keypoint_list = " << keypoint_list1.size() << flush;
-    //cout << "\n  descriptor_list = " << descriptor_list1.size() << flush;
+    // check cache before computing features
+    // TODO: Enable when we have a proper implementation of caching.
+    // Disabled for now.
+    // bool is_im1_cached = cache->get(base_filename1, keypoint_list1, descriptor_list1);
+    // if (is_im1_cached) {
+    //   cout << "\n using cached data for fid: " << base_filename1 << flush;
+    // }
+    // if (!is_im1_cached) {
+    //   // images are converted to gray scale before processing
+    //   compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
+    //   // cache for future use
+    //   cache->put(base_filename1, keypoint_list1, descriptor_list1);
+    //   cout << "\n successfully cached fid: " << base_filename1 << flush;
+    // }
+    // cout << "\n cached first keypoint is: " << keypoint_list1.at(1).x << " " << keypoint_list1.at(1).y << flush;
+    //
+    // bool is_im2_cached = cache->get(base_filename2, keypoint_list2, descriptor_list2);
+    // if (is_im2_cached) {
+    //   cout << "\n using cached data for fid: " << base_filename2 << flush;
+    // }
+    // if (!is_im2_cached) {
+    //   // images are converted to gray scale before processing
+    //   compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
+    //   // cache for future use
+    //   cache->put(base_filename2, keypoint_list2, descriptor_list2);
+    //   cout << "\n successfully cached fid: " << base_filename2 << flush;
+    // }
+    // cout << "\n second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << flush;
 
-    //cout << "\nComputing SIFT features for im2 ..." << flush;
+
+    // Compute SIFT features without caching.
+    compute_sift_features(im1_g, keypoint_list1, descriptor_list1);
     compute_sift_features(im2_g, keypoint_list2, descriptor_list2);
-    //cout << "\nFilename = " << filename2 << flush;
-    //cout << "\n  keypoint_list = " << keypoint_list2.size() << flush;
-    //cout << "\n  descriptor_list = " << descriptor_list2.size() << flush;
 
     // use Lowe's 2nd nn test to find putative matches
     float threshold = 1.5f;

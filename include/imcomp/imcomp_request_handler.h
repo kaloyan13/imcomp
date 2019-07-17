@@ -29,6 +29,7 @@
 
 #include "util/strutil.h"
 #include "imreg_sift/imreg_sift.h"
+#include "imcomp/imcomp_cache.h"
 
 using namespace std;
 using namespace Eigen;
@@ -38,6 +39,7 @@ class imcomp_request_handler {
   boost::filesystem::path upload_dir_;
   boost::filesystem::path result_dir_;
   boost::filesystem::path asset_dir_;
+  imcomp_cache* cache_;
 
   imcomp_request_handler() { };
   imcomp_request_handler(const imcomp_request_handler& sh) { };
@@ -65,7 +67,8 @@ class imcomp_request_handler {
 
   void init(const boost::filesystem::path upload_dir,
             const boost::filesystem::path result_dir,
-            const boost::filesystem::path asset_dir);
+            const boost::filesystem::path asset_dir,
+            imcomp_cache * cache);
   void handle_http_request(const http_request& request, http_response& response);
 };
 #endif

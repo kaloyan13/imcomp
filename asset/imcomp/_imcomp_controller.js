@@ -46,6 +46,7 @@ function _imcomp_controller() {
   this.config.upload.MAX_IMG_DIM_PX = 1200;
   this.config.imcomp_server_upload_uri = "/imcomp/_upload";
   this.config.imcomp_server_compare_uri = "/imcomp/_compare";
+  this.config.imcomp_cache_uri = "/imcomp/_cache";
 
   this.compare = {};
   this.compare.is_ongoing = false;
@@ -135,6 +136,9 @@ _imcomp_controller.prototype.file_dropped = function(img_elem_id, type) {
   if ( type === 'comp' ) {
     this.set_now('comp', file_idx);
   }
+
+  // make an async request to pre-compute features and cache them
+  // this.m.compute_cache_features(file_idx);
 }
 
 _imcomp_controller.prototype.move_to_next = function(type) {

@@ -30,8 +30,11 @@ extern "C" {
 
 #include <Magick++.h>
 
+#include <imcomp/imcomp_cache.h>
+
 using namespace Eigen;
 using namespace std;
+using namespace std::chrono;
 
 class imreg_sift {
  public:
@@ -44,7 +47,8 @@ class imreg_sift {
                          const char diff_image_fn[],
                          const char overlap_image_fn[],
                          bool& success,
-                         std::string& message);
+                         std::string& message,
+                         imcomp_cache* cache);
 
   // Applies robust filtering of point correspondences and uses Thin Plate Spline for image registration
   //
@@ -60,7 +64,12 @@ class imreg_sift {
                                 const char diff_image_fn[],
                                 const char overlap_image_fn[],
                                 bool& success,
-                                std::string& message);
+                                std::string& message,
+                                imcomp_cache* cache);
+
+ // Computes image features for a give uploaded file with a unique file id
+ // and caches the features to imrpove performance.
+ static bool cache_img_with_fid(boost::filesystem::path upload_dir, std::string fid, imcomp_cache* cache);
 
  private:
   // implementation of Direct Linear Transform (DLT)

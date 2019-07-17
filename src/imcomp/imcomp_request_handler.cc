@@ -11,10 +11,13 @@ imcomp_request_handler* imcomp_request_handler::instance() {
 
 void imcomp_request_handler::init(const boost::filesystem::path upload_dir,
                                   const boost::filesystem::path result_dir,
-                                  const boost::filesystem::path asset_dir) {
+                                  const boost::filesystem::path asset_dir,
+                                  imcomp_cache * cache) {
   upload_dir_ = upload_dir;
   result_dir_ = result_dir;
   asset_dir_ = asset_dir;
+  cache_ = cache;
+
   cout << "\nImageMagick Magick++ quantum depth = " << MAGICKCORE_QUANTUM_DEPTH << flush;
   cout << "\nimcomp_request_handler::init() : initializing http request handler" << flush;
   cout << "\nimcomp_request_handler::init() : upload_dir=" << upload_dir_.string() << flush;
@@ -184,7 +187,17 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                       diff_fn.string().c_str(),
                                       overlap_fn.string().c_str(),
                                       success,
-                                      message);
+                                      message,
+                                      cache_);
+      } else if (algname == "identity") {
+        // TODO: implement
+        cout << "\n in identity transform " << flush;
+      } else if (algname == "translation") {
+        // TODO: implement
+        cout << "\n in identity transform " << flush;
+      } else if (algname == "projective") {
+        // TODO: implement
+        cout << "\n in identity transform " << flush;
       } else {
         imreg_sift::ransac_dlt(im1_fn.string().c_str(),
                                im2_fn.string().c_str(),
@@ -197,7 +210,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                diff_fn.string().c_str(),
                                overlap_fn.string().c_str(),
                                success,
-                               message);
+                               message,
+                               cache_);
       }
 
       std::ostringstream json;
@@ -232,6 +246,31 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
     }
     return;
   }
+
+  // TODO: pre-compute features when the user drags and drops images for comparison
+  // if ( util::begins_with(request.uri_, "/imcomp/_cache") && request.method_ == "POST" ) {
+  //   cout << "\nreceived request to cache " << flush;
+  //   map<string,string> uri_arg;
+  //   bool req_success   = request.parse_uri(uri_arg);
+  //   bool cache_success = false;
+  //
+  //   cout << "\n parse uri success: " << req_success << flush;
+  //
+  //   if(req_success) {
+  //     string fid = uri_arg["fid"];
+  //     cout << "\nin server fid is: " << fid << flush;
+  //
+  //     cache_success = imreg_sift::cache_img_with_fid(upload_dir_, fid, cache_);
+  //
+  //     if (cache_success) {
+  //       response.set_field("Content-Type", "application/json");
+  //       string payload = "{\"fid\":\"" + fid + "\"}";
+  //       response.set_payload(payload);
+  //     }
+  //   }
+  //
+  //   return;
+  // }
 
   response.set_status(400);
 }
