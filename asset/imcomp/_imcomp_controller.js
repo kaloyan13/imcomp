@@ -135,6 +135,7 @@ _imcomp_controller.prototype.file_dropped = function(img_elem_id, type) {
   }
   if ( type === 'comp' ) {
     this.set_now('comp', file_idx);
+    show_instruction("Click compare to compare both the images. Optionally draw a region on the left image to compare image regions.");
   }
 
   // make an async request to pre-compute features and cache them
@@ -189,7 +190,7 @@ _imcomp_controller.prototype.on_filelist_update = function() {
   if ( this.m.file_count > 1 ) {
     document.getElementById('step1_files_added_nav').classList.remove('display-none');
   }
-  show_message('Added [' + this.m.file_count + '] files. Drag and drop images from top to compare.');
+  // show_message('Added [' + this.m.file_count + '] files. Drag and drop images from top to compare.');
 
   _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, false);
 }
@@ -418,6 +419,11 @@ _imcomp_controller.prototype.format_comparison_page = function() {
 
   document.getElementById('top_panel').classList.remove('display-none');
   document.getElementById('banner').style.display = 'none';
+
+  document.getElementById('instructions_panel').style.display = 'block';
+  show_instruction('Select images by dragging them from the Files Panel and dropping them on the View Panel.');
+
+  document.getElementById('left_content_container').style.height = '66vh';
 }
 
 _imcomp_controller.prototype.format_results_page = function() {
@@ -437,10 +443,11 @@ _imcomp_controller.prototype.format_results_page = function() {
   this.set_toggle('base');
   this.deactivate_results_tabs();
   document.getElementById('results_tabs_default').classList.add('active');
-  document.getElementById('left_content_container').style.overflow = 'auto';
+  document.getElementById('left_content_container').style.height = 'auto';
 
   document.getElementById('top_panel').classList.remove('display-none');
   document.getElementById('banner').classList.add('display-none');
+  document.getElementById('instructions_panel').style.display = 'none';
 }
 
 _imcomp_controller.prototype.enable_results_tabs = function() {
@@ -1301,7 +1308,7 @@ _imcomp_controller.prototype.hover_right_left = function(e) {
   var base_width = document.getElementById('left_content_img_panel').offsetWidth;
   var base_width = left_img_div.offsetWidth;
   // if we are more than half the image distance, we switch to left image
-  if ( x < (base_width / 2) ) {
+  if ( x <= (base_width / 2) ) {
     left_img_div.src = this.get_content_url('base', 'base_crop');
   } else {
     left_img_div.src = this.get_content_url('comp', 'comp_crop_tx');
@@ -1415,6 +1422,8 @@ _imcomp_controller.prototype.toolbar_back_handler = function(e) {
   }
   if ( this.toolbar.current_page === "result" ) {
     _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, true);
+    this.set_now('base', 0);
+    this.set_now('comp', 1);
     this.toolbar.current_page = "compare";
     // remove all divs that could have been added in results page
     this.remove_overlay_elem();
@@ -1474,11 +1483,29 @@ _imcomp_controller.prototype.algorithm_change_handler = function(e) {
 
 _imcomp_controller.prototype.show_demo = function(e) {
   // parent of the img element is the div wrapping it
-  if (e.target.parentNode.id === "sample_image_set_one") {
+  if (e.target.parentNode.id === "sample_image_set_one_base" ||
+      e.target.parentNode.id === "sample_image_set_one_comp") {
     this.m.demo_files = ['demo/painting_base.png', 'demo/painting_comp.png'];
   }
-  if (e.target.parentNode.id === "sample_image_set_two") {
+  if (e.target.parentNode.id === "sample_image_set_two_base" ||
+      e.target.parentNode.id === "sample_image_set_two_comp") {
     this.m.demo_files = ['demo/portrait_base.png', 'demo/portrait_comp.png'];
+  }
+  if (e.target.parentNode.id === "sample_image_set_three_base" ||
+  e.target.parentNode.id === "sample_image_set_three_comp") {
+    this.m.demo_files = ['demo/cartoon_base.png', 'demo/cartoon_comp.png'];
+  }
+  if (e.target.parentNode.id === "sample_image_set_four_base" ||
+      e.target.parentNode.id === "sample_image_set_four_comp") {
+    this.m.demo_files = ['demo/book1_base.jpg', 'demo/book1_comp.jpg'];
+  }
+  if (e.target.parentNode.id === "sample_image_set_five_base" ||
+      e.target.parentNode.id === "sample_image_set_five_comp" ) {
+    this.m.demo_files = ['demo/book2_base.jpg', 'demo/book2_comp.jpg'];
+  }
+  if (e.target.parentNode.id === "sample_image_set_six_base" ||
+      e.target.parentNode.id === "sample_image_set_six_comp") {
+    this.m.demo_files = ['demo/book3_base.jpg', 'demo/book3_comp.jpg'];
   }
   console.log('set demo files to: ', this.m.demo_files);
   this.m.fetch_show_demo_pair(e);

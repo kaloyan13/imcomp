@@ -273,15 +273,54 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   }.bind(this), false);
 
   // demo images in home page
-  document.getElementById('sample_image_set_one').addEventListener('click', function(e) {
+  document.getElementById('sample_image_set_one_base').addEventListener('click', function(e) {
     e.stopPropagation();
     this.c.show_demo(e);
   }.bind(this), false);
-  document.getElementById('sample_image_set_two').addEventListener('click', function(e) {
+  document.getElementById('sample_image_set_one_comp').addEventListener('click', function(e) {
     e.stopPropagation();
     this.c.show_demo(e);
   }.bind(this), false);
-
+  document.getElementById('sample_image_set_two_base').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_two_comp').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_three_base').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_three_comp').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_four_base').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_four_comp').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_five_base').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_five_comp').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_six_base').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
+  document.getElementById('sample_image_set_six_comp').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.show_demo(e);
+  }.bind(this), false);
 }
 
 _imcomp_view.prototype.msg = function(msg, t) {

@@ -78,6 +78,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
 	if ( panel_id === IMCOMP_PANEL_NAME.STEP1 ) {
 		document.getElementById('top_right').style.display = 'none';
 		document.getElementById('step1_text').style.border = '';
+		document.getElementById('instructions_panel').style.display = 'none';
 	}
 
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {
@@ -88,7 +89,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       return;
     }
 		document.getElementById('top_right').style.display = '';
-		show_message('Please draw a region with your mouse on the left image and click compare. Or click compare to compare the whole image.');
+		// show_message('Please draw a region with your mouse on the left image and click compare. Or click compare to compare the whole image.');
   }
 
   // update all buttons
@@ -137,8 +138,10 @@ function _imcomp_set_panel_content(panel_id, is_navigation) {
     console.log(_imcomp.c.type_list)
     for ( var type in _imcomp.c.type_list ) {
       _imcomp.c.update_view_filelist(type);
-      _imcomp.c.set_now(type, img_index);
-      img_index = img_index + 1;
+
+      // _imcomp.c.set_now(type, img_index);
+
+			img_index = img_index + 1;
 
       var sid_suffix = type + '_via';
       _imcomp.c.content_selector_set_state(type, sid_suffix, true);
@@ -379,4 +382,8 @@ function show_message(msg, t) {
   _via_message_clear_timer = setTimeout( function() {
     document.getElementById('message_panel').style.display = 'none';
   }, timeout);
+}
+
+function show_instruction(msg) {
+	document.getElementById('instructions_panel').innerHTML = msg;
 }

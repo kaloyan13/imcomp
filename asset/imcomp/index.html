@@ -44,7 +44,7 @@
 <div class="imcomp_container">
   <!-- <div id="banner" class="banner"><a href="index.html">Image Comparator</a></div> -->
   <div id="banner" class="banner">
-    <img href="index.html" src="demo/banner_full_1.jpg" alt="img">
+    <img href="index.html" src="demo/banner_full.jpg" alt="img">
   </div>
 
   <div id="top_panel" class="top_panel display-none">
@@ -88,14 +88,15 @@
         </div>
       </div>
     </div>
-    <select id="trnasformation_select">
-    <option value="affine">Select a Transform</option>
-    <option value="identity">Identity</option>
-    <option value="translation">Translation</option>
-    <option value="affine">Affine</option>
-    <option value="tps">Thin Plate Spline</option>
-    <!-- <option value="projective">Projective</option> -->
-  </select>
+
+    <select name="transform" id="trnasformation_select">
+      <option value="affine">Select a Transform</option>
+      <!-- <option value="identity">Identity</option>
+      <option value="translation">Translation</option> -->
+      <option value="affine">Affine</option>
+      <option value="tps">Thin Plate Spline</option>
+    </select>
+
     <div class="compare_panel">
       <button id="compare_base_comp" type="button" title="Compare the two chosen images">compare</button>
     </div>
@@ -125,14 +126,62 @@
 
   <!-- <p>Click on the below sample image pairs to try them</p> -->
   <div id="sample_images_div" class="sample_images_div">
-    <div id="sample_image_set_one" class="sample_images_set">
-      <img src="demo/painting_base.png" alt="img" height="150" >
-      <img src="demo/painting_comp.png" alt="img" height="150" >
+    <div class="sample_images_div_row">
+      <div id="sample_image_set_one_base" class="sample_images_set">
+        <img src="demo/painting_base.png" alt="img" height="150" >
+      </div>
+      <div id="sample_image_set_one_comp" class="sample_images_set">
+        <img src="demo/painting_comp.png" alt="img" height="150" >
+      </div>
     </div>
     <div class="demo_space"> </div>
-    <div id="sample_image_set_two" class="sample_images_set">
-      <img src="demo/portrait_base.png" alt="img" height="150" >
-      <img src="demo/portrait_comp.png" alt="img" height="150" >
+    <div class="sample_images_div_row">
+      <div id="sample_image_set_two_base" class="sample_images_set">
+        <img src="demo/portrait_base.png" alt="img" height="150" >
+      </div>
+      <div id="sample_image_set_two_comp" class="sample_images_set">
+        <img src="demo/portrait_comp.png" alt="img" height="150" >
+      </div>
+    </div>
+
+    <div class="demo_space"> </div>
+    <div class="sample_images_div_row">
+      <div id="sample_image_set_three_base" class="sample_images_set">
+        <img src="demo/cartoon_base.png" alt="img" height="150" >
+      </div>
+      <div id="sample_image_set_three_comp" class="sample_images_set">
+        <img src="demo/cartoon_comp.png" alt="img" height="150" >
+      </div>
+    </div>
+
+    <div class="demo_space"> </div>
+    <div class="sample_images_div_row">
+      <div id="sample_image_set_four_base" class="sample_images_set">
+        <img src="demo/book1_base.jpg" alt="img" height="150" >
+      </div>
+      <div id="sample_image_set_four_comp" class="sample_images_set">
+        <img src="demo/book1_comp.jpg" alt="img" height="150" >
+      </div>
+    </div>
+
+    <div class="demo_space"> </div>
+    <div class="sample_images_div_row">
+      <div id="sample_image_set_five_base" class="sample_images_set">
+        <img src="demo/book2_base.jpg" alt="img" height="150" >
+      </div>
+      <div id="sample_image_set_five_comp" class="sample_images_set">
+        <img src="demo/book2_comp.jpg" alt="img" height="150" >
+      </div>
+    </div>
+
+    <div class="demo_space"> </div>
+    <div class="sample_images_div_row">
+      <div id="sample_image_set_six_base" class="sample_images_set">
+        <img src="demo/book3_base.jpg" alt="img" height="150" >
+      </div>
+      <div id="sample_image_set_six_comp" class="sample_images_set">
+        <img src="demo/book3_comp.jpg" alt="img" height="150" >
+      </div>
     </div>
   </div>
 
@@ -142,6 +191,8 @@
     </div>
     <p><button onclick="_imcomp_set_panel('step3', false)">Next</button></p>
   </div> -->
+
+  <div id="instructions_panel" style="display: none"></div>
 
   <!-- Panel to visualize image comparison result -->
   <div id="step3_panel" class="panel_content step3_content_color">
