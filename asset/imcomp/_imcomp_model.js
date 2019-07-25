@@ -395,13 +395,12 @@ _imcomp_model.prototype.set_compare_status = function(status, msg) {
 _imcomp_model.prototype.compare_img_pair = function(c) {
   return new Promise( function(ok_callback, err_callback) {
     console.log('comparing images: ' + c.upload_id1 + ', ' + c.upload_id2);
-    this.c.on_compare_start();
     var args = [];
     args.push('file1=' + c.upload_id1);
     args.push('file2=' + c.upload_id2);
 
     // resize the img1 region based on the scaling of upload image
-    if( c.scale1 != 1.0 ) {
+    if( typeof c.scale1 !== 'undefined' && c.scale1 != 1.0 ) {
       for( var i=0; i<c.region1.length; i++ ) {
         c.region1[i] = Math.round( c.region1[i] * c.scale1 );
       }
@@ -447,6 +446,8 @@ _imcomp_model.prototype.compare_img_pair = function(c) {
       }
     }.bind(this));
 
+    // notifto time the compare
+    this.c.on_compare_start();
 
     cr.open('POST', this.c.config.imcomp_server_compare_uri + '?' + args.join('&'));
     cr.timeout = 40000; // 20 sec
