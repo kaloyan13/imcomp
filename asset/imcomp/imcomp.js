@@ -78,13 +78,13 @@ function _imcomp_set_panel(panel_id, is_navigation) {
 	if ( panel_id === IMCOMP_PANEL_NAME.STEP1 ) {
 		document.getElementById('top_right').style.display = 'none';
 		document.getElementById('step1_text').style.border = '';
-		document.getElementById('instructions_panel').style.display = 'none';
+		show_instruction("Upload at least two of your images below to compare them. <br/> Or try our demo images at the bottom of the page by clicking on them.");
 	}
 
   if ( panel_id === IMCOMP_PANEL_NAME.STEP3 ) {
 
     if ( _imcomp.m.file_count < 2 ) {
-      show_message('To compare, you must add at least two images!');
+			show_instruction("Please upload at least two images before moving to the next step.");
       _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
       return;
     }
@@ -385,5 +385,5 @@ function show_message(msg, t) {
 }
 
 function show_instruction(msg) {
-	document.getElementById('instructions_panel').innerHTML = msg;
+	document.getElementById('instructions_panel_p').innerHTML = msg;
 }

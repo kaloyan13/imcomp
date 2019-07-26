@@ -135,7 +135,7 @@ _imcomp_controller.prototype.file_dropped = function(img_elem_id, type) {
   }
   if ( type === 'comp' ) {
     this.set_now('comp', file_idx);
-    show_instruction("Click compare to compare both the images. Optionally draw a region on the left image to compare image regions.");
+    show_instruction("Click compare to compare both the images. You may also draw a region on the left image to compare image regions.<br/> Optionally you may select a transform before clicking compare.");
   }
 
   // make an async request to pre-compute features and cache them
@@ -327,12 +327,6 @@ _imcomp_controller.prototype.compare_base_comp = function() {
     via.c.add_region_from_nvertex();
     via.v.nvertex.splice(0);
   }
-  // some logging
-  var c = new _imcomp_compare_instance(findex1, findex2);
-  console.log('via base is: ');
-  console.log(this.m.via['base']);
-  // console.log(this.m.via['base'].v.now.tform.content_width);
-  // console.log(this.m.via['base'].v.now.tform.content_height);
 
   var findex1 = this.v.now['base'].findex;
   var findex2 = this.v.now['comp'].findex;
@@ -421,9 +415,10 @@ _imcomp_controller.prototype.format_comparison_page = function() {
   document.getElementById('banner').style.display = 'none';
 
   document.getElementById('instructions_panel').style.display = 'block';
-  show_instruction('Select images by dragging them from the Files Panel and dropping them on the View Panel.');
+  show_instruction("Select images by dragging them from the Files Panel and dropping them on the View Panel.");
 
   document.getElementById('left_content_container').style.height = '66vh';
+  document.getElementById('left_content_container').classList.add('imcomp_border');
 }
 
 _imcomp_controller.prototype.format_results_page = function() {
@@ -447,7 +442,20 @@ _imcomp_controller.prototype.format_results_page = function() {
 
   document.getElementById('top_panel').classList.remove('display-none');
   document.getElementById('banner').classList.add('display-none');
-  document.getElementById('instructions_panel').style.display = 'none';
+  show_instruction("Visualize results in different ways by clicking on the tabs below. <br/> You may also zoom in, zoom out and magnify regions using the toolbar on the top left of the page.");
+
+  var base_img = document.getElementById('left_content_image');
+  console.log('img width is: ', base_img.width);
+  console.log('img height is: ', base_img.height);
+
+  document.getElementById('left_content_container').classList.remove('imcomp_border');
+
+  // document.getElementById('left_content_container').style.overflowY = 'scroll';
+  // base_img.style.height = '600px';
+  // base_img.style.height = Math.round(base_img.offsetHeight * 0.9) + 'px';
+  // var slide_img = document.getElementById('hor_slide_overlay_img');
+  // slide_img.style.width = Math.round(slide_img.offsetWidth * 0.8) + 'px';
+  // slide_img.style.height = Math.round(slide_img.offsetHeight * 0.8) + 'px';
 }
 
 _imcomp_controller.prototype.enable_results_tabs = function() {
@@ -459,7 +467,6 @@ _imcomp_controller.prototype.enable_results_tabs = function() {
 }
 
 _imcomp_controller.prototype.brighten_instructions = function(panel_id) {
-  console.log('in brighten panel id is: ' + panel_id);
   switch (panel_id) {
     case 'step1':
       document.getElementById('instruction_step1').classList.add('instruction_active');
@@ -501,6 +508,23 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       this.set_toggle('base');
       this.remove_slider_elem('all');
       this.remove_overlay_elem();
+      break;
+
+    case 'results_tabs_overlay':
+      var slide_elem = document.getElementById('base_comp_fader');
+      document.getElementById('base_comp_fader').value = 50;
+      document.getElementById('base_comp_fader_value').innerHTML = 50;
+      var sid_suffix = this.get_sid_suffix_for_results_tab(e);
+      this.set_content(container_type, sid_suffix);
+      this.clear_toggle('base');
+      this.remove_overlay_elem();
+      this.remove_slider_elem('all');
+      // fader at 50% is overlay
+      this.add_fader_overlay();
+      // reset any zoom done before
+      var base_img = document.getElementById('left_content_image');
+      base_img.style.width = this.results.canvas_width;
+      base_img.style.height = this.results.canvas_height;
       break;
 
     case 'results_tabs_toggle':
@@ -671,12 +695,11 @@ _imcomp_controller.prototype.get_sid_suffix_for_results_tab = function(e) {
   case 'results_tabs_default':
     sid_suffix = 'base_crop';
     break;
-  case 'results_tabs_overlay':
-    sid_suffix = 'base_comp_overlap';
-    break;
   case 'results_tabs_diff':
     sid_suffix = 'base_comp_diff';
     break;
+  // overlay is same as fade with slider set at 50%
+  case 'results_tabs_overlay':
   case 'results_tabs_fade':
     sid_suffix = 'base_crop';
     break;
@@ -1442,26 +1465,35 @@ _imcomp_controller.prototype.toolbar_forward_handler = function(e) {
 
 _imcomp_controller.prototype.toolbar_zoomin_handler = function(e) {
   var base_img = document.getElementById('left_content_image');
-  if ( this.results.active_tab === 'fade' || this.results.active_tab === 'slide' ) {
+  var overlay_img = document.getElementById('hor_slide_overlay_img');
+  if ( this.results.active_tab === 'fade' || this.results.active_tab === 'slide' ||
+       this.results.active_tab === 'overlay') {
     base_img.style.width = this.results.canvas_width;
     base_img.style.height = this.results.canvas_height;
-    show_message('Cannot zoom in fade or slide mode!');
+    show_message('Cannot zoom in fade, slide and overlay mode!');
     return;
   }
   base_img.style.width = Math.round(base_img.offsetWidth * 1.1) + 'px';
   base_img.style.height = Math.round(base_img.offsetHeight * 1.1) + 'px';
+  // overlay_img.style.width = Math.round(overlay_img.offsetWidth * 1.1) + 'px';
+  // overlay_img.style.height = Math.round(overlay_img.offsetHeight * 1.1) + 'px';
 }
 
 _imcomp_controller.prototype.toolbar_zoomout_handler = function(e) {
   var base_img = document.getElementById('left_content_image');
-  if ( this.results.active_tab === 'fade' || this.results.active_tab === 'slide' ) {
+  var overlay_img = document.getElementById('hor_slide_overlay_img');
+  if ( this.results.active_tab === 'fade' || this.results.active_tab === 'slide' ||
+       this.results.active_tab === 'overlay') {
     base_img.style.width = this.results.canvas_width;
     base_img.style.height = this.results.canvas_height;
-    show_message('Cannot zoom in fade or slide mode!');
+    show_message('Cannot zoom in fade, slide and overlay mode!');
     return;
   }
   base_img.style.width = Math.round(base_img.offsetWidth * 0.9) + 'px';
   base_img.style.height = Math.round(base_img.offsetHeight * 0.9) + 'px';
+  // overlay_img.style.width = Math.round(overlay_img.offsetWidth * 0.9) + 'px';
+  // overlay_img.style.height = Math.round(overlay_img.offsetHeight * 0.9) + 'px';
+
 }
 
 _imcomp_controller.prototype.algorithm_change_handler = function(e) {
@@ -1480,6 +1512,38 @@ _imcomp_controller.prototype.algorithm_change_handler = function(e) {
       this.compare.algorithm = 'ransac_dlt';
   }
 }
+
+_imcomp_controller.prototype.instruction_step1_handler = function(e) {
+  _imcomp_set_panel('step1', true);
+  this.toolbar.current_page = 'home';
+}
+
+_imcomp_controller.prototype.instruction_step2_handler = function(e) {
+  if (this.toolbar.current_page === "compare") {return;}
+  // we have less than 2 files uploaded. no point showing compare page.
+  if (this.m.files.length <= 1) {return;}
+
+  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, true);
+  this.set_now('base', 0);
+  this.set_now('comp', 1);
+  this.toolbar.current_page = "compare";
+  // remove all divs that could have been added in results page
+  this.remove_overlay_elem();
+  this.remove_slider_elem('all');
+  // delete any regions pre-selected
+  this.m.via['base'].c.region_select_all();
+  this.m.via['base'].c.delete_selected_regions();
+
+}
+
+_imcomp_controller.prototype.instruction_step3_handler = function(e) {
+  if (this.toolbar.current_page === "result" ||
+      this.toolbar.current_page === "home") {return;}
+
+  this.compare_base_comp();
+  this.toolbar.current_page = "result";
+}
+
 
 _imcomp_controller.prototype.show_demo = function(e) {
   // parent of the img element is the div wrapping it

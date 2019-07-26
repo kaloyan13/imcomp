@@ -321,6 +321,21 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
     e.stopPropagation();
     this.c.show_demo(e);
   }.bind(this), false);
+
+  // instructions panel navigation
+  document.getElementById('instruction_step1').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.instruction_step1_handler(e);
+  }.bind(this), false);
+  document.getElementById('instruction_step2').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.instruction_step2_handler(e);
+  }.bind(this), false);
+  document.getElementById('instruction_step3').addEventListener('click', function(e) {
+    e.stopPropagation();
+    this.c.instruction_step3_handler(e);
+  }.bind(this), false);
+
 }
 
 _imcomp_view.prototype.msg = function(msg, t) {

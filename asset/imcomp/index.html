@@ -107,11 +107,15 @@
     <!-- <button id="step1_button" class="step1_button_color panel_selector_button" onclick="_imcomp_set_panel('step1')">1. Select Images to Compare</button>
     <button id="step2_button" class="step2_button_color panel_selector_button" onclick="_imcomp_set_panel('step2')">2. Set Comparison Settings</button>
     <button id="step3_button" class="step3_button_color panel_selector_button" onclick="_imcomp_set_panel('step3')">3. Compare and Visualize Results</button> -->
-    <div id="instruction_step1" class="instruction_step1">1. Upload Image</div>
+    <div id="instruction_step1" class="instruction_step1" onclick="_imcomp_set_panel('step1', true)" >1. Upload Image</div>
     <div class="right_arrow"> <span>&#10230;</span> </div>
     <div id="instruction_step2" class="instruction_step2">2. Select Images and Compare</div>
     <div class="right_arrow"> <span>&#10230;</span> </div>
     <div id="instruction_step3" class="instruction_step3">3. Visualize Results</div>
+  </div>
+
+  <div id="instructions_panel">
+    <p id="instructions_panel_p"></p>
   </div>
 
   <div id="step1_panel" class="panel_content step1_content_color">
@@ -191,8 +195,6 @@
     </div>
     <p><button onclick="_imcomp_set_panel('step3', false)">Next</button></p>
   </div> -->
-
-  <div id="instructions_panel" style="display: none"></div>
 
   <!-- Panel to visualize image comparison result -->
   <div id="step3_panel" class="panel_content step3_content_color">
@@ -338,7 +340,7 @@
       <!-- Content panel: display images and annotation window to the user -->
       <div id="content_panel" class="non_draggable row" draggable="false">
         <div id="left_content" class="cell non_draggable" title="First image chosen from above for comparison ">
-        	<div id="left_content_container" class="non_draggable" draggable="false">
+        	<div id="left_content_container" class="non_draggable imcomp_border" draggable="false">
             <!-- Note:
              * the parent of via_panel should have user-defined dimensions
              * the parent should have "display: inline-block; position: relative"

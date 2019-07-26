@@ -31,11 +31,14 @@ body {
   display:grid;
   grid-template-rows: auto auto auto auto 1fr;
   grid-row-gap:0.5em;
-  padding:0.3em;
+  padding: 0.3em;
   background-color:#ffffff;
-  height:98vh;
-  max-height:100vh;
-  width:100vw;
+  height:90vh;
+  max-height:90vh;
+  width:99vw;
+}
+.imcomp_border {
+  border: 1px solid #673AB7;
 }
 .top {
   display:block;
@@ -224,7 +227,7 @@ body {
 }
 
 .step1_text {
-  padding: 12rem;
+  padding: 11rem;
   height: 100%;
 }
 #step1_panel button {
@@ -360,10 +363,7 @@ body {
   table-layout: fixed;
   margin: 0;
   padding: 0;
-  /* border: 1px solid #9E9E9E; */
-  overflow: hidden;
   width: 100%;
-  /* border: 1px solid #673AB7; */
 }
 #middle_panel .row {
   display: table-row;
@@ -377,9 +377,6 @@ body {
   width: 48%;
   text-align: center;
   vertical-align: middle;
-  /* border-right: 1px solid #9E9E9E;  */
-  /* border-top: 1px solid #9E9E9E; */
-
 }
 
 .tab_tools_panel {
@@ -398,11 +395,6 @@ body {
   width: 12rem;
   height: 1.5rem;
 }
-
-/* .tab_tools_panel .toggle_controls input[type=checkbox]
-{
-  transform: scale(2);
-} */
 
 .img_label {
   font-size: medium;
@@ -486,7 +478,7 @@ body {
   display: block;
   width: 100%;
   font-size: larger;
-  height: 6rem;
+  min-height: 6rem;
   padding: 0.5rem;
   border: solid 1px #673AB7;
 }
@@ -537,9 +529,8 @@ body {
   position: relative;
   display: inline-block;
   width: 100%;
-  height: 66vh;
+  height: 70vh;
   min-height: 66vh;
-  border: 1px solid #673AB7;
 }
 #left_content_img_panel {
     position: relative;
@@ -563,10 +554,15 @@ body {
 #left_content_image {
     z-index: 1000;
     top: 0;
-    width: 100%;
+    height: 100%;
+    width: auto;
 }
 #left_content_image * {
   margin: auto;
+}
+#hor_slide_overlay_img {
+  height: 100%;
+  width: auto;
 }
 
 /* comp panel */
