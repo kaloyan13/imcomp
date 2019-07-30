@@ -254,82 +254,22 @@ void imreg_sift::get_putative_matches(vector< vector<vl_uint8> >& descriptor_lis
 }
 
 void imreg_sift::get_diff_image(Magick::Image& im1, Magick::Image& im2, Magick::Image& cdiff) {
-  Magick::Image im1g = im1;
-  // const Magick::Image im2g = im2; // for ImageMagick compare function
-  // const Magick:MetricType metric_type = 0;
-  Magick::Image im2g = im2;
+  Magick::Image im1_gray = im1;
+  Magick::Image im2_gray = im2;
+  im1_gray.type(Magick::GrayscaleType);
+  im2_gray.type(Magick::GrayscaleType);
 
-  im1g.type(Magick::GrayscaleType);
-  im2g.type(Magick::GrayscaleType);
+  // difference between im1 and im2 is red Channel
+  // difference between im2 and im1 is blue channel
+  // green channel is then just the gray scale image
+  Magick::Image diff_gray(im1_gray);
+  diff_gray.composite(im1_gray, 0, 0, Magick::AtopCompositeOp);
+  diff_gray.composite(im2_gray, 0, 0, Magick::AtopCompositeOp);
 
-  high_resolution_clock::time_point before_percent = std::chrono::high_resolution_clock::now();
-
-  const vector<unsigned int> percentile = {5,25};
-  for (int i = 0 ; i < percentile.size() ; ++i) {
-    std::cout << "\n" << percentile[i] << ' ' << flush;
-  }
-
-  vector<double> im1_percentile_values = get_pixel_percentile(im1g, percentile);
-  vector<double> im2_percentile_values = get_pixel_percentile(im2g, percentile);
-
-  high_resolution_clock::time_point after_percent = std::chrono::high_resolution_clock::now();
-  cout << "\n after percent comp is: " << (duration_cast<duration<double>>(after_percent - before_percent)).count() << flush;
-
-  double px1, px2, sum;
-  double del1 = im1_percentile_values.at(0) - im1_percentile_values.at(1);
-  double del2 = im2_percentile_values.at(0) - im2_percentile_values.at(1);
-
-  cout << "\nWriting diff image ... " << flush;
-  for(unsigned int j=0; j<im1g.rows(); j++) {
-    for(unsigned int i=0; i<im1g.columns(); i++) {
-      Magick::ColorGray c1 = im1g.pixelColor(i,j);
-      Magick::ColorGray c2 = im2g.pixelColor(i,j);
-      px1 = ( c1.shade() - im1_percentile_values.at(1) ) / del1;
-      px2 = ( c2.shade() - im2_percentile_values.at(1) ) / del2;
-
-      sum = clamp(px1 + px2, 0.0, 1.0);
-      px1 = clamp(px1, 0.0, 1.0);
-      px2 = clamp(px2, 0.0, 1.0);
-
-      cdiff.pixelColor(i, j, Magick::ColorRGB(1.0 - px1, 1.0 - sum, 1.0 - px2));
-    }
-  }
-
-  // TODO: compare using the ImageMagick function instead of using our own implementation:
-  // double distortion = im1g.compare(im2g, Magick::MetricType::MeanSquaredErrorMetric);
-  // std::cout << "distortion returned is: " << distortion << flush;
-  // cdiff = im1g.compare(im2g, Magick::MetricType::MeanSquaredErrorMetric, &distortion);
-  // cdiff.magick("JPEG");
-  // cdiff.write("/home/shrinivasan/work/traherne/imcomp/temp_diff.jpg");
-  // high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();
-  // cout << "\n after diff comp in fn is: " << (duration_cast<duration<double>>(after_diff - after_percent)).count() << flush;
+  cdiff.composite(diff_gray, 0, 0, Magick::CopyGreenCompositeOp);
+  cdiff.composite(im1_gray, 0, 0, Magick::CopyRedCompositeOp);
+  cdiff.composite(im2_gray, 0, 0, Magick::CopyBlueCompositeOp);
 }
-
-vector<double> imreg_sift::get_pixel_percentile(Magick::Image& img, const vector<unsigned int> percentile) {
-  size_t npixel = img.rows() * img.columns();
-  vector<double> pixel_values;
-  pixel_values.reserve(npixel);
-  for(unsigned int j=0; j<img.rows(); j++) {
-    for(unsigned int i=0; i<img.columns(); i++) {
-      Magick::ColorGray c = img.pixelColor(i,j);
-      pixel_values.push_back(c.shade());
-    }
-  }
-
-  //sort(pixel_values.begin(), pixel_values.end());
-  vector<double> percentile_values;
-  percentile_values.reserve(percentile.size());
-  for( size_t i = 0; i < percentile.size(); i++ ) {
-    double k = percentile.at(i);
-    // source: https://stackoverflow.com/a/28548904
-    auto nth = pixel_values.begin() + (k * pixel_values.size())/100;
-    std::nth_element(pixel_values.begin(), nth, pixel_values.end());
-    percentile_values.push_back( *nth );
-  }
-
-  return percentile_values;
-}
-
 
 bool imreg_sift::cache_img_with_fid(boost::filesystem::path upload_dir, string fid, imcomp_cache* cache) {
   // compute sift features for the selected file
@@ -360,7 +300,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             bool& success,
                             std::string& message,
                             imcomp_cache * cache) {
-  try {
+  // try {
     high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
     success = false;
@@ -425,10 +365,12 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // cout << "\n second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << flush;
 
     // compute SIFT features without caching
+    cout << "\n computing sift features" << flush;
     compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
     compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
 
     // use Lowe's 2nd nn test to find putative matches
+    cout << "\n computing putative matches" << flush;
     float threshold = 1.5f;
     std::vector< std::pair<uint32_t, uint32_t> > putative_matches;
     get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
@@ -459,7 +401,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       im2_match_kp(2, i) = 1.0;
     }
 
-    //cout << "\nNormalizing keypoints" << flush;
+    cout << "\n Normalizing keypoints" << flush;
     Matrix<double,3,3> im1_match_kp_tform, im2_match_kp_tform;
     get_norm_matrix(im1_match_kp, im1_match_kp_tform);
     get_norm_matrix(im2_match_kp, im2_match_kp_tform);
@@ -480,6 +422,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     uniform_int_distribution<> dist(0, n_match-1);
 
     // estimate homography using RANSAC
+    cout << "\n estimating homography using RANSAC" << flush;
     size_t max_score = 0;
     Matrix<double,3,3> Hi;
     vector<unsigned int> best_inliers_index;
@@ -551,6 +494,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     // Recompute homography using all the inliers
     // This does not improve the registration
+    cout << "\n re-computing homography using inliers" << flush;
     size_t n_inliers = best_inliers_index.size();
     MatrixXd X(n_inliers,3);
     MatrixXd Y(n_inliers,3);
@@ -614,7 +558,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // cout << "\n before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
 
     // difference image
-    Magick::Image cdiff(im1_crop.size(), "black");
+    cout << "\n comoputing diff imgae" << flush;
+    Magick::Image cdiff(im1_crop);
     get_diff_image(im1_crop, im2t_crop, cdiff);
     cdiff.write(diff_image_fn);
 
@@ -624,12 +569,14 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     success = true;
     message = "";
     //std::cout << "\ndone" << std::endl;
-  } catch( std::exception &e ) {
-    success = false;
-    std::ostringstream ss;
-    ss << "Exception occured: [" << e.what() << "]";
-    message = ss.str();
-  }
+
+  // } catch( std::exception &e ) {
+    // success = false;
+    // std::ostringstream ss;
+    // ss << "Exception occured: [" << e.what() << "]";
+    // message = ss.str();
+  // }
+
 }
 
 
