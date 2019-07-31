@@ -406,7 +406,6 @@ _imcomp_controller.prototype.format_comparison_page = function() {
 	document.getElementById('ref_line_container').style.display = '';
 	document.getElementById('right_content').style.display = '';
   document.getElementById('files_panel').style.display = '';
-  document.getElementById('tab_tools_panel').classList.add('display-none');
   document.getElementById('toggle_controls').classList.add('display-none');
   document.getElementById('fade_controls').classList.add('display-none');
 	document.getElementById('results_tabs_panel').style.display = 'none';
@@ -419,6 +418,8 @@ _imcomp_controller.prototype.format_comparison_page = function() {
 
   document.getElementById('left_content_container').style.height = '66vh';
   document.getElementById('left_content_container').classList.add('imcomp_border');
+
+  document.getElementById('tab_tools_panel').classList.add('display-none');
 }
 
 _imcomp_controller.prototype.format_results_page = function() {
@@ -449,6 +450,7 @@ _imcomp_controller.prototype.format_results_page = function() {
   console.log('img height is: ', base_img.height);
 
   document.getElementById('left_content_container').classList.remove('imcomp_border');
+  document.getElementById('tab_tools_panel').classList.remove('display-none');
 
   // document.getElementById('left_content_container').style.overflowY = 'scroll';
   // base_img.style.height = '600px';
@@ -495,13 +497,13 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
   var container_type = 'base';
   var target_id = e.target.id;
   this.results.active_tab = target_id.replace('results_tabs_', '');
-  document.getElementById('tab_tools_panel').classList.add('display-none');
-  document.getElementById('toggle_controls').classList.add('display-none');
-  document.getElementById('fade_controls').classList.add('display-none');
 
   // display tab specific tools
   switch ( target_id ) {
     case 'results_tabs_default':
+      document.getElementById('slide_controls').classList.add('display-none');
+      document.getElementById('toggle_controls').classList.add('display-none');
+      document.getElementById('fade_controls').classList.add('display-none');
       // toggle at medium speed by default
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
@@ -511,9 +513,11 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_overlay':
+      document.getElementById('slide_controls').classList.add('display-none');
+      document.getElementById('toggle_controls').classList.add('display-none');
+      document.getElementById('fade_controls').classList.add('display-none');
       var slide_elem = document.getElementById('base_comp_fader');
       document.getElementById('base_comp_fader').value = 50;
-      document.getElementById('base_comp_fader_value').innerHTML = 50;
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       this.clear_toggle('base');
@@ -528,7 +532,7 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_toggle':
-      document.getElementById('tab_tools_panel').classList.remove('display-none');
+      document.getElementById('fade_controls').classList.add('display-none');
       document.getElementById('toggle_controls').classList.remove('display-none');
       document.getElementById('slide_controls').classList.add('display-none');
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
@@ -539,12 +543,11 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_fade':
-      document.getElementById('tab_tools_panel').classList.remove('display-none');
       document.getElementById('fade_controls').classList.remove('display-none');
+      document.getElementById('toggle_controls').classList.add('display-none');
       document.getElementById('slide_controls').classList.add('display-none');
       var slide_elem = document.getElementById('base_comp_fader');
       document.getElementById('base_comp_fader').value = 50;
-      document.getElementById('base_comp_fader_value').innerHTML = 50;
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
       this.clear_toggle('base');
@@ -558,9 +561,10 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_slide':
-    document.getElementById('tab_tools_panel').classList.remove('display-none');
-    document.getElementById('slide_controls').classList.remove('display-none');
-    document.getElementById('slide_radio_horizontal').checked = true;
+      document.getElementById('fade_controls').classList.add('display-none');
+      document.getElementById('toggle_controls').classList.add('display-none');
+      document.getElementById('slide_controls').classList.remove('display-none');
+      document.getElementById('slide_radio_horizontal').checked = true;
       this.clear_toggle('base');
       this.add_hor_slider_overlay();
       // this.add_vert_slider_overlay();
@@ -572,6 +576,9 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       break;
 
     case 'results_tabs_hover':
+      document.getElementById('fade_controls').classList.add('display-none');
+      document.getElementById('toggle_controls').classList.add('display-none');
+      document.getElementById('slide_controls').classList.add('display-none');
       this.clear_toggle('base');
       this.remove_overlay_elem();
       this.remove_slider_elem('all');
@@ -579,7 +586,10 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       this.set_content(container_type, sid_suffix);
       break;
 
-    default: // overlay and difference views
+      default: // overlay and difference views
+      document.getElementById('fade_controls').classList.add('display-none');
+      document.getElementById('toggle_controls').classList.add('display-none');
+      document.getElementById('slide_controls').classList.add('display-none');
       this.clear_toggle('base');
       this.remove_overlay_elem();
       this.remove_slider_elem('all');
@@ -1314,10 +1324,34 @@ _imcomp_controller.prototype.slider_switch_radio_handler = function(e) {
 
 _imcomp_controller.prototype.update_base_comp_fader = function(e) {
   var slider_val = e.target.value;
-  document.getElementById('base_comp_fader_value').innerHTML = slider_val;
+  var bubble = document.getElementById('base_comp_fader_bubble');
+  if (slider_val > 0 && slider_val < 100) {
+    bubble.style.left = Math.round(e.clientX - (bubble.offsetWidth / 2) - 12) + 'px';
+  }
+  bubble.innerHTML = slider_val;
   var overlay_div = document.getElementById('hor_slide_overlay');
   var img = overlay_div.getElementsByTagName('img')[0];
   img.style.opacity = (0.01 * slider_val);
+}
+
+_imcomp_controller.prototype.base_comp_fader_show_bubble = function(e) {
+  var bubble = document.getElementById('base_comp_fader_bubble');
+  bubble.style.left = Math.round(e.clientX - (bubble.offsetWidth / 2) - 12) + 'px';
+  bubble.style.opacity = '1';
+}
+
+_imcomp_controller.prototype.base_comp_fader_hide_bubble = function(e) {
+  var bubble = document.getElementById('base_comp_fader_bubble');
+  bubble.style.opacity = '0';
+}
+
+_imcomp_controller.prototype.base_comp_fader_move_bubble = function(e) {
+  var slider_val = document.getElementById('base_comp_fader').value;
+  var bubble = document.getElementById('base_comp_fader_bubble');
+  console.log('slider value is: ', slider_val);
+  if (slider_val > 1 && slider_val < 100) {
+     bubble.style.left = Math.round(e.clientX - (bubble.offsetWidth / 2) - 12) + 'px';
+  }
 }
 
 _imcomp_controller.prototype.hover_right_left = function(e) {

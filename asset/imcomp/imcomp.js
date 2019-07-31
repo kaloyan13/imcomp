@@ -89,7 +89,6 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       return;
     }
 		document.getElementById('top_right').style.display = '';
-		// show_message('Please draw a region with your mouse on the left image and click compare. Or click compare to compare the whole image.');
   }
 
   // update all buttons
@@ -100,7 +99,6 @@ function _imcomp_set_panel(panel_id, is_navigation) {
     if ( blist[i].id.startsWith(panel_id) ) {
       blist[i].classList.add('stepn_button_activate');
       blist[i].classList.remove('stepn_button_deactivate');
-      //console.log('activate ' + blist[i].id);
     } else {
       blist[i].classList.add('stepn_button_deactivate');
       blist[i].classList.remove('stepn_button_activate');
@@ -139,8 +137,6 @@ function _imcomp_set_panel_content(panel_id, is_navigation) {
     for ( var type in _imcomp.c.type_list ) {
       _imcomp.c.update_view_filelist(type);
 
-      // _imcomp.c.set_now(type, img_index);
-
 			img_index = img_index + 1;
 
       var sid_suffix = type + '_via';
@@ -166,7 +162,6 @@ function _imcomp_set_panel_content(panel_id, is_navigation) {
 				    fr.addEventListener( 'load', function(e) {
 				    	var img = document.createElement('img');
 							img.setAttribute('draggable', true);
-							// img.setAttribute('id', e.currentTarget.fid);
 							img.setAttribute('id', 'files_panel_file_' + e.currentTarget.f_idx);
 				    	img.setAttribute('src', e.currentTarget.result);
 				    	fp.appendChild(img);

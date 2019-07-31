@@ -42,13 +42,11 @@
 </svg>
 
 <div class="imcomp_container">
-  <!-- <div id="banner" class="banner"><a href="index.html">Image Comparator</a></div> -->
   <div id="banner" class="banner">
     <img href="index.html" src="demo/banner_full.jpg" alt="img">
   </div>
 
   <div id="top_panel" class="top_panel display-none">
-    <!-- <div id="top_left_logo" class="top_left_logo"><a href="index.html">Image Comparator</a></div> -->
     <div class="top_right" id="top_right">
       <div class="toolbar">
         <div id="icon_home_div" onclick="_imcomp_set_panel('step1', true)">
@@ -104,9 +102,6 @@
   </div>
 
   <div class="instructions">
-    <!-- <button id="step1_button" class="step1_button_color panel_selector_button" onclick="_imcomp_set_panel('step1')">1. Select Images to Compare</button>
-    <button id="step2_button" class="step2_button_color panel_selector_button" onclick="_imcomp_set_panel('step2')">2. Set Comparison Settings</button>
-    <button id="step3_button" class="step3_button_color panel_selector_button" onclick="_imcomp_set_panel('step3')">3. Compare and Visualize Results</button> -->
     <div id="instruction_step1" class="instruction_step1" onclick="_imcomp_set_panel('step1', true)" >1. Upload Image</div>
     <div class="right_arrow"> <span>&#10230;</span> </div>
     <div id="instruction_step2" class="instruction_step2">2. Select Images and Compare</div>
@@ -189,13 +184,6 @@
     </div>
   </div>
 
-  <!-- Panel to configure image comparison algorithm -->
-  <!-- <div id="step2_panel" class="panel_content step2_content_color">
-    <div id="comparison_settings">
-    </div>
-    <p><button onclick="_imcomp_set_panel('step3', false)">Next</button></p>
-  </div> -->
-
   <!-- Panel to visualize image comparison result -->
   <div id="step3_panel" class="panel_content step3_content_color">
     <div class="control_panel">
@@ -241,7 +229,7 @@
 
     <!-- tools specific to the tabs above -->
     <div id="tab_tools_panel" class="tab_tools_panel">
-      <div id="toggle_controls" class="toggle_controls">
+      <div id="toggle_controls" class="toggle_controls display-none">
         <select name="toggle_speed" id="toggle_speed">
           <option value="1000">Speed: Very Slow</option>
           <option value="600">Speed: Slow</option>
@@ -250,13 +238,16 @@
           <option value="100">Speed: Very Fast</option>
         </select>
       </div>
-      <div id="fade_controls">
-        <label for="base_comp_fader">Left</label>
-        <input id="base_comp_fader" type="range" min="1" max="100" value="50" class="base_comp_fader">
-        <label for="base_comp_fader">Right</label>
-        <p>value: <span id="base_comp_fader_value"></span></p>
+      <div id="fade_controls" class="display-none">
+        <div id="base_comp_fader_bubble"></div>
+        <div class="base_comp_fader_slider">
+          <label for="base_comp_fader">Left</label>
+          <input id="base_comp_fader" type="range" min="1" max="100" value="50" class="base_comp_fader">
+          <label for="base_comp_fader">Right</label>
+        </div>
+        <!-- <p>value: <span id="base_comp_fader_value"></span></p> -->
       </div>
-      <div id="slide_controls">
+      <div id="slide_controls" class="display-none">
         <input id="slide_radio_horizontal"type="radio" name="slide_radio" value="horizontal">
         <label for="slide_radio_horizontal">Horizontal</label>
         <input id="slide_radio_vertical"type="radio" name="slide_radio" value="vertical">

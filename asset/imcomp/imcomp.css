@@ -66,7 +66,6 @@ body {
 
 .instructions {
   display: flex;
-  /* margin: 0.5rem 0.5rem 0.5rem 0.5rem; */
   margin-top: 0.5rem;
   height: 1.6rem;
   text-align: center;
@@ -75,21 +74,18 @@ body {
   border: 1px solid #673AB7;
 }
 .instruction_step1 {
-  /* background-color: #fcf7ab; */
   background-color: #cccccc;
   width: 35%;
   font-size: larger;
   cursor: pointer;
 }
 .instruction_step2 {
-  /* background-color: #fcf7ab; */
   background-color: #cccccc;
   width: 35%;
   font-size: larger;
   cursor: pointer;
 }
 .instruction_step3 {
-  /* background-color: #fcf7ab; */
   background-color: #cccccc;
   width: 35%;
   font-size: larger;
@@ -127,10 +123,7 @@ body {
 }
 
 .panel_content {
-  /* margin:0.5rem 0.5rem; */
-  /* padding: 0.2rem; */
   display:none;
-  /* border:1px solid #cccccc; */
 }
 .bottom {
   display:block;
@@ -144,7 +137,6 @@ body {
   object-fit: cover;
 }
 .banner img {
-  /* object-fit: cover; */
   width: 100%;
 }
 
@@ -153,8 +145,9 @@ body {
   background-color: #673AB7;
   padding:0.4em 0.5em;
 }
-.top_panel * { vertical-align: middle; }
-
+.top_panel * {
+  vertical-align: middle;
+}
 .top_left_logo {
   font-size: 1.3em;
   display: inline;
@@ -176,6 +169,7 @@ body {
   width:16em;
   font-size:1.4em;
 }
+
 /* toolbar  icons on top */
 .toolbar {
   display:inline !important;
@@ -225,7 +219,6 @@ body {
   color: #673AB7;
   border: 1px solid;
 }
-
 .step1_text {
   padding: 11rem;
   height: 100%;
@@ -243,13 +236,11 @@ body {
 .step1_panel_note {
   font-size: small;
 }
-
 #step3_panel .control_panel {
   display:none;
   /* display: flex; */
   padding-bottom:1rem;
 }
-
 #step3_panel .control_panel .space {
   margin-left:2rem;
 }
@@ -297,7 +288,6 @@ body {
   border-left: 1px solid #9E9E9E;
   cursor: pointer;
 }
-
 .results_tab.active {
   /* border-top: 3px solid #673AB7; */
   color: white;
@@ -310,7 +300,6 @@ body {
   text-align: center;
   padding: 1.2rem;
 }
-
 #results_save_panel button {
   border-radius: 20px;
   background-color: #673AB7;
@@ -348,15 +337,12 @@ body {
 #step3_panel #content_selector {
   display: none;
 }
-
 #step3_panel #content_label {
   display: none;
 }
-
 #step3_panel #content_control {
   display: none;
 }
-
 
 #middle_panel {
   display: table;
@@ -381,16 +367,18 @@ body {
 
 .tab_tools_panel {
   width: 100%;
-  height: 5rem;
-  padding: 1px;
+  height: 3rem;
+  padding: 10px;
   border: 1px solid;
-  text-align: center;
+  text-align: left;
   justify-content: center;
   border-top: 1px solid #673AB7;
   border-left: 1px solid #673AB7;
   border-right: 1px solid #673AB7;
 }
-
+/* .toggle_controls {
+  text-align: left;
+} */
 .tab_tools_panel .toggle_controls select {
   width: 12rem;
   height: 1.5rem;
@@ -436,7 +424,6 @@ body {
   margin: 0 !important;
   border: 1px solid ##673AB7;
 }
-
 .horizontal_ref_line {
   z-index: 1000;
   padding: 0;
@@ -482,7 +469,6 @@ body {
   padding: 0.5rem;
   border: solid 1px #673AB7;
 }
-
 #instructions_panel p {
   /* display: table-cell; */
   vertical-align: middle;
@@ -673,7 +659,6 @@ body {
   position: absolute;
   z-index:9;
   cursor: ew-resize;
-  /*set the appearance of the slider:*/
   width: 20px;
   height: 20px;
   background-color: #2196F3;
@@ -684,7 +669,6 @@ body {
   position: absolute;
   z-index:9;
   cursor: ns-resize;
-  /*set the appearance of the slider:*/
   width: 20px;
   height: 20px;
   background-color: #2196F3;
@@ -693,5 +677,22 @@ body {
 }
 .img-comp-container {
   position: relative;
-  /* height: 200px; /*should be the same height as the images*/
+}
+
+/* fade between the two images */
+#base_comp_fader_bubble {
+  position: absolute;
+  bottom: 25px;
+  width: 30px;
+  height:20px;
+  background-color: red;
+  color: white;
+  pointer-events: none;
+  opacity: 0;
+}
+.base_comp_fader_slider label {
+  vertical-align: super;
+}
+#fade_controls {
+  position: absolute;
 }

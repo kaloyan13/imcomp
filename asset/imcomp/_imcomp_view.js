@@ -240,6 +240,15 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   document.getElementById('base_comp_fader').addEventListener('input', function(e) {
     this.c.update_base_comp_fader(e);
   }.bind(this), false);
+  document.getElementById('base_comp_fader').addEventListener('mousedown', function(e) {
+    this.c.base_comp_fader_show_bubble(e);
+  }.bind(this), false);
+  document.getElementById('base_comp_fader').addEventListener('mouseup', function(e) {
+    this.c.base_comp_fader_hide_bubble(e);
+  }.bind(this), false);
+  document.getElementById('base_comp_fader').addEventListener('mousemove', function(e) {
+    this.c.base_comp_fader_move_bubble(e);
+  }.bind(this), false);
 
   // slide action in result visualisation
   document.getElementById('horizontal_slider').addEventListener('mousedown', function(e) {
