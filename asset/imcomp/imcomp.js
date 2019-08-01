@@ -89,6 +89,9 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       return;
     }
 		document.getElementById('top_right').style.display = '';
+		// always show the first two images in files panel as the now files
+		_imcomp.c.set_now('base', 0);
+		_imcomp.c.set_now('comp', 1);
   }
 
   // update all buttons

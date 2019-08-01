@@ -414,12 +414,17 @@ _imcomp_controller.prototype.format_comparison_page = function() {
   document.getElementById('banner').style.display = 'none';
 
   document.getElementById('instructions_panel').style.display = 'block';
-  show_instruction("Select images by dragging them from the Files Panel and dropping them on the View Panel.");
+  show_instruction("Select images by dragging them from the Files Panel and dropping them on the View Panel. <br/> Click compare to compare both the pre-selected images");
 
   document.getElementById('left_content_container').style.height = '66vh';
   document.getElementById('left_content_container').classList.add('imcomp_border');
 
   document.getElementById('tab_tools_panel').classList.add('display-none');
+
+  this.remove_overlay_elem();
+  this.remove_slider_elem();
+  this.m.via['base'].c.region_select_all();
+  this.m.via['base'].c.delete_selected_regions();
 }
 
 _imcomp_controller.prototype.format_results_page = function() {
@@ -452,12 +457,43 @@ _imcomp_controller.prototype.format_results_page = function() {
   document.getElementById('left_content_container').classList.remove('imcomp_border');
   document.getElementById('tab_tools_panel').classList.remove('display-none');
 
-  // document.getElementById('left_content_container').style.overflowY = 'scroll';
-  // base_img.style.height = '600px';
-  // base_img.style.height = Math.round(base_img.offsetHeight * 0.9) + 'px';
-  // var slide_img = document.getElementById('hor_slide_overlay_img');
-  // slide_img.style.width = Math.round(slide_img.offsetWidth * 0.8) + 'px';
-  // slide_img.style.height = Math.round(slide_img.offsetHeight * 0.8) + 'px';
+  this.format_results_images();
+}
+
+// resize image to be same as how it looked in the compare page. The image is in
+// via panel div "left_content_via_panel" in the compare page. But its under the
+// left_content_img_panel div in results page.
+_imcomp_controller.prototype.format_results_images = function() {
+  var via = this.m.via['base'];
+
+  // we need a compare instance to get width and height details of the via region
+  var findex1 = this.v.now['base'].findex;
+  var findex2 = this.v.now['comp'].findex;
+  var ci = new _imcomp_compare_instance(findex1, findex2);
+  var via_fid1 = this.m.fid_to_via_fileid['base'][ci.findex1];
+  var rid = this.m.via['base'].v.now.all_rid_list[0];
+  var base_region = this.m.via['base'].m.regions[via_fid1][rid];
+  var region_width = base_region.width;
+  var region_height = base_region.height;
+
+  if (region_width > region_height) {
+    console.log('width greater');
+    document.getElementById('left_content_image').style.width = region_width + 'px';
+
+    document.getElementById('hor_slide_overlay').childNodes[1].style.width = region_width + 'px';
+    document.getElementById('vert_slide_overlay').childNodes[1].style.width = region_width + 'px';
+    document.getElementById('left_content_image').style.height = 'auto';
+    document.getElementById('hor_slide_overlay').childNodes[1].style.height = 'auto';
+    document.getElementById('vert_slide_overlay').childNodes[1].style.height = 'auto';
+  } else {
+    console.log('height greater');
+    document.getElementById('left_content_image').style.height = region_height + 'px';
+    document.getElementById('hor_slide_overlay').childNodes[1].style.height = region_height + 'px';
+    document.getElementById('vert_slide_overlay').childNodes[1].style.height = region_height + 'px';
+    document.getElementById('left_content_image').style.width = 'auto';
+    document.getElementById('hor_slide_overlay').childNodes[1].style.width = 'auto';
+    document.getElementById('vert_slide_overlay').childNodes[1].style.width =  'auto';
+  }
 }
 
 _imcomp_controller.prototype.enable_results_tabs = function() {
@@ -529,6 +565,8 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       var base_img = document.getElementById('left_content_image');
       base_img.style.width = this.results.canvas_width;
       base_img.style.height = this.results.canvas_height;
+      document.getElementById('hor_slide_overlay').classList.remove('hor-slide-border');
+      document.getElementById('vert_slide_overlay').classList.remove('vert-slide-border');
       break;
 
     case 'results_tabs_toggle':
@@ -558,6 +596,8 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       var base_img = document.getElementById('left_content_image');
       base_img.style.width = this.results.canvas_width;
       base_img.style.height = this.results.canvas_height;
+      document.getElementById('hor_slide_overlay').classList.remove('hor-slide-border');
+      document.getElementById('vert_slide_overlay').classList.remove('vert-slide-border');
       break;
 
     case 'results_tabs_slide':
@@ -567,7 +607,6 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       document.getElementById('slide_radio_horizontal').checked = true;
       this.clear_toggle('base');
       this.add_hor_slider_overlay();
-      // this.add_vert_slider_overlay();
       // reset any zoom done before
       var base_img = document.getElementById('left_content_image');
       base_img.style.width = this.results.canvas_width;
@@ -597,6 +636,7 @@ _imcomp_controller.prototype.results_tab_event_handler = function(e) {
       var sid_suffix = this.get_sid_suffix_for_results_tab(e);
       this.set_content(container_type, sid_suffix);
   }
+  this.format_results_images();
 }
 
 _imcomp_controller.prototype.add_fader_overlay = function() {
@@ -657,6 +697,7 @@ _imcomp_controller.prototype.add_hor_slider_overlay = function () {
   var overlay_div = document.getElementById('hor_slide_overlay');
   overlay_div.classList.add('display-inline-block');
   overlay_div.style.width = (w / 2) + "px";
+  overlay_div.classList.add('hor-slide-border');
 
   // position slider and bind its actions
   var slider = document.getElementById('horizontal_slider');
@@ -682,6 +723,7 @@ _imcomp_controller.prototype.add_vert_slider_overlay = function () {
   var overlay_div = document.getElementById('vert_slide_overlay');
   overlay_div.classList.add('display-inline-block');
   overlay_div.style.height = (h / 2) + "px";
+  overlay_div.classList.add('vert-slide-border');
 
   // position slider and bind its actions
   var slider = document.getElementById('vertical_slider');
@@ -1355,7 +1397,7 @@ _imcomp_controller.prototype.base_comp_fader_move_bubble = function(e) {
 }
 
 _imcomp_controller.prototype.hover_right_left = function(e) {
-  if ( this.results.active_tab !== 'hover' ) { return; }
+  if ( this.results.active_tab != 'hover' ) {return;}
 
   // get the mouse coordinates wrt the image
   var rect = e.target.getBoundingClientRect();
@@ -1558,8 +1600,6 @@ _imcomp_controller.prototype.instruction_step2_handler = function(e) {
   if (this.m.files.length <= 1) {return;}
 
   _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP3, true);
-  this.set_now('base', 0);
-  this.set_now('comp', 1);
   this.toolbar.current_page = "compare";
   // remove all divs that could have been added in results page
   this.remove_overlay_elem();
@@ -1567,7 +1607,6 @@ _imcomp_controller.prototype.instruction_step2_handler = function(e) {
   // delete any regions pre-selected
   this.m.via['base'].c.region_select_all();
   this.m.via['base'].c.delete_selected_regions();
-
 }
 
 _imcomp_controller.prototype.instruction_step3_handler = function(e) {
