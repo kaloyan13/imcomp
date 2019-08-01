@@ -114,7 +114,7 @@ elseif(APPLE)
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
 else()
   # for Linux the automatic detection is ok
-  find_package( ImageMagick COMPONENTS Magick++ REQUIRED )
+  find_package( ImageMagick COMPONENTS Magick++ MagickWand MagickCore REQUIRED )
   include_directories( ${ImageMagick_INCLUDE_DIRS} )
 endif()
 
