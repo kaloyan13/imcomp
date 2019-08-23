@@ -30,7 +30,7 @@ void imreg_sift::get_norm_matrix(const MatrixXd& pts, Matrix<double,3,3>& T) {
 
 // Implementation of Direct Linear Transform (DLT) algorithm as described in pg. 91
 // Multiple View Geometry in Computer Vision, Richard Hartley and Andrew Zisserman, 2nd Edition
-// assumption: X and Y are point correspondences
+// assumption: X and Y are point correspondences. Four 2D points. (4 X 3 in homogenous coordinates)
 // X and Y : n x 3 matrix
 // H : 3x3 matrix
 void imreg_sift::dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H) {
@@ -54,6 +54,99 @@ void imreg_sift::dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H
        svd.matrixV()(3,8), svd.matrixV()(4,8), svd.matrixV()(5,8),
                         0,                  0, svd.matrixV()(8,8); // affine transform
 //       svd.matrixV()(6,8), svd.matrixV()(7,8), svd.matrixV()(8,8); // projective transform
+}
+
+
+void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string& transform, Matrix<double,3,3>& T) {
+  // ignore homogenous representation
+  Matrix<double,4,2> X_, Y_;
+  X_ = X.block<4,2>(0,0);
+  Y_ = Y.block<4,2>(0,0);
+
+  // example values to test with spot the difference demo image.
+  // should give identity rotation
+  // X_ <<  -1.1684, -1.34154,
+  //         -1.3568, -1.28858,
+  //         -1.08083,-1.0768,
+  //         -1.47721,-1.02969;
+  // Y_  << -1.15706, -1.33154,
+  //         -1.35822,-1.28466,
+  //         -1.08694, -1.07509,
+  //         -1.48525, -1.02964;
+
+  size_t m = X_.cols();
+  size_t n = X_.rows();
+
+  Matrix<double,2,4> Xt_, Yt_;
+  Xt_ = X_.transpose();
+  Yt_ = Y_.transpose();
+
+  // subtract mean from points
+  VectorXd X_mu = Xt_.rowwise().mean();
+  VectorXd Y_mu = Yt_.rowwise().mean();
+  cout << "X_mu is: " << X_mu << endl;
+  cout << "Y_mu is: " << Y_mu << endl;
+
+  Xt_.colwise() -= X_mu;
+  Yt_.colwise() -= Y_mu;
+  MatrixXd X_norm = Xt_.transpose();
+  MatrixXd Y_norm = Yt_.transpose();
+
+  // compute matrix A first (3 X 3 rotation matrix)
+  MatrixXd A = (1.0 / n) * (Y_norm.transpose() * X_norm);
+  // rotation matrix to compute
+  Matrix<double,2,2> R;
+  Matrix<double,2,2> d = Matrix<double,2,2>::Identity();
+
+  // do SVD of A
+  JacobiSVD<MatrixXd> svd_u(A, ComputeFullU);
+  Matrix<double,2,2> U = svd_u.matrixU();
+  U(0,0) = -1.0 * U(0,0);
+  U(1,0) = -1.0 * U(1,0);
+  JacobiSVD<MatrixXd> svd_v(A, ComputeFullV);
+  Matrix<double,2,2> V = svd_v.matrixV();
+  V(0,0) = -1.0 * V(0,0);
+  V(1,0) = -1.0 * V(1,0);
+
+  if (svd_u.rank() == 0) {
+    cout << "SVD leads to 0 rank!" << endl;
+    return;
+  }
+
+  if (svd_u.rank() == (m - 1)) {
+    if ( (U.determinant() * V.determinant() ) > 0) {
+      // cout << "det prod greater!" << endl;
+      R = U * V;
+    } else {
+      // cout << "det prod lesser!" << endl;
+      double s = d(1,1);
+      d(1,1) = -1;
+      R = U * d * V;
+      d(1,1) = s;
+    }
+
+  } else {
+    R =  U * d * V;
+  }
+
+  double scale = 1.0;
+  if (transform == "similarity") {
+    // double scale = 1.0 / src_demean.var(axis=0).sum() * (S @ d)
+    // double variance = 0.0001; // TODO: compute using X_norm
+    // double scale = 1.0 / (variance * S.colwise() * d);
+    cout << "yet to implement similarity" << endl;
+  }
+
+  // compute translation
+  Vector2d t = Y_norm - (scale * (R * X_norm.transpose()));
+
+  T << R(0,0), R(0,1), t(0),
+       R(1,0), R(1,1), t(1),
+       0,      0,      1.0;
+
+  cout << "Final T value is: " << endl;
+  cout << T << endl;
+
 }
 
 double imreg_sift::clamp(double v, double min, double max) {
@@ -299,10 +392,12 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             const char overlap_image_fn[],
                             bool& success,
                             std::string& message,
-                            imcomp_cache * cache) {
-  // try {
+                            imcomp_cache * cache,
+                            std::string& transform) {
+  try {
     high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
+    // cout << "\n value of transform is: "  << transform << flush;
     success = false;
     message = "";
 
@@ -454,7 +549,11 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       Y.row(2) = im2_match_norm.col(kp_id3).transpose();
       Y.row(3) = im2_match_norm.col(kp_id4).transpose();
 
-      dlt(X, Y, Hi);
+      // dlt(X, Y, Hi);
+
+      // added instead of dlt above
+      // Matrix<double,3,3> T;
+      estimate_transform(X, Y, transform, Hi);
 
       size_t score = 0;
       vector<unsigned int> inliers_index;
@@ -471,14 +570,14 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       VectorXd error = del.row(0) + del.row(1);
       error = error.array().sqrt();
 
-      for( size_t k=0; k<n_match; k++ ) {
+      for( size_t k = 0; k < n_match; k++ ) {
         if(error(k) < geom_err_threshold_norm) {
           score++;
           inliers_index.push_back(k);
         }
       }
 
-      //cout << "\n  iter " << iter << " of " << RANSAC_ITER_COUNT << " : score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << flush;
+      cout << "iter " << iter << " of " << RANSAC_ITER_COUNT << " : score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << endl;
       if( score > max_score ) {
         max_score = score;
         best_inliers_index.swap(inliers_index);
@@ -494,7 +593,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     // Recompute homography using all the inliers
     // This does not improve the registration
-    cout << "\n re-computing homography using inliers" << flush;
+    cout << "re-computing homography using inliers" << endl;
     size_t n_inliers = best_inliers_index.size();
     MatrixXd X(n_inliers,3);
     MatrixXd Y(n_inliers,3);
@@ -504,10 +603,17 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     }
 
     Matrix<double, 3, 3> Hopt_norm, H;
-    dlt(X, Y, Hopt_norm);
+
+    // dlt(X, Y, Hopt_norm);
+
+    // added instead of dlt above
+    // Matrix<double, 3, 3> T;
+    estimate_transform(X, Y, transform, H);
+    // cout << "estimated T is: " << T << endl;
+
     // see Hartley and Zisserman p.109
-    H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform;
-    H = H / H(2,2);
+    // H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform;
+    // H = H / H(2,2);
     // Hopt is the reference variable passed to this method
     Hopt = H;
 
@@ -526,36 +632,74 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     */
     Matrix<double, 3, 3> Hinv = H.inverse();
     Magick::Image im2t_crop(im2);
-    // some simple affine tralsformations for testing:
-    // Magick::DrawableAffine affine(1.0,  1.0, 0, 0, 0.0, 0.0); // example: identity transform
-    // Magick::DrawableAffine hinv_affine(1,1,.3,0,0,0); // simple shearing
-    // Magick::DrawableAffine hinv_affine(1,-1,0,0,0,0); // flip
-    // Magick::DrawableAffine hinv_affine(1,0.5,0,0,0,0); // scale
+    string op_w_h_and_offsets;
 
-    // set rotation as per Hinv
-    Magick::DrawableAffine hinv_affine(Hinv(0,0), Hinv(1,1), Hinv(1,0), Hinv(0,1), 0, 0);
+    if (transform == "identity") {
+      // identity transform = identity rotation + zero translation
+      Magick::DrawableAffine hinv_affine(1.0, 1.0, 0, 0, 0.0, 0.0);
+      op_w_h_and_offsets = std::to_string(xu-xl) +
+                           "x" +
+                           std::to_string(yu-yl) +
+                           "-" + to_string(0) +
+                           "-" + to_string(0);
+      // apply the values set above
+      im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+      im2t_crop.affineTransform(hinv_affine);
 
-    // set translation and resizing using viewport function.
-    // See: http://www.imagemagick.org/discourse-server/viewtopic.php?f=27&t=33029#p157520.
-    // As we need to render the image on a webpage canvas, we need to resize the
-    // width and height of im2. Then offset in x and y direction based on the translation
-    // computed by Homography (H and Hinv matrices).
-    string op_w_h_and_offsets = std::to_string(xu-xl) +
-                                "x" +
-                                std::to_string(yu-yl) +
-                                "-" + to_string((int) Hinv(0,2)) +
-                                "-" + to_string((int) Hinv(1,2));
-    im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
-    im2t_crop.affineTransform(hinv_affine);
+    } else if (transform == "translation") {
+      // apply translation only but no rotation
+      Magick::DrawableAffine hinv_affine(1.0, 1.0, 0, 0, 0.0, 0.0);
+      op_w_h_and_offsets = std::to_string(xu-xl) +
+                           "x" +
+                           std::to_string(yu-yl) +
+                           "-" + to_string((int) Hinv(0,2)) +
+                           "-" + to_string((int) Hinv(1,2));
+      // apply the values set above
+      im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+      im2t_crop.affineTransform(hinv_affine);
+
+    } else {
+      // some simple affine tralsformations for testing:
+      // Magick::DrawableAffine affine(1.0,  1.0, 0, 0, 0.0, 0.0);
+      // Magick::DrawableAffine hinv_affine(1,1,.3,0,0,0); // simple shearing
+      // Magick::DrawableAffine hinv_affine(1,-1,0,0,0,0); // flip
+      // Magick::DrawableAffine hinv_affine(1,0.5,0,0,0,0); // scale
+
+      // added
+      // set rotation as per Tinv
+      Matrix<double, 3, 3> T;
+      cout << "calling estimate_transform in else" << endl;
+      // estimate_transform(X, Y, transform, T);
+      // Matrix<double, 3,3> Tinv = T.inverse();
+      // Magick::DrawableAffine hinv_affine(Tinv(0,0), Tinv(1,1), Tinv(1,0), Tinv(0,1), 0, 0);
+      // set rotation as per Hinv
+      Magick::DrawableAffine hinv_affine(Hinv(0,0), Hinv(1,1), Hinv(1,0), Hinv(0,1), 0, 0);
+
+      // set translation and resizing using viewport function.
+      // See: http://www.imagemagick.org/discourse-server/viewtopic.php?f=27&t=33029#p157520.
+      // As we need to render the image on a webpage canvas, we need to resize the
+      // width and height of im2. Then offset in x and y direction based on the translation
+      // computed by Homography (H and Hinv matrices).
+
+      // op_w_h_and_offsets = std::to_string(xu-xl) +
+      //                      "x" +
+      //                      std::to_string(yu-yl) +
+      //                      "-" + to_string((int) Hinv(0,2)) +
+      //                      "-" + to_string((int) Hinv(1,2));
+      // // apply the values set above
+      // im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+      im2t_crop.affineTransform(hinv_affine);
+    }
 
     // save result
     im2t_crop.write(im2_tx_fn);
     // TODO: find a way to create a good overlap image. For now use im2t_crop
     // overlap.write(overlap_image_fn);
+    // TODO: fix the javascript so that we don't use overlap image as im2t!!
     im2t_crop.write(overlap_image_fn);
 
-    high_resolution_clock::time_point before_diff = std::chrono::high_resolution_clock::now();
-    // cout << "\n before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
+    // high_resolution_clock::time_point before_diff = std::chrono::high_resolution_clock::now();
+    // cout << "before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
 
     // difference image
     cout << "\n comoputing diff imgae" << flush;
@@ -563,20 +707,18 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     get_diff_image(im1_crop, im2t_crop, cdiff);
     cdiff.write(diff_image_fn);
 
-    high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();
-    cout << "\n after diff image comp is: " << (duration_cast<duration<double>>(after_diff - before_diff)).count() << flush;
+    // high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();
+    // cout << "after diff image comp is: " << (duration_cast<duration<double>>(after_diff - before_diff)).count() << flush;
 
     success = true;
     message = "";
-    //std::cout << "\ndone" << std::endl;
 
-  // } catch( std::exception &e ) {
-    // success = false;
-    // std::ostringstream ss;
-    // ss << "Exception occured: [" << e.what() << "]";
-    // message = ss.str();
-  // }
-
+  } catch( std::exception &e ) {
+    success = false;
+    std::ostringstream ss;
+    ss << "Exception occured: [" << e.what() << "]";
+    message = ss.str();
+  }
 }
 
 
@@ -753,7 +895,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
         best_robust_match_idx.swap(robust_match_idx);
         //cout << "\t[MIN]" << flush;
       }
-    }
+    } // end RANSAC_ITER_COUNT loop
+
     fp_match_count = best_robust_match_idx.size();
     if ( fp_match_count < 3 ) {
       message = "Very low number of robust matching feature points";

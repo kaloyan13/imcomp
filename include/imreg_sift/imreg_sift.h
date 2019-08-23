@@ -48,7 +48,8 @@ class imreg_sift {
                          const char overlap_image_fn[],
                          bool& success,
                          std::string& message,
-                         imcomp_cache* cache);
+                         imcomp_cache* cache,
+                         std::string& transform);
 
   // Applies robust filtering of point correspondences and uses Thin Plate Spline for image registration
   //
@@ -75,6 +76,10 @@ class imreg_sift {
   // implementation of Direct Linear Transform (DLT)
   // see Chapter 4 of Hartley and Zisserman (2nd Edition)
   static void dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H);
+
+  // estimates transformation between two set of M corresponding points X and Y of N dimensions.
+  // see ...
+  static void estimate_transform(const MatrixXd& X, const MatrixXd& Y, std::string& transform, Matrix<double,3,3>& T);
 
   // use vlfeat to compute SIFT keypoint and descriptors
   //static void compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false);
