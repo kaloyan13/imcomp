@@ -55,6 +55,7 @@ function _imcomp_controller() {
   this.compare.promise = {};  // promise to current compare operation
   this.compare.result = {};
   this.compare.algorithm = {};
+  this.compare.transform = {};
 
   this.ref_line = {};
 
@@ -305,7 +306,6 @@ _imcomp_controller.prototype.compare_base_comp = function() {
     show_message('Please wait, compare process is <span class="blue">ongoing</span> ...');
     return;
   }
-
 
   if( !this.is_base_region_selected() ) {
     show_message('Comparing images as no regions were selected.');
@@ -1575,16 +1575,27 @@ _imcomp_controller.prototype.toolbar_zoomout_handler = function(e) {
 _imcomp_controller.prototype.algorithm_change_handler = function(e) {
   switch (e.target.value) {
     case 'identity':
-    case 'translation':
+      this.compare.transform = 'identity';
+      this.compare.algorithm = 'ransac_dlt';
+      break;
+    case 'rigid':
+      this.compare.transform = 'rigid';
+      this.compare.algorithm = 'ransac_dlt';
+      break;
+    case 'similarity':
+      this.compare.transform = 'similarity';
+      this.compare.algorithm = 'ransac_dlt';
+      break;
     case 'affine':
+      this.compare.transform = 'affine';
       this.compare.algorithm = 'ransac_dlt';
       break;
     case 'tps':
-      console.log('setting algname to tps');
+      this.compare.transform = 'none';
       this.compare.algorithm = 'robust_ransac_tps';
       break;
-    case 'perspective':
     default: // affine
+      // this.compare.transform = 'affine';
       this.compare.algorithm = 'ransac_dlt';
   }
 }

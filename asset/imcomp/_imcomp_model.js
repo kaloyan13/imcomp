@@ -407,7 +407,9 @@ _imcomp_model.prototype.compare_img_pair = function(c) {
     }
     args.push('region=' + c.region1.join(','));
     var algname = this.c.compare.algorithm;
+    var transform = this.c.compare.transform;
     args.push('algname=' + algname);
+    args.push('transform=' + transform);
 
     var cr = new XMLHttpRequest();
     cr.addEventListener('timeout', function(e) {

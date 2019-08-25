@@ -58,91 +58,119 @@ void imreg_sift::dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H
 
 
 void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string& transform, Matrix<double,3,3>& T) {
-  // ignore homogenous representation
-  Matrix<double,4,2> X_, Y_;
-  X_ = X.block<4,2>(0,0);
-  Y_ = Y.block<4,2>(0,0);
 
-  // example values to test with spot the difference demo image.
-  // should give identity rotation
-  // X_ <<  -1.1684, -1.34154,
-  //         -1.3568, -1.28858,
-  //         -1.08083,-1.0768,
-  //         -1.47721,-1.02969;
-  // Y_  << -1.15706, -1.33154,
-  //         -1.35822,-1.28466,
-  //         -1.08694, -1.07509,
-  //         -1.48525, -1.02964;
-
-  size_t m = X_.cols();
-  size_t n = X_.rows();
-
-  Matrix<double,2,4> Xt_, Yt_;
-  Xt_ = X_.transpose();
-  Yt_ = Y_.transpose();
-
-  // subtract mean from points
-  VectorXd X_mu = Xt_.rowwise().mean();
-  VectorXd Y_mu = Yt_.rowwise().mean();
-  cout << "X_mu is: " << X_mu << endl;
-  cout << "Y_mu is: " << Y_mu << endl;
-
-  Xt_.colwise() -= X_mu;
-  Yt_.colwise() -= Y_mu;
-  MatrixXd X_norm = Xt_.transpose();
-  MatrixXd Y_norm = Yt_.transpose();
-
-  // compute matrix A first (3 X 3 rotation matrix)
-  MatrixXd A = (1.0 / n) * (Y_norm.transpose() * X_norm);
-  // rotation matrix to compute
-  Matrix<double,2,2> R;
-  Matrix<double,2,2> d = Matrix<double,2,2>::Identity();
-
-  // do SVD of A
-  JacobiSVD<MatrixXd> svd_u(A, ComputeFullU);
-  Matrix<double,2,2> U = svd_u.matrixU();
-  U(0,0) = -1.0 * U(0,0);
-  U(1,0) = -1.0 * U(1,0);
-  JacobiSVD<MatrixXd> svd_v(A, ComputeFullV);
-  Matrix<double,2,2> V = svd_v.matrixV();
-  V(0,0) = -1.0 * V(0,0);
-  V(1,0) = -1.0 * V(1,0);
-
-  if (svd_u.rank() == 0) {
-    cout << "SVD leads to 0 rank!" << endl;
-    return;
+  if (transform == "identity") {
+    cout << "in estimate_transform identity" << endl;
+    T << 1.0, 0.0, 0.0,
+         0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0;
   }
 
-  if (svd_u.rank() == (m - 1)) {
-    if ( (U.determinant() * V.determinant() ) > 0) {
-      // cout << "det prod greater!" << endl;
-      R = U * V;
-    } else {
-      // cout << "det prod lesser!" << endl;
-      double s = d(1,1);
-      d(1,1) = -1;
-      R = U * d * V;
-      d(1,1) = s;
+  if (transform == "rigid" || transform == "similarity") {
+    cout << "in estimate_transform rigid or similarity" << endl;
+    // ignore homogenous representation
+    Matrix<double,4,2> X_, Y_;
+    X_ = X.block<4,2>(0,0);
+    Y_ = Y.block<4,2>(0,0);
+
+    // example values to test with spot the difference demo image.
+    // should give identity rotation
+    // X_ <<  -1.1684, -1.34154,
+    //         -1.3568, -1.28858,
+    //         -1.08083,-1.0768,
+    //         -1.47721,-1.02969;
+    // Y_  << -1.15706, -1.33154,
+    //         -1.35822,-1.28466,
+    //         -1.08694, -1.07509,
+    //         -1.48525, -1.02964;
+
+    size_t m = X_.cols();
+    size_t n = X_.rows();
+
+    Matrix<double,2,4> Xt_, Yt_;
+    Xt_ = X_.transpose();
+    Yt_ = Y_.transpose();
+
+    // subtract mean from points
+    VectorXd X_mu = Xt_.rowwise().mean();
+    VectorXd Y_mu = Yt_.rowwise().mean();
+    cout << "X_mu is: " << X_mu << endl;
+    cout << "Y_mu is: " << Y_mu << endl;
+    cout << "Transform value is: " << transform << endl;
+
+    Xt_.colwise() -= X_mu;
+    Yt_.colwise() -= Y_mu;
+    MatrixXd X_norm = Xt_.transpose();
+    MatrixXd Y_norm = Yt_.transpose();
+
+    // compute matrix A first (3 X 3 rotation matrix)
+    MatrixXd A = (1.0 / n) * (Y_norm.transpose() * X_norm);
+    // rotation matrix to compute
+    Matrix<double,2,2> R;
+    Matrix<double,2,2> d = Matrix<double,2,2>::Identity();
+
+    // do SVD of A
+    JacobiSVD<MatrixXd> svd_u(A, ComputeFullU);
+    Matrix<double,2,2> U = svd_u.matrixU();
+
+    U(0,0) = -1.0 * U(0,0);
+    U(1,0) = -1.0 * U(1,0);
+    JacobiSVD<MatrixXd> svd_v(A, ComputeFullV);
+    Matrix<double,2,2> V = svd_v.matrixV();
+    V(0,0) = -1.0 * V(0,0);
+    V(1,0) = -1.0 * V(1,0);
+
+    if (svd_u.rank() == 0) {
+      cout << "SVD leads to 0 rank!" << endl;
+      return;
     }
 
-  } else {
-    R =  U * d * V;
+    if (svd_u.rank() == (m - 1)) {
+      if ( (U.determinant() * V.determinant() ) > 0) {
+        // cout << "det prod greater!" << endl;
+        R = U * V;
+      } else {
+        // cout << "det prod lesser!" << endl;
+        double s = d(1,1);
+        d(1,1) = -1;
+        R = U * d * V;
+        d(1,1) = s;
+      }
+    } else {
+      R =  U * d * V;
+    }
+
+    double scale = 1.0;
+    // compute scale if its similarity transform
+    if (transform == "similarity") {
+      // double scale = 1.0 / src_demean.var(axis=0).sum() * (S @ d)
+      cout << "X_norm is: " << endl;
+      cout << X_norm << endl;
+      // double variance = 0.0001; // TODO: compute using X_norm
+      // double scale = 1.0 / (variance * S.colwise() * d);
+      double s_dot_d = svd_u.singularValues().dot(d.diagonal());
+      // cout << "S * d is: " << svd_u.singularValues().dot(d.diagonal()) << endl;
+      cout << "computed abs vals are: " << endl;
+      double x_norm_var = X_norm.transpose().cwiseAbs2().rowwise().mean().sum();
+      cout << x_norm_var << endl;
+      scale = (1.0 / x_norm_var) * (svd_u.singularValues().dot(d.diagonal()));
+    }
+    cout << "scale value is: " << scale << endl;
+
+    // apply scale to rotation and translation
+    Vector2d t = Y_mu - (scale * (R * X_mu));
+    R = R * scale;
+
+    T << R(0,0), R(0,1), t(0),
+         R(1,0), R(1,1), t(1),
+         0,      0,      1.0;
   }
 
-  double scale = 1.0;
-  if (transform == "similarity") {
-    // double scale = 1.0 / src_demean.var(axis=0).sum() * (S @ d)
-    // double variance = 0.0001; // TODO: compute using X_norm
-    // double scale = 1.0 / (variance * S.colwise() * d);
-    cout << "yet to implement similarity" << endl;
+  if (transform == "affine") {
+    cout << "in estimate_transform affine" << endl;
+    // estimate affine transform using DLT algorithm
+    dlt(X, Y, T);
   }
-
-  // compute translation
-  Vector2d t = Y_norm - (scale * (R * X_norm.transpose()));
-
-  T << R(0,0), R(0,1), t(0),
-       R(1,0), R(1,1), t(1),
-       0,      0,      1.0;
 
   cout << "Final T value is: " << endl;
   cout << T << endl;
@@ -471,9 +499,9 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
     size_t n_match = putative_matches.size();
     fp_match_count = n_match;
-    //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << n_match << flush;
+    //cout << "Putative matches (using Lowe's 2nd NN test) = " << n_match << endl;
     // high_resolution_clock::time_point after_putative_match = std::chrono::high_resolution_clock::now();
-    // cout << "\n time after putative match computation: " << (duration_cast<duration<double>>(after_putative_match - after_second_sift)).count() << flush;
+    // cout << "time after putative match computation: " << (duration_cast<duration<double>>(after_putative_match - after_second_sift)).count() << endl;
 
     if( n_match < 9 ) {
       message = "Number of feature points that match are very low";
@@ -504,8 +532,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     MatrixXd im1_match_norm = im1_match_kp_tform * im1_match_kp;
     MatrixXd im2_match_norm = im2_match_kp_tform * im2_match_kp;
-    //cout << "\nim1_match_kp_tform=" << im1_match_kp_tform << flush;
-    //cout << "\nim2_match_kp_tform=" << im2_match_kp_tform << flush;
+    //cout << "im1_match_kp_tform=" << im1_match_kp_tform << endl;
+    //cout << "im2_match_kp_tform=" << im2_match_kp_tform << endl;
 
     // memory cleanup as these are not required anymore
     im1_match_kp.resize(0,0);
@@ -517,7 +545,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     uniform_int_distribution<> dist(0, n_match-1);
 
     // estimate homography using RANSAC
-    cout << "\n estimating homography using RANSAC" << flush;
+    cout << "estimating homography using RANSAC" << endl;
     size_t max_score = 0;
     Matrix<double,3,3> Hi;
     vector<unsigned int> best_inliers_index;
@@ -550,9 +578,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       Y.row(3) = im2_match_norm.col(kp_id4).transpose();
 
       // dlt(X, Y, Hi);
-
-      // added instead of dlt above
-      // Matrix<double,3,3> T;
       estimate_transform(X, Y, transform, Hi);
 
       size_t score = 0;
@@ -584,7 +609,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       }
     } // end RANSAC_ITER_COUNT loop
     // high_resolution_clock::time_point after_ransac = std::chrono::high_resolution_clock::now();
-    // cout << "\n after ransac is: " << (duration_cast<duration<double>>(after_ransac - after_putative_match)).count() << flush;
+    // cout << "after ransac is: " << (duration_cast<duration<double>>(after_ransac - after_putative_match)).count() << endl;
 
     if( max_score < 3 ) {
       message = "Failed to find a suitable transformation";
@@ -605,15 +630,12 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     Matrix<double, 3, 3> Hopt_norm, H;
 
     // dlt(X, Y, Hopt_norm);
-
-    // added instead of dlt above
-    // Matrix<double, 3, 3> T;
-    estimate_transform(X, Y, transform, H);
+    estimate_transform(X, Y, transform, Hopt_norm);
     // cout << "estimated T is: " << T << endl;
 
     // see Hartley and Zisserman p.109
-    // H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform;
-    // H = H / H(2,2);
+    H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform;
+    H = H / H(2,2);
     // Hopt is the reference variable passed to this method
     Hopt = H;
 
@@ -636,7 +658,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     if (transform == "identity") {
       // identity transform = identity rotation + zero translation
-      Magick::DrawableAffine hinv_affine(1.0, 1.0, 0, 0, 0.0, 0.0);
+      Magick::DrawableAffine hinv_affine(1.0, 1.0, 0.0, 0.0, 0, 0);
       op_w_h_and_offsets = std::to_string(xu-xl) +
                            "x" +
                            std::to_string(yu-yl) +
@@ -667,8 +689,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
       // added
       // set rotation as per Tinv
-      Matrix<double, 3, 3> T;
-      cout << "calling estimate_transform in else" << endl;
+      // Matrix<double, 3, 3> T;
       // estimate_transform(X, Y, transform, T);
       // Matrix<double, 3,3> Tinv = T.inverse();
       // Magick::DrawableAffine hinv_affine(Tinv(0,0), Tinv(1,1), Tinv(1,0), Tinv(0,1), 0, 0);
@@ -681,13 +702,13 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       // width and height of im2. Then offset in x and y direction based on the translation
       // computed by Homography (H and Hinv matrices).
 
-      // op_w_h_and_offsets = std::to_string(xu-xl) +
-      //                      "x" +
-      //                      std::to_string(yu-yl) +
-      //                      "-" + to_string((int) Hinv(0,2)) +
-      //                      "-" + to_string((int) Hinv(1,2));
-      // // apply the values set above
-      // im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+      op_w_h_and_offsets = std::to_string(xu-xl) +
+                           "x" +
+                           std::to_string(yu-yl) +
+                           "-" + to_string((int) Hinv(0,2)) +
+                           "-" + to_string((int) Hinv(1,2));
+      // apply the values set above
+      im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
       im2t_crop.affineTransform(hinv_affine);
     }
 

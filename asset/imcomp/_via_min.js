@@ -1516,7 +1516,6 @@ _via_ctrl.prototype.trigger_hook = function(hook_name, param) {
     if ( this.hook.now.hasOwnProperty(hook_name) ) {
       for ( var i=0; i<this.hook.now[hook_name].length; i++ ) {
         var target = this.hook.now[hook_name][i];
-        i
         target.call(null, param);
       }
     }
@@ -1948,6 +1947,8 @@ _via_ctrl.prototype.keyup_handler = function(e) {
 }
 
 _via_ctrl.prototype.keydown_handler = function(e) {
+  console.log('in keydown handler');
+
   e.stopPropagation();
 
   this.v.layers['top'].focus();
@@ -2223,6 +2224,7 @@ _via_ctrl.prototype.mousemove_handler = function(e) {
 
 _via_ctrl.prototype.mouseup_handler = function(e) {
   e.stopPropagation();
+
   var x1 = e.offsetX;
   var y1 = e.offsetY;
   this.v.last.mouseup = new _via_point(x1, y1);
