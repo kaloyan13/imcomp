@@ -3,7 +3,7 @@ set(BUILD_SHARED_LIBS "ON" )
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_library( imreg_sift STATIC imreg_sift.cc )
-target_link_libraries( imreg_sift imcomp_cache ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} ${VLFEAT_LIB} Eigen3::Eigen)
+target_link_libraries( imreg_sift imcomp_cache ${ImageMagick_LIBRARIES} ${Boost_LIBRARIES} ${VLFEAT_LIB})
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("debug mode")
