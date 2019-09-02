@@ -60,14 +60,12 @@ void imreg_sift::dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H
 void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string& transform, Matrix<double,3,3>& T) {
 
   if (transform == "identity") {
-    cout << "in estimate_transform identity" << endl;
     T << 1.0, 0.0, 0.0,
          0.0, 1.0, 0.0,
          0.0, 0.0, 1.0;
   }
 
   if (transform == "rigid" || transform == "similarity") {
-    cout << "in estimate_transform rigid or similarity" << endl;
     // ignore homogenous representation
     Matrix<double,4,2> X_, Y_;
     X_ = X.block<4,2>(0,0);
@@ -94,9 +92,6 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
     // subtract mean from points
     VectorXd X_mu = Xt_.rowwise().mean();
     VectorXd Y_mu = Yt_.rowwise().mean();
-    cout << "X_mu is: " << X_mu << endl;
-    cout << "Y_mu is: " << Y_mu << endl;
-    cout << "Transform value is: " << transform << endl;
 
     Xt_.colwise() -= X_mu;
     Yt_.colwise() -= Y_mu;
@@ -112,7 +107,6 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
     // do SVD of A
     JacobiSVD<MatrixXd> svd_u(A, ComputeFullU);
     Matrix<double,2,2> U = svd_u.matrixU();
-
     U(0,0) = -1.0 * U(0,0);
     U(1,0) = -1.0 * U(1,0);
     JacobiSVD<MatrixXd> svd_v(A, ComputeFullV);
@@ -127,10 +121,8 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
 
     if (svd_u.rank() == (m - 1)) {
       if ( (U.determinant() * V.determinant() ) > 0) {
-        // cout << "det prod greater!" << endl;
         R = U * V;
       } else {
-        // cout << "det prod lesser!" << endl;
         double s = d(1,1);
         d(1,1) = -1;
         R = U * d * V;
@@ -143,20 +135,10 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
     double scale = 1.0;
     // compute scale if its similarity transform
     if (transform == "similarity") {
-      // double scale = 1.0 / src_demean.var(axis=0).sum() * (S @ d)
-      cout << "X_norm is: " << endl;
-      cout << X_norm << endl;
-      // double variance = 0.0001; // TODO: compute using X_norm
-      // double scale = 1.0 / (variance * S.colwise() * d);
       double s_dot_d = svd_u.singularValues().dot(d.diagonal());
-      // cout << "S * d is: " << svd_u.singularValues().dot(d.diagonal()) << endl;
-      cout << "computed abs vals are: " << endl;
       double x_norm_var = X_norm.transpose().cwiseAbs2().rowwise().mean().sum();
-      cout << x_norm_var << endl;
       scale = (1.0 / x_norm_var) * (svd_u.singularValues().dot(d.diagonal()));
     }
-    cout << "scale value is: " << scale << endl;
-
     // apply scale to rotation and translation
     Vector2d t = Y_mu - (scale * (R * X_mu));
     R = R * scale;
@@ -167,15 +149,209 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
   }
 
   if (transform == "affine") {
-    cout << "in estimate_transform affine" << endl;
     // estimate affine transform using DLT algorithm
     dlt(X, Y, T);
   }
-
-  cout << "Final T value is: " << endl;
-  cout << T << endl;
-
+  // cout << "Final T value is: " << endl;
+  // cout << T << endl;
 }
+
+void imreg_sift::estimate_photo_transform(Magick::Image img_one, Magick::Image img_two, Magick::Image& transformed_img) {
+  // init some constants
+  size_t score = 0;
+  size_t max_score = 0;
+  size_t ransac_iters = 2000; // change
+  size_t num_pts = 3; // change
+  double error_threshold = 0.05; // change
+  int w = img_one.columns();
+  int h = img_one.rows();
+  // vector<unsigned int> inliers_index, best_inliers_index;
+  std::vector< int > best_inlier_x_pts, best_inlier_y_pts;
+
+  // initialize random number generator to randomly sample pixels from images
+  random_device rand_device;
+  mt19937 generator(rand_device());
+  uniform_int_distribution<> x_dist(0, w);
+  uniform_int_distribution<> y_dist(0, h);
+
+  // RANSAC iteration loop
+  for (int i = 0; i < ransac_iters; i++) {
+    std::vector< int > x_pts, y_pts;
+    std::vector< int > inlier_x_pts, inlier_y_pts;
+
+    // randomly select n_pts points
+    for (int i = 0; i < num_pts; i++) {
+      x_pts.push_back(x_dist(generator));
+      y_pts.push_back(y_dist(generator));
+    }
+    // select intensities at the random points
+    Eigen::VectorXd img_one_red(num_pts), img_two_red(num_pts);
+    Eigen::VectorXd img_one_green(num_pts), img_two_green(num_pts);
+    Eigen::VectorXd img_one_blue(num_pts), img_two_blue(num_pts);
+    for (int i = 0; i < num_pts; i++) {
+      Magick::ColorRGB img_one_px = img_one.pixelColor(x_pts.at(i), y_pts.at(i));
+      img_one_red[i] = img_one_px.red();
+      img_one_green[i] = img_one_px.green();
+      img_one_blue[i] = img_one_px.blue();
+
+      Magick::ColorRGB img_two_px = img_two.pixelColor(x_pts.at(i), y_pts.at(i));
+      img_two_red[i] = img_two_px.red();
+      img_two_green[i] = img_two_px.green();
+      img_two_blue[i] = img_two_px.blue();
+    }
+
+    // estimate photometric
+    Matrix3d A = Matrix3d::Identity();
+    Vector3d b;
+    Vector2d a_b;
+    MatrixXd S = MatrixXd::Ones(num_pts, 2);
+    // form the system matrix to solve for A and B
+    // for each channel
+    S.col(0) << img_one_red;
+    JacobiSVD<MatrixXd> svd_r(S, ComputeFullU | ComputeFullV);
+    a_b = svd_r.solve(img_two_red);
+    A(0,0) = a_b(0); b(0) = a_b(1);
+
+    S.col(0) << img_one_green;
+    JacobiSVD<MatrixXd> svd_g(S, ComputeFullU | ComputeFullV);
+    a_b = svd_g.solve(img_two_green);
+    A(1,1) = a_b(0); b(1) = a_b(1);
+
+    S.col(0) << img_one_blue;
+    JacobiSVD<MatrixXd> svd_b(S, ComputeFullU | ComputeFullV);
+    a_b = svd_b.solve(img_two_blue);
+    A(2,2) = a_b(0); b(2) = a_b(1);
+
+    // form matrix B to solve
+    MatrixXd B = b.transpose().replicate(num_pts, 1);
+
+    cout << "value of A is: " << endl;
+    cout << A << endl;
+    cout << "value of B is: " << endl;
+    cout << B << endl;
+
+    // apply photometric to compute error
+    MatrixXd iter_img_one = MatrixXd::Ones(num_pts, 3);
+    MatrixXd iter_img_two = MatrixXd::Ones(num_pts, 3);
+    iter_img_one.col(0) << img_one_red;
+    iter_img_one.col(1) << img_one_green;
+    iter_img_one.col(2) << img_one_blue;
+    iter_img_two.col(0) << img_two_red;
+    iter_img_two.col(1) << img_two_green;
+    iter_img_two.col(2) << img_two_blue;
+
+    MatrixXd computed_img_one = (iter_img_two * A) + B;
+    VectorXd errors = (iter_img_one - computed_img_one).rowwise().squaredNorm();
+    cout << "errors are: " << endl;
+    cout << errors << endl;
+
+    for(size_t k = 0; k < num_pts; k++) {
+      if(errors(k) < error_threshold) {
+        score++;
+        inlier_x_pts.push_back(x_pts.at(k));
+        inlier_y_pts.push_back(y_pts.at(k));
+      }
+      score = inlier_x_pts.size();
+      cout << "score is: " << score << endl;
+    }
+    if(score > max_score) {
+      max_score = score;
+      best_inlier_x_pts.swap(inlier_x_pts);
+      best_inlier_y_pts.swap(inlier_y_pts);
+    }
+
+  } // end of RANSAC loop
+
+  cout << "best inliers are: " << endl;
+  for (int i = 0; i < best_inlier_x_pts.size(); i++) {
+    cout << best_inlier_x_pts.at(i) << endl;
+  }
+
+  if( max_score < 2 ) {
+    cout << "Less than 2 points for photometric transformation! Returning!" << endl;
+    return;
+  }
+
+  // --------------------------------------
+  // recompute transform with best inliers
+  // --------------------------------------
+  Eigen::VectorXd img_one_red(num_pts), img_two_red(num_pts);
+  Eigen::VectorXd img_one_green(num_pts), img_two_green(num_pts);
+  Eigen::VectorXd img_one_blue(num_pts), img_two_blue(num_pts);
+  // Magick::ColorRGB img_one_px, img_two_px;
+  for (int i = 0; i < best_inlier_x_pts.size(); i++) {
+     Magick::ColorRGB img_one_px = img_one.pixelColor(best_inlier_x_pts.at(i), best_inlier_y_pts.at(i));
+     // double img_one_mean = (img_one_px.red() + img_one_px.green() + img_one_px.blue()) / 3.0;
+     img_one_red[i] = img_one_px.red();
+     img_one_green[i] = img_one_px.green();
+     img_one_blue[i] = img_one_px.blue();
+
+     Magick::ColorRGB img_two_px = img_two.pixelColor(best_inlier_x_pts.at(i), best_inlier_y_pts.at(i));
+     // double img_two_mean = (img_two_px.red() + img_two_px.green() + img_two_px.blue()) / 3.0;
+     img_two_red[i] = img_two_px.red();
+     img_two_green[i] = img_two_px.green();
+     img_two_blue[i] = img_two_px.blue();
+  }
+
+  Matrix3d A = Matrix3d::Identity();
+  Vector3d b;
+  VectorXd a_b;
+  MatrixXd S = MatrixXd::Ones(num_pts, 2);
+
+  S.col(0) << img_two_red;
+  JacobiSVD<MatrixXd> svd_r(S, ComputeFullU | ComputeFullV);
+  a_b = svd_r.solve(img_one_red);
+  A(0,0) = a_b(0); b(0) = a_b(1);
+
+  S.col(0) << img_two_green;
+  JacobiSVD<MatrixXd> svd_g(S, ComputeFullU | ComputeFullV);
+  a_b = svd_g.solve(img_one_green);
+  A(1,1) = a_b(0); b(1) = a_b(1);
+
+  S.col(0) << img_two_blue;
+  JacobiSVD<MatrixXd> svd_b(S, ComputeFullU | ComputeFullV);
+  a_b = svd_b.solve(img_one_blue);
+  A(2,2) = a_b(0); b(2) = a_b(1);
+
+  MatrixXd B = b.transpose().replicate(num_pts, 1);
+
+  cout << "final A matrix is: " << endl;
+  cout << A << endl;
+  cout << "final B matrix is: " << endl;
+  cout << B << endl;
+
+  // apply the transformation on the image
+  // Magick::Image img_two_transformed(img_two.size(), "black"); // create an empty image
+  // Magick::Image img_two_transformed(img_two.size(), "black");
+  // img_two_transformed->size( img_two.size() );
+  // img_two_transformed.backgroundColor( Magick::Color( "white" ) );
+  // img_two_transformed.erase();
+  // img_two_transformed.type(Magick::TrueColorType);
+
+  for(unsigned int i = 0; i < transformed_img.rows(); i++) {
+    for(unsigned int j = 0; j < transformed_img.columns(); j++) {
+      Magick::ColorRGB img_two_pixel = img_two.pixelColor(j, i);
+      // unsigned char r = img_two_px_new.redQuantum()	* 255 / QuantumRange;
+      // unsigned char g = img_two_px_new.greenQuantum()	* 255 / QuantumRange;
+      // unsigned char b = img_two_px_new.blueQuantum()	* 255 / QuantumRange;
+
+      // apply the computed transform
+      double r = (img_two_pixel.red() * A(0,0)) + B(0,0);
+      double g = (img_two_pixel.green() * A(1,1)) +  B(0,1);
+      double b = (img_two_pixel.blue() * A(2,2)) + B(0,2);
+      img_two_pixel.red(r);
+      img_two_pixel.green(g);
+      img_two_pixel.blue(b);
+
+      transformed_img.pixelColor(j,i,img_two_pixel);
+    }
+  }
+  cout << "done" << endl;
+  transformed_img.write("/home/shrinivasan/Desktop/res.jpg");
+
+  // img_two = img_two_transformed;
+
+} // end of function
 
 double imreg_sift::clamp(double v, double min, double max) {
   if( v > min ) {
@@ -423,9 +599,9 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             imcomp_cache * cache,
                             std::string& transform) {
   try {
+    cout << "got value of transform is: " << transform << endl;
     high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-    // cout << "\n value of transform is: "  << transform << flush;
     success = false;
     message = "";
 
@@ -456,44 +632,42 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
     high_resolution_clock::time_point before_sift = std::chrono::high_resolution_clock::now();
-    cout << "\n time before sift computation: " << (duration_cast<duration<double>>(before_sift - start)).count() << flush;
+    cout << "time before sift computation: " << (duration_cast<duration<double>>(before_sift - start)).count() << endl;
 
     // check cache before computing features
     // TODO: Enable when we have a proper implementation of caching mechanism.
     // Disabled for now.
     // bool is_im1_cached = cache->get(base_filename1, keypoint_list1, descriptor_list1);
     // if (is_im1_cached) {
-    //   cout << "\n using cached data for fid: " << base_filename1 << flush;
+    //   cout << "using cached data for fid: " << base_filename1 << endl;
     // }
     // if (!is_im1_cached) {
     //   // images are converted to gray scale before processing
     //   compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
     //   // cache for future use
     //   cache->put(base_filename1, keypoint_list1, descriptor_list1);
-    //   cout << "\n successfully cached fid: " << base_filename1 << flush;
+    //   cout << "successfully cached fid: " << base_filename1 << endl;
     // }
-    // cout << "\n cached first keypoint is: " << keypoint_list1.at(1).x << " " << keypoint_list1.at(1).y << flush;
+    // cout << "cached first keypoint is: " << keypoint_list1.at(1).x << " " << keypoint_list1.at(1).y << endl;
     //
     // bool is_im2_cached = cache->get(base_filename2, keypoint_list2, descriptor_list2);
     // if (is_im2_cached) {
-    //   cout << "\n using cached data for fid: " << base_filename2 << flush;
+    //   cout << "using cached data for fid: " << base_filename2 << endl;
     // }
     // if (!is_im2_cached) {
     //   // images are converted to gray scale before processing
     //   compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
     //   // cache for future use
     //   cache->put(base_filename2, keypoint_list2, descriptor_list2);
-    //   cout << "\n successfully cached fid: " << base_filename2 << flush;
+    //   cout << "successfully cached fid: " << base_filename2 << endl;
     // }
-    // cout << "\n second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << flush;
+    // cout << "second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << endl;
 
     // compute SIFT features without caching
-    cout << "\n computing sift features" << flush;
     compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
     compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
 
     // use Lowe's 2nd nn test to find putative matches
-    cout << "\n computing putative matches" << flush;
     float threshold = 1.5f;
     std::vector< std::pair<uint32_t, uint32_t> > putative_matches;
     get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
@@ -524,7 +698,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       im2_match_kp(2, i) = 1.0;
     }
 
-    cout << "\n Normalizing keypoints" << flush;
     Matrix<double,3,3> im1_match_kp_tform, im2_match_kp_tform;
     get_norm_matrix(im1_match_kp, im1_match_kp_tform);
     get_norm_matrix(im2_match_kp, im2_match_kp_tform);
@@ -545,7 +718,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     uniform_int_distribution<> dist(0, n_match-1);
 
     // estimate homography using RANSAC
-    cout << "estimating homography using RANSAC" << endl;
     size_t max_score = 0;
     Matrix<double,3,3> Hi;
     vector<unsigned int> best_inliers_index;
@@ -563,7 +735,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       int kp_id2 = dist(generator);
       int kp_id3 = dist(generator);
       int kp_id4 = dist(generator);
-      //cout << "\n  Random entries from putative_matches: " << kp_id1 << "," << kp_id2 << "," << kp_id3 << "," << kp_id4 << flush;
+      //cout << "Random entries from putative_matches: " << kp_id1 << "," << kp_id2 << "," << kp_id3 << "," << kp_id4 << endl;
 
       MatrixXd X(4,3);
       X.row(0) = im1_match_norm.col(kp_id1).transpose();
@@ -577,6 +749,10 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       Y.row(2) = im2_match_norm.col(kp_id3).transpose();
       Y.row(3) = im2_match_norm.col(kp_id4).transpose();
 
+      // cout << "X is: " << endl;
+      // cout << X << endl;
+      // cout << "Y is: " << endl;
+      // cout << Y << endl;
       // dlt(X, Y, Hi);
       estimate_transform(X, Y, transform, Hi);
 
@@ -601,13 +777,13 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
           inliers_index.push_back(k);
         }
       }
-
-      cout << "iter " << iter << " of " << RANSAC_ITER_COUNT << " : score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << endl;
+      // cout << "iter " << iter << " of " << RANSAC_ITER_COUNT << " : score=" << score << ", max_score=" << max_score << ", total_matches=" << putative_matches.size() << endl;
       if( score > max_score ) {
         max_score = score;
         best_inliers_index.swap(inliers_index);
       }
     } // end RANSAC_ITER_COUNT loop
+
     // high_resolution_clock::time_point after_ransac = std::chrono::high_resolution_clock::now();
     // cout << "after ransac is: " << (duration_cast<duration<double>>(after_ransac - after_putative_match)).count() << endl;
 
@@ -618,7 +794,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     // Recompute homography using all the inliers
     // This does not improve the registration
-    cout << "re-computing homography using inliers" << endl;
+    // cout << "re-computing homography using inliers" << endl;
     size_t n_inliers = best_inliers_index.size();
     MatrixXd X(n_inliers,3);
     MatrixXd Y(n_inliers,3);
@@ -656,74 +832,49 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     Magick::Image im2t_crop(im2);
     string op_w_h_and_offsets;
 
-    if (transform == "identity") {
-      // identity transform = identity rotation + zero translation
-      Magick::DrawableAffine hinv_affine(1.0, 1.0, 0.0, 0.0, 0, 0);
-      op_w_h_and_offsets = std::to_string(xu-xl) +
-                           "x" +
-                           std::to_string(yu-yl) +
-                           "-" + to_string(0) +
-                           "-" + to_string(0);
-      // apply the values set above
-      im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
-      im2t_crop.affineTransform(hinv_affine);
+    // some simple affine tralsformations for testing:
+    // Magick::DrawableAffine affine(1.0,  1.0, 0, 0, 0.0, 0.0);
+    // Magick::DrawableAffine hinv_affine(1,1,.3,0,0,0); // simple shearing
+    // Magick::DrawableAffine hinv_affine(1,-1,0,0,0,0); // flip
+    // Magick::DrawableAffine hinv_affine(1,0.5,0,0,0,0); // scale
+    // set rotation as per Hinv
+    Magick::DrawableAffine hinv_affine(Hinv(0,0), Hinv(1,1), Hinv(1,0), Hinv(0,1), 0, 0);
 
-    } else if (transform == "translation") {
-      // apply translation only but no rotation
-      Magick::DrawableAffine hinv_affine(1.0, 1.0, 0, 0, 0.0, 0.0);
-      op_w_h_and_offsets = std::to_string(xu-xl) +
-                           "x" +
-                           std::to_string(yu-yl) +
-                           "-" + to_string((int) Hinv(0,2)) +
-                           "-" + to_string((int) Hinv(1,2));
-      // apply the values set above
-      im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
-      im2t_crop.affineTransform(hinv_affine);
+    // set translation and resizing using viewport function.
+    // See: http://www.imagemagick.org/discourse-server/viewtopic.php?f=27&t=33029#p157520.
+    // As we need to render the image on a webpage canvas, we need to resize the
+    // width and height of im2. Then offset in x and y direction based on the translation
+    // computed by Homography (H and Hinv matrices).
+    op_w_h_and_offsets = std::to_string(xu-xl) +
+                         "x" +
+                         std::to_string(yu-yl) +
+                         "-" + to_string((int) Hinv(0,2)) +
+                         "-" + to_string((int) Hinv(1,2));
+    // apply the values set above
+    im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+    im2t_crop.affineTransform(hinv_affine);
 
-    } else {
-      // some simple affine tralsformations for testing:
-      // Magick::DrawableAffine affine(1.0,  1.0, 0, 0, 0.0, 0.0);
-      // Magick::DrawableAffine hinv_affine(1,1,.3,0,0,0); // simple shearing
-      // Magick::DrawableAffine hinv_affine(1,-1,0,0,0,0); // flip
-      // Magick::DrawableAffine hinv_affine(1,0.5,0,0,0,0); // scale
+    // estimate and apply photometric transform
+    Magick::Image im2_pmetric_transformed(im2t_crop.size(), "black");
+    im2_pmetric_transformed.type(Magick::TrueColorType);
+    // img_two_transformed.backgroundColor( Magick::Color( "white" ));
+    im2_pmetric_transformed.erase();
 
-      // added
-      // set rotation as per Tinv
-      // Matrix<double, 3, 3> T;
-      // estimate_transform(X, Y, transform, T);
-      // Matrix<double, 3,3> Tinv = T.inverse();
-      // Magick::DrawableAffine hinv_affine(Tinv(0,0), Tinv(1,1), Tinv(1,0), Tinv(0,1), 0, 0);
-      // set rotation as per Hinv
-      Magick::DrawableAffine hinv_affine(Hinv(0,0), Hinv(1,1), Hinv(1,0), Hinv(0,1), 0, 0);
-
-      // set translation and resizing using viewport function.
-      // See: http://www.imagemagick.org/discourse-server/viewtopic.php?f=27&t=33029#p157520.
-      // As we need to render the image on a webpage canvas, we need to resize the
-      // width and height of im2. Then offset in x and y direction based on the translation
-      // computed by Homography (H and Hinv matrices).
-
-      op_w_h_and_offsets = std::to_string(xu-xl) +
-                           "x" +
-                           std::to_string(yu-yl) +
-                           "-" + to_string((int) Hinv(0,2)) +
-                           "-" + to_string((int) Hinv(1,2));
-      // apply the values set above
-      im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
-      im2t_crop.affineTransform(hinv_affine);
-    }
+    estimate_photo_transform(im1_crop, im2t_crop, im2_pmetric_transformed);
 
     // save result
-    im2t_crop.write(im2_tx_fn);
+    // im2t_crop.write(im2_tx_fn);
+    im2_pmetric_transformed.write(im2_tx_fn);
     // TODO: find a way to create a good overlap image. For now use im2t_crop
     // overlap.write(overlap_image_fn);
     // TODO: fix the javascript so that we don't use overlap image as im2t!!
-    im2t_crop.write(overlap_image_fn);
+    // im2t_crop.write(overlap_image_fn);
+    im2_pmetric_transformed.write(overlap_image_fn);
 
     // high_resolution_clock::time_point before_diff = std::chrono::high_resolution_clock::now();
     // cout << "before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
 
     // difference image
-    cout << "\n comoputing diff imgae" << flush;
     Magick::Image cdiff(im1_crop);
     get_diff_image(im1_crop, im2t_crop, cdiff);
     cdiff.write(diff_image_fn);
@@ -752,7 +903,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 /// Thin plate spline registration based on:
 /// Bookstein, F.L., 1989. Principal warps: Thin-plate splines and the decomposition of deformations. IEEE TPAMI.
 ///
-
 void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
                                    double xl, double xu, double yl, double yu,
                                    MatrixXd& Hopt, size_t& fp_match_count,
@@ -798,30 +948,29 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     // Disabled for now.
     // bool is_im1_cached = cache->get(base_filename1, keypoint_list1, descriptor_list1);
     // if (is_im1_cached) {
-    //   cout << "\n using cached data for fid: " << base_filename1 << flush;
+    //   cout << "using cached data for fid: " << base_filename1 << endl;
     // }
     // if (!is_im1_cached) {
     //   // images are converted to gray scale before processing
     //   compute_sift_features(im1_g, keypoint_list1, descriptor_list1, false);
     //   // cache for future use
     //   cache->put(base_filename1, keypoint_list1, descriptor_list1);
-    //   cout << "\n successfully cached fid: " << base_filename1 << flush;
+    //   cout << "successfully cached fid: " << base_filename1 << endl;
     // }
-    // cout << "\n cached first keypoint is: " << keypoint_list1.at(1).x << " " << keypoint_list1.at(1).y << flush;
-    //
+    // cout << "cached first keypoint is: " << keypoint_list1.at(1).x << " " << keypoint_list1.at(1).y << endl;
+
     // bool is_im2_cached = cache->get(base_filename2, keypoint_list2, descriptor_list2);
     // if (is_im2_cached) {
-    //   cout << "\n using cached data for fid: " << base_filename2 << flush;
+    //   cout << "using cached data for fid: " << base_filename2 << endl;
     // }
     // if (!is_im2_cached) {
     //   // images are converted to gray scale before processing
     //   compute_sift_features(im2_g, keypoint_list2, descriptor_list2, false);
     //   // cache for future use
     //   cache->put(base_filename2, keypoint_list2, descriptor_list2);
-    //   cout << "\n successfully cached fid: " << base_filename2 << flush;
+    //   cout << "successfully cached fid: " << base_filename2 << endl;
     // }
-    // cout << "\n second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << flush;
-
+    // cout << "second keypoint is: " << keypoint_list2.at(1).x << " " << keypoint_list2.at(1).y << endl;
 
     // Compute SIFT features without caching.
     compute_sift_features(im1_g, keypoint_list1, descriptor_list1);
@@ -833,7 +982,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
 
     size_t n_lowe_match = putative_matches.size();
-    //cout << "\nPutative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << flush;
+    //cout << "Putative matches (using Lowe's 2nd NN test) = " << putative_matches.size() << endl;
 
     if( n_lowe_match < 9 ) {
       fp_match_count = n_lowe_match;
@@ -843,10 +992,10 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
 
     // Normalize points so that centroid lies at origin and mean distance to
     // original points in sqrt(2)
-    //cout << "\nCreating matrix of size 3x" << n_lowe_match << " ..." << flush;
+    //cout << "Creating matrix of size 3x" << n_lowe_match << " ..." << endl;
     MatrixXd pts1(3, n_lowe_match);
     MatrixXd pts2(3, n_lowe_match);
-    //cout << "\nCreating point set matched using lowe ..." << flush;
+    //cout << "Creating point set matched using lowe ..." << endl;
     for( size_t i=0; i<n_lowe_match; ++i) {
       VlSiftKeypoint kp1 = keypoint_list1.at( putative_matches[i].first );
       VlSiftKeypoint kp2 = keypoint_list2.at( putative_matches[i].second );
@@ -857,11 +1006,11 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
       pts2(1, i) = kp2.y;
       pts2(2, i) = 1.0;
     }
-    //cout << "\nNormalizing points ..." << flush;
+    //cout << "Normalizing points ..." << endl;
 
     Matrix3d pts1_tform;
     get_norm_matrix(pts1, pts1_tform);
-    //cout << "\nNormalizing matrix (T) = " << pts1_tform << flush;
+    //cout << "Normalizing matrix (T) = " << pts1_tform << endl;
 
     MatrixXd pts1_norm = pts1_tform * pts1;
     MatrixXd pts2_norm = pts1_tform * pts2;
@@ -885,7 +1034,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     // @todo: tune this threshold for better generalization
     double robust_ransac_threshold = 0.09;
     size_t RANSAC_ITER_COUNT = (size_t) ((double) n_lowe_match * 0.6);
-    //cout << "\nRANSAC_ITER_COUNT = " << RANSAC_ITER_COUNT << flush;
+    //cout << "RANSAC_ITER_COUNT = " << RANSAC_ITER_COUNT << endl;
     for( int i=0; i<RANSAC_ITER_COUNT; ++i ) {
       S.col(0) = S_all.col( dist(generator) ); // randomly select a match from S_all
       S.col(1) = S_all.col( dist(generator) );
@@ -910,11 +1059,11 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
         }
       }
 
-      //cout << "\n" << i << ": robust_match_idx=" << robust_match_idx.size() << flush;
+      //cout << i << ": robust_match_idx=" << robust_match_idx.size() << endl;
       if ( robust_match_idx.size() > best_robust_match_idx.size() ) {
         best_robust_match_idx.clear();
         best_robust_match_idx.swap(robust_match_idx);
-        //cout << "\t[MIN]" << flush;
+        //cout << "[MIN]" << endl;
       }
     } // end RANSAC_ITER_COUNT loop
 
@@ -944,8 +1093,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     }
     unsigned int cw = (unsigned int) (im1.columns() / n_cell_w);
 
-    //printf("\nn_cell_w=%d, n_cell_h=%d, cw=%d, ch=%d", n_cell_w, n_cell_h, cw, ch);
-    //printf("\nimage size = %ld x %ld", im1.columns(), im1.rows());
+    //printf("n_cell_w=%d, n_cell_h=%d, cw=%d, ch=%d", n_cell_w, n_cell_h, cw, ch);
+    //printf("image size = %ld x %ld", im1.columns(), im1.rows());
     vector<size_t> sel_best_robust_match_idx;
     for( unsigned int i=0; i<n_cell_w; ++i ) {
       for( unsigned int j=0; j<n_cell_h; ++j ) {
@@ -981,7 +1130,6 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
             sel_best_robust_match_idx.push_back( cell_pts.at(cell_pts_idx) );
           }
         }
-        //printf(" has points=%ld", cell_pts.size());
       }
     }
 
@@ -1026,8 +1174,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
         K(j, i) = K(i,j);
       }
     }
-    //cout << "\nK=" << K.rows() << "," << K.cols() << flush;
-    //cout << "\nlambda = " << lambda << flush;
+    //cout << "K=" << K.rows() << "," << K.cols() << endl;
+    //cout << "lambda = " << lambda << endl;
     // create matrix P
     MatrixXd P(n_cp, 3);
     for(unsigned int i=0; i<n_cp; ++i ) {
@@ -1039,8 +1187,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
       P(i,1) = cp1(0,i);
       P(i,2) = cp1(1,i);
     }
-    //cout << "\nP=" << P.rows() << "," << P.cols() << flush;
-    //cout << "\nK=" << endl << K.block(0,0,6,6) << flush;
+    //cout << "P=" << P.rows() << "," << P.cols() << endl;
+    //cout << "K=" << endl << K.block(0,0,6,6) << endl;
 
     // create matrix L
     MatrixXd L(n_cp+3, n_cp+3);
@@ -1057,113 +1205,35 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
       V(i,0) = cp2(0,i);
       V(i,1) = cp2(1,i);
     }
-    //cout << "\nV=" << V.rows() << "," << V.cols() << flush;
-
     MatrixXd Linv = L.inverse();
-    //cout << "\nLinv=" << endl << Linv << flush;
-
     MatrixXd W = Linv * V;
-    //cout << "\nW=" << W.rows() << "," << W.cols() << flush;
 
-    // each column of W denotes the coefficients of (1,x,y) and U() to get the image of point (X,y) in the warped domain
-    // For a point (x,y) in the original image, the warped point (x',y') is given by
-    // x' = W(0,0) + W(0,1)*x + W(0,2)*y + \sum{i=0}^{N} W(0,3+i) * U( ||Pi - (x,y)|| )
-    // y' = W(1,0) + W(1,1)*x + W(1,2)*y + \sum{i=0}^{N} W(1,3+i) * U( ||Pi - (x,y)|| )
+    // apply compyute transformations to second image
+    Magick::Image im2t_crop(im2);
+    string op_w_h_and_offsets;
+    Magick::DrawableAffine hinv_affine(W(0,0), W(1,1), W(1,0), W(0,1), 0, 0);
+    op_w_h_and_offsets = std::to_string(xu-xl) +
+                         "x" +
+                         std::to_string(yu-yl) +
+                         "-" + to_string((int) W(0,2)) +
+                         "-" + to_string((int) W(1,2));
+    im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
 
-    Magick::Image im2t_crop( im1_crop.size(), "white");
-    //cout << "\nTransforming image ..." << flush;
-    double x0,x1,y0,y1;
-    double x, y;
-    double dx0, dx1, dy0, dy1;
-    double fxy0, fxy1;
-    double fxy_red, fxy_green, fxy_blue;
-    double xi, yi;
-    double x_non_linear_terms, y_non_linear_terms;
-    double x_affine_terms, y_affine_terms;
-    Magick::Image overlap(im1_crop.size(), "white");
-
-    for(unsigned int j=0; j<im1_crop.rows(); j++) {
-      for(unsigned int i=0; i<im1_crop.columns(); i++) {
-        //cout << "\n(" << i << "," << j << ") :" << flush;
-        xi = ((double) i) + 0.5; // center of pixel
-        yi = ((double) j) + 0.5; // center of pixel
-        x_non_linear_terms = 0.0;
-        y_non_linear_terms = 0.0;
-        for(unsigned int k=0; k<n_cp; ++k) {
-          //cout << "\n  k=" << k << flush;
-          rx = cp1(0,k) - xi;
-          ry = cp1(1,k) - yi;
-          r = sqrt(rx*rx + ry*ry);
-          r2 = r*r;
-          x_non_linear_terms += W(k, 0) * r2 * log(r2);
-          y_non_linear_terms += W(k, 1) * r2 * log(r2);
-          //cout << "(" << x_non_linear_terms << "," << y_non_linear_terms << ")" << flush;
-        }
-        x_affine_terms = W(n_cp,0) + W(n_cp+1,0)*xi + W(n_cp+2,0)*yi;
-        y_affine_terms = W(n_cp,1) + W(n_cp+1,1)*xi + W(n_cp+2,1)*yi;
-        x = x_affine_terms + x_non_linear_terms;
-        y = y_affine_terms + y_non_linear_terms;
-
-        //printf("\n(%d,%d) : (xi,yi)=(%.2f,%.2f) (x,y)=(%.2f,%.2f) : (x,y)-affine = (%.2f,%.2f) (x,y)-nonlin = (%.2f,%.2f)", i, j, xi, yi, x, y, x_affine_terms, y_affine_terms, x_non_linear_terms, y_non_linear_terms);
-
-        // neighbourhood of xh
-        x0 = ((int) x);
-        x1 = x0 + 1;
-        dx0 = x - x0;
-        dx1 = x1 - x;
-
-        y0 = ((int) y);
-        y1 = y0 + 1;
-        dy0 = y - y0;
-        dy1 = y1 - y;
-
-        Magick::ColorRGB fx0y0 = im2.pixelColor(x0, y0);
-        Magick::ColorRGB fx1y0 = im2.pixelColor(x1, y0);
-        Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
-        Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
-
-        // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
-        fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1
-        fxy1 = dx1 * fx0y1.red() + dx0 * fx1y1.red(); // note: x1 - x0 = 1
-        fxy_red = dy1 * fxy0 + dy0 * fxy1;
-
-        fxy0 = dx1 * fx0y0.green() + dx0 * fx1y0.green(); // note: x1 - x0 = 1
-        fxy1 = dx1 * fx0y1.green() + dx0 * fx1y1.green(); // note: x1 - x0 = 1
-        fxy_green = dy1 * fxy0 + dy0 * fxy1;
-
-        fxy0 = dx1 * fx0y0.blue() + dx0 * fx1y0.blue(); // note: x1 - x0 = 1
-        fxy1 = dx1 * fx0y1.blue() + dx0 * fx1y1.blue(); // note: x1 - x0 = 1
-        fxy_blue = dy1 * fxy0 + dy0 * fxy1;
-
-        Magick::ColorRGB fxy(fxy_red, fxy_green, fxy_blue);
-        im2t_crop.pixelColor(i, j, fxy);
-
-        // overlap
-        Magick::ColorRGB c1 = im1_crop.pixelColor(i,j);
-        double red_avg = (c1.red() + fxy_red) / (2.0f);
-        double green_avg = (c1.green() + fxy_green) / (2.0f);
-        double blue_avg = (c1.blue() + fxy_blue) / (2.0f);
-        overlap.pixelColor(i, j, Magick::ColorRGB(red_avg, green_avg, blue_avg));
-      }
-    }
-    //cout << "\nWriting to " << im2_tx_fn << flush;
     im2t_crop.write( im2_tx_fn );
-    //cout << "\nWriting to " << overlap_image_fn << flush;
-    overlap.write(overlap_image_fn);
+    im2t_crop.write( overlap_image_fn );
 
     //auto finish = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double> elapsed = finish - start;
-    //std::cout << "\ntps registration completed in " << elapsed.count() << " s" << flush;
+    //std::cout << "tps registration completed in " << elapsed.count() << " s" << endl;
 
     // difference image
     Magick::Image cdiff(im1_crop.size(), "black");
     get_diff_image(im1_crop, im2t_crop, cdiff);
-    //cout << "\nWriting to " << diff_image_fn << flush;
-    cdiff.magick("JPEG");
     cdiff.write(diff_image_fn);
 
     success = true;
     message = "";
+
   } catch( std::exception &e ) {
     success = false;
     std::ostringstream ss;

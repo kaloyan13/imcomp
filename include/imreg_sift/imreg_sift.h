@@ -34,6 +34,7 @@ extern "C" {
 
 using namespace Eigen;
 using namespace std;
+using namespace Magick;
 using namespace std::chrono;
 
 class imreg_sift {
@@ -78,8 +79,13 @@ class imreg_sift {
   static void dlt(const MatrixXd& X, const MatrixXd& Y, Matrix<double,3,3>& H);
 
   // estimates transformation between two set of M corresponding points X and Y of N dimensions.
-  // see ...
+  // see the classic Linear Least Square paper: https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=88573
+  // The implementation is based on the sklearn implementation of the paper in function "_umeyama" here:
+  // https://github.com/scikit-image/scikit-image/blob/master/skimage/transform/_geometric.py
   static void estimate_transform(const MatrixXd& X, const MatrixXd& Y, std::string& transform, Matrix<double,3,3>& T);
+
+  // estimates the photometric transform given two sets of images
+  static void estimate_photo_transform(Magick::Image img_one, Magick::Image img_two, Magick::Image& transformed_img);
 
   // use vlfeat to compute SIFT keypoint and descriptors
   //static void compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false);
