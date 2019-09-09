@@ -156,81 +156,122 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
   // cout << T << endl;
 }
 
-void imreg_sift::estimate_photo_transform(Magick::Image img_one, Magick::Image img_two, Magick::Image& transformed_img) {
+
+void imreg_sift::compute_photo_transform(Magick::Image img_one,
+                                         Magick::Image img_two,
+                                         Magick::Image& transformed_img) {
   // init some constants
-  size_t score = 0;
-  size_t max_score = 0;
-  size_t ransac_iters = 2000; // change
-  size_t num_pts = 3; // change
-  double error_threshold = 0.05; // change
+  int score_r = 0;
+  int score_g = 0;
+  int score_b = 0;
+  int max_score_r = 0;
+  int max_score_g = 0;
+  int max_score_b = 0;
+  int ransac_iters = 1000;
+  float error_threshold = 0.01;
+
+  // float tolerance = std::numeric_limits<float>::epsilon();
   int w = img_one.columns();
   int h = img_one.rows();
-  // vector<unsigned int> inliers_index, best_inliers_index;
-  std::vector< int > best_inlier_x_pts, best_inlier_y_pts;
+  // min of 300 points or lesser if img is smaller
+  int num_pts = min(600, min(w,h));
+  cout << "compute_photo_transform: runnning for " << num_pts << " points" << endl;
+
+  std::vector<int> inlier_x_pts_r, inlier_y_pts_r,
+                   inlier_x_pts_g, inliner_y_pts_g,
+                   inlier_x_pts_b, inlier_y_pts_b;
+  std::vector<int> best_inlier_x_pts_r, best_inlier_y_pts_r,
+                   best_inlier_x_pts_g, best_inlier_y_pts_g,
+                   best_inlier_x_pts_b, best_inlier_y_pts_b;
+
+  // test for solve_lse function:
+  // expected: 0.9791, 0.0102
+  // VectorXd x(num_pts);
+  // x << 1.0000,0.7686,0.7529,0.5373;
+  // VectorXd y(num_pts);
+  // y << 1.0000,0.7686,0.7843,0.5294;
+  // Vector2d a_b;
+  // solve_lse(x,y,a_b);
+  // cout << "solved values are: " << a_b(0) << " " << a_b(1) << endl;
+  //
+  // // expected:     1.5000, -0.2637
+  // x << 0.5098,0.5373,0.4902,0.5373;
+  // y << 0.5098,0.5373,0.5098,0.5294;
+  // solve_lse(x,y,a_b);
+  // cout << "solved values are: " << a_b(0) << " " << a_b(1) << endl;
 
   // initialize random number generator to randomly sample pixels from images
   random_device rand_device;
   mt19937 generator(rand_device());
-  uniform_int_distribution<> x_dist(0, w);
-  uniform_int_distribution<> y_dist(0, h);
+  uniform_int_distribution<int> x_dist(0, w);
+  uniform_int_distribution<int> y_dist(0, h);
 
   // RANSAC iteration loop
   for (int i = 0; i < ransac_iters; i++) {
-    std::vector< int > x_pts, y_pts;
-    std::vector< int > inlier_x_pts, inlier_y_pts;
+    VectorXi x_pts(num_pts);
+    VectorXi y_pts(num_pts);
+    inlier_x_pts_r.clear();
+    inlier_x_pts_g.clear();
+    inlier_x_pts_b.clear();
+    inlier_y_pts_r.clear();
+    inliner_y_pts_g.clear();
+    inlier_y_pts_b.clear();
 
     // randomly select n_pts points
     for (int i = 0; i < num_pts; i++) {
-      x_pts.push_back(x_dist(generator));
-      y_pts.push_back(y_dist(generator));
+      x_pts[i] = x_dist(generator);
+      y_pts[i] = y_dist(generator);
     }
+
     // select intensities at the random points
     Eigen::VectorXd img_one_red(num_pts), img_two_red(num_pts);
     Eigen::VectorXd img_one_green(num_pts), img_two_green(num_pts);
     Eigen::VectorXd img_one_blue(num_pts), img_two_blue(num_pts);
     for (int i = 0; i < num_pts; i++) {
-      Magick::ColorRGB img_one_px = img_one.pixelColor(x_pts.at(i), y_pts.at(i));
+      Magick::ColorRGB img_one_px = img_one.pixelColor(x_pts[i], y_pts[i]);
       img_one_red[i] = img_one_px.red();
       img_one_green[i] = img_one_px.green();
       img_one_blue[i] = img_one_px.blue();
 
-      Magick::ColorRGB img_two_px = img_two.pixelColor(x_pts.at(i), y_pts.at(i));
+      Magick::ColorRGB img_two_px = img_two.pixelColor(x_pts[i], y_pts[i]);
       img_two_red[i] = img_two_px.red();
       img_two_green[i] = img_two_px.green();
       img_two_blue[i] = img_two_px.blue();
     }
 
-    // estimate photometric
+    // fix NaN values
+    img_one_red = img_one_red.array().isNaN().select(1e-8,img_one_red);
+    img_one_green = img_one_green.array().isNaN().select(1e-8,img_one_green);
+    img_one_blue = img_one_blue.array().isNaN().select(1e-8,img_one_blue);
+    img_two_red = img_two_red.array().isNaN().select(1e-8,img_two_red);
+    img_two_green = img_two_green.array().isNaN().select(1e-8,img_two_green);
+    img_two_blue = img_two_blue.array().isNaN().select(1e-8,img_two_blue);
+
+    // estimate photometric transform
     Matrix3d A = Matrix3d::Identity();
     Vector3d b;
-    Vector2d a_b;
-    MatrixXd S = MatrixXd::Ones(num_pts, 2);
-    // form the system matrix to solve for A and B
-    // for each channel
-    S.col(0) << img_one_red;
-    JacobiSVD<MatrixXd> svd_r(S, ComputeFullU | ComputeFullV);
-    a_b = svd_r.solve(img_two_red);
-    A(0,0) = a_b(0); b(0) = a_b(1);
+    VectorXd a_b;
 
-    S.col(0) << img_one_green;
-    JacobiSVD<MatrixXd> svd_g(S, ComputeFullU | ComputeFullV);
-    a_b = svd_g.solve(img_two_green);
-    A(1,1) = a_b(0); b(1) = a_b(1);
+    solve_lse(img_one_red, img_two_red, a_b);
+    A(0,0) = a_b(0);
+    b(0) = a_b(1);
 
-    S.col(0) << img_one_blue;
-    JacobiSVD<MatrixXd> svd_b(S, ComputeFullU | ComputeFullV);
-    a_b = svd_b.solve(img_two_blue);
-    A(2,2) = a_b(0); b(2) = a_b(1);
+    solve_lse(img_one_green, img_two_green, a_b);
+    A(1,1) = a_b(0);
+    b(1) = a_b(1);
 
-    // form matrix B to solve
+    solve_lse(img_one_blue, img_two_blue, a_b);
+    A(2,2) = a_b(0);
+    b(2) = a_b(1);
+
+    // form matrix B with b vector as diagonal to solve
     MatrixXd B = b.transpose().replicate(num_pts, 1);
+    // cout << "In RANSAC: Estimated value of A is: " << endl;
+    // cout << A << endl;
+    // cout << "value of B is: " << endl;
+    // cout << B(0,0)  << " " << B(0,1)  << " " << B(0,2) << endl;
 
-    cout << "value of A is: " << endl;
-    cout << A << endl;
-    cout << "value of B is: " << endl;
-    cout << B << endl;
-
-    // apply photometric to compute error
+    // apply photometric transform to compute error
     MatrixXd iter_img_one = MatrixXd::Ones(num_pts, 3);
     MatrixXd iter_img_two = MatrixXd::Ones(num_pts, 3);
     iter_img_one.col(0) << img_one_red;
@@ -240,34 +281,64 @@ void imreg_sift::estimate_photo_transform(Magick::Image img_one, Magick::Image i
     iter_img_two.col(1) << img_two_green;
     iter_img_two.col(2) << img_two_blue;
 
+    // compute image one from estimate
     MatrixXd computed_img_one = (iter_img_two * A) + B;
-    VectorXd errors = (iter_img_one - computed_img_one).rowwise().squaredNorm();
-    cout << "errors are: " << endl;
-    cout << errors << endl;
 
-    for(size_t k = 0; k < num_pts; k++) {
-      if(errors(k) < error_threshold) {
-        score++;
-        inlier_x_pts.push_back(x_pts.at(k));
-        inlier_y_pts.push_back(y_pts.at(k));
+    // VectorXd errors = (iter_img_one - computed_img_one).cwiseAbs2().rowwise().sum().cwiseSqrt();
+    MatrixXd errors_rgb = (iter_img_one - computed_img_one).cwiseAbs2().cwiseSqrt();
+    // cout << "errors in r,g,b are: " << endl;
+    // cout << errors_rgb << endl;
+
+    for(int k = 0; k < errors_rgb.rows(); k++) {
+      if (errors_rgb(k,0) < error_threshold) {
+        inlier_x_pts_r.push_back(x_pts[k]);
+        inlier_y_pts_r.push_back(y_pts[k]);
       }
-      score = inlier_x_pts.size();
-      cout << "score is: " << score << endl;
-    }
-    if(score > max_score) {
-      max_score = score;
-      best_inlier_x_pts.swap(inlier_x_pts);
-      best_inlier_y_pts.swap(inlier_y_pts);
+      if (errors_rgb(k,1) < error_threshold) {
+        inlier_x_pts_g.push_back(x_pts[k]);
+        inliner_y_pts_g.push_back(y_pts[k]);
+      }
+      if (errors_rgb(k,2) < error_threshold) {
+        inlier_x_pts_b.push_back(x_pts[k]);
+        inlier_y_pts_b.push_back(y_pts[k]);
+      }
     }
 
+    // how many we are eligible to be selected in this iteration
+    score_r = inlier_x_pts_r.size();
+    score_g = inlier_x_pts_g.size();
+    score_b = inlier_x_pts_b.size();
+
+    if (score_r > max_score_r) {
+      max_score_r = score_r;
+      best_inlier_x_pts_r.clear();
+      best_inlier_y_pts_r.clear();
+      for (unsigned i = 0; i < inlier_x_pts_r.size(); i++) {
+        best_inlier_x_pts_r.push_back(inlier_x_pts_r[i]);
+        best_inlier_y_pts_r.push_back(inlier_y_pts_r[i]);
+      }
+    }
+    if (score_g > max_score_g) {
+      max_score_g = score_g;
+      best_inlier_x_pts_g.clear();
+      best_inlier_y_pts_g.clear();
+      for (unsigned i = 0; i < inlier_x_pts_g.size(); i++) {
+        best_inlier_x_pts_g.push_back(inlier_x_pts_g[i]);
+        best_inlier_y_pts_g.push_back(inliner_y_pts_g[i]);
+      }
+    }
+    if (score_b > max_score_b) {
+      max_score_b = score_b;
+      best_inlier_x_pts_b.clear();
+      best_inlier_y_pts_b.clear();
+      for (unsigned i = 0; i < inlier_x_pts_b.size(); i++) {
+        best_inlier_x_pts_b.push_back(inlier_x_pts_b[i]);
+        best_inlier_y_pts_b.push_back(inlier_y_pts_b[i]);
+      }
+    }
   } // end of RANSAC loop
 
-  cout << "best inliers are: " << endl;
-  for (int i = 0; i < best_inlier_x_pts.size(); i++) {
-    cout << best_inlier_x_pts.at(i) << endl;
-  }
-
-  if( max_score < 2 ) {
+  if (max_score_r < 2 || max_score_g < 2 || max_score_b < 2) {
     cout << "Less than 2 points for photometric transformation! Returning!" << endl;
     return;
   }
@@ -275,83 +346,118 @@ void imreg_sift::estimate_photo_transform(Magick::Image img_one, Magick::Image i
   // --------------------------------------
   // recompute transform with best inliers
   // --------------------------------------
+  cout << "\n Recomputing photometric transform with best estimate. \n" << endl;
+
   Eigen::VectorXd img_one_red(num_pts), img_two_red(num_pts);
   Eigen::VectorXd img_one_green(num_pts), img_two_green(num_pts);
   Eigen::VectorXd img_one_blue(num_pts), img_two_blue(num_pts);
-  // Magick::ColorRGB img_one_px, img_two_px;
-  for (int i = 0; i < best_inlier_x_pts.size(); i++) {
-     Magick::ColorRGB img_one_px = img_one.pixelColor(best_inlier_x_pts.at(i), best_inlier_y_pts.at(i));
-     // double img_one_mean = (img_one_px.red() + img_one_px.green() + img_one_px.blue()) / 3.0;
-     img_one_red[i] = img_one_px.red();
-     img_one_green[i] = img_one_px.green();
-     img_one_blue[i] = img_one_px.blue();
-
-     Magick::ColorRGB img_two_px = img_two.pixelColor(best_inlier_x_pts.at(i), best_inlier_y_pts.at(i));
-     // double img_two_mean = (img_two_px.red() + img_two_px.green() + img_two_px.blue()) / 3.0;
-     img_two_red[i] = img_two_px.red();
-     img_two_green[i] = img_two_px.green();
-     img_two_blue[i] = img_two_px.blue();
+  Magick::ColorRGB img_one_px;
+  Magick::ColorRGB img_two_px;
+  for (int i = 0; i < best_inlier_x_pts_r.size(); i++) {
+    img_one_px = img_one.pixelColor(best_inlier_x_pts_r[i], best_inlier_y_pts_r[i]);
+    img_one_red[i] = img_one_px.red();
+    img_two_px = img_two.pixelColor(best_inlier_x_pts_r[i], best_inlier_y_pts_r[i]);
+    img_two_red[i] = img_two_px.red();
   }
+  for (int i = 0; i < best_inlier_x_pts_g.size(); i++) {
+    img_one_px = img_one.pixelColor(best_inlier_x_pts_g[i], best_inlier_y_pts_g[i]);
+    img_one_green[i] = img_one_px.green();
+    img_two_px = img_two.pixelColor(best_inlier_x_pts_g[i], best_inlier_y_pts_g[i]);
+    img_two_green[i] = img_two_px.green();
+  }
+  for (int i = 0; i < best_inlier_x_pts_b.size(); i++) {
+    img_one_px = img_one.pixelColor(best_inlier_x_pts_b[i], best_inlier_y_pts_b[i]);
+    img_one_blue[i] = img_one_px.blue();
+    img_two_px = img_two.pixelColor(best_inlier_x_pts_b[i], best_inlier_y_pts_b[i]);
+    img_two_blue[i] = img_two_px.blue();
+  }
+
+  // fix NaN values
+  img_one_red = img_one_red.array().isNaN().select(1e-8,img_one_red);
+  img_one_green = img_one_green.array().isNaN().select(1e-8,img_one_green);
+  img_one_blue = img_one_blue.array().isNaN().select(1e-8,img_one_blue);
+  img_two_red = img_two_red.array().isNaN().select(1e-8,img_two_red);
+  img_two_green = img_two_green.array().isNaN().select(1e-8,img_two_green);
+  img_two_blue = img_two_blue.array().isNaN().select(1e-8,img_two_blue);
 
   Matrix3d A = Matrix3d::Identity();
   Vector3d b;
   VectorXd a_b;
-  MatrixXd S = MatrixXd::Ones(num_pts, 2);
 
-  S.col(0) << img_two_red;
-  JacobiSVD<MatrixXd> svd_r(S, ComputeFullU | ComputeFullV);
-  a_b = svd_r.solve(img_one_red);
-  A(0,0) = a_b(0); b(0) = a_b(1);
+  solve_lse(img_one_red, img_two_red, a_b);
+  // cout << "a_b vector is: " << a_b << endl;
+  A(0,0) = a_b(0);
+  b(0) = a_b(1);
 
-  S.col(0) << img_two_green;
-  JacobiSVD<MatrixXd> svd_g(S, ComputeFullU | ComputeFullV);
-  a_b = svd_g.solve(img_one_green);
-  A(1,1) = a_b(0); b(1) = a_b(1);
+  solve_lse(img_one_green, img_two_green, a_b);
+  // cout << "a_b vector is: " << a_b << endl;
+  A(1,1) = a_b(0);
+  b(1) = a_b(1);
 
-  S.col(0) << img_two_blue;
-  JacobiSVD<MatrixXd> svd_b(S, ComputeFullU | ComputeFullV);
-  a_b = svd_b.solve(img_one_blue);
-  A(2,2) = a_b(0); b(2) = a_b(1);
+  solve_lse(img_one_blue, img_two_blue, a_b);
+  // cout << "a_b vector is: " << a_b << endl;
+  A(2,2) = a_b(0);
+  b(2) = a_b(1);
 
   MatrixXd B = b.transpose().replicate(num_pts, 1);
 
   cout << "final A matrix is: " << endl;
   cout << A << endl;
-  cout << "final B matrix is: " << endl;
-  cout << B << endl;
+  cout << "final b vector is: " << endl;
+  cout << B(0,0) << " " << B(0,1) << " " << B(0,2) << endl;
 
-  // apply the transformation on the image
-  // Magick::Image img_two_transformed(img_two.size(), "black"); // create an empty image
-  // Magick::Image img_two_transformed(img_two.size(), "black");
-  // img_two_transformed->size( img_two.size() );
-  // img_two_transformed.backgroundColor( Magick::Color( "white" ) );
-  // img_two_transformed.erase();
-  // img_two_transformed.type(Magick::TrueColorType);
-
+  // apply the computed transformation on the image
   for(unsigned int i = 0; i < transformed_img.rows(); i++) {
     for(unsigned int j = 0; j < transformed_img.columns(); j++) {
       Magick::ColorRGB img_two_pixel = img_two.pixelColor(j, i);
-      // unsigned char r = img_two_px_new.redQuantum()	* 255 / QuantumRange;
-      // unsigned char g = img_two_px_new.greenQuantum()	* 255 / QuantumRange;
-      // unsigned char b = img_two_px_new.blueQuantum()	* 255 / QuantumRange;
-
-      // apply the computed transform
       double r = (img_two_pixel.red() * A(0,0)) + B(0,0);
       double g = (img_two_pixel.green() * A(1,1)) +  B(0,1);
       double b = (img_two_pixel.blue() * A(2,2)) + B(0,2);
       img_two_pixel.red(r);
       img_two_pixel.green(g);
       img_two_pixel.blue(b);
-
       transformed_img.pixelColor(j,i,img_two_pixel);
     }
   }
-  cout << "done" << endl;
-  transformed_img.write("/home/shrinivasan/Desktop/res.jpg");
-
-  // img_two = img_two_transformed;
-
+  transformed_img.type(TrueColorType);
+  cout << "done with photometric transform." << endl;
+  // transformed_img.write("/home/shrinivasan/Desktop/res.jpg");
 } // end of function
+
+
+void imreg_sift::solve_lse(Eigen::VectorXd x, Eigen::VectorXd y, VectorXd& a_and_b) {
+  // cout << "in svd: x points are: " << endl;
+  // cout << x << endl;
+  // cout << "in svd: y points are: " << endl;
+  // cout << y << endl;
+
+  // cout << "creating S matrix with size: " << x.size() << endl;
+  MatrixXd S = MatrixXd::Ones(y.size(), 2);
+  double tolerance = 1e-4;
+  S.col(0) << y;
+  JacobiSVD<MatrixXd> svd(S, ComputeFullU | ComputeFullV);
+  MatrixXd singular_values = svd.singularValues();
+  MatrixXd singular_values_inv(S.rows(), S.cols());
+  singular_values_inv.setZero();
+
+  // cout << "singular_values are: " << endl;
+  for (unsigned int i = 0; i < singular_values.rows(); ++i) {
+    // cout << singular_values(i) << endl;
+    if (singular_values(i) > tolerance) {
+        singular_values_inv(i, i) = 1. / float(singular_values(i));
+        // cout << "singular_values_inv is: " << singular_values_inv(i, i) << endl;
+    } else {
+        singular_values_inv(i, i) = 0.;
+    }
+  }
+
+  // cout << "V matrices are: " << endl;
+  // cout << svd.matrixV() << endl;
+
+  a_and_b = (svd.matrixU() * singular_values_inv * svd.matrixV().transpose()).transpose() * x;
+  // a_and_b = svd.solve(x);
+  // cout << "in svd a_and_b values are: " << a_and_b << endl;
+}
 
 double imreg_sift::clamp(double v, double min, double max) {
   if( v > min ) {
@@ -599,7 +705,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             imcomp_cache * cache,
                             std::string& transform) {
   try {
-    cout << "got value of transform is: " << transform << endl;
     high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
     success = false;
@@ -622,6 +727,16 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // to ensure that image pixel values are 8bit RGB
     im1.type(Magick::TrueColorType);
     im2.type(Magick::TrueColorType);
+    // im1.contrastStretch(0.,1.0);
+    // im2.contrastStretch(0.,1.0);
+
+    // temp to test
+    // Magick::Image im2_pmetric_transformed(im2.size(), "black");
+    // im2_pmetric_transformed.type(Magick::TrueColorType);
+    // compute_photo_transform_new(im1, im2, im2_pmetric_transformed);
+    // compute_photo_transform(im1, im2, im2_pmetric_transformed);
+    // im2_pmetric_transformed.write("/home/shrinivasan/Desktop/res.jpg");
+    // return;
 
     Magick::Image im1_g = im1;
     im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
@@ -825,9 +940,9 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     im2_crop.crop( cropRect1 );
     //im2_crop.write( im2_crop_fn );
 
-    /*
-      apply Homography to im2 in order to visualize it along with im1.
-    */
+    // ----------------------------------------------------------------
+    // apply Homography to im2 in order to visualize it along with im1.
+    // ----------------------------------------------------------------
     Matrix<double, 3, 3> Hinv = H.inverse();
     Magick::Image im2t_crop(im2);
     string op_w_h_and_offsets;
@@ -855,12 +970,17 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     im2t_crop.affineTransform(hinv_affine);
 
     // estimate and apply photometric transform
-    Magick::Image im2_pmetric_transformed(im2t_crop.size(), "black");
+    im2t_crop.type(Magick::TrueColorType);
+    im1_crop.type(Magick::TrueColorType);
+    Magick::Image im2t_crop_clone(im2t_crop);
+    Magick::Image im1_crop_clone(im1_crop);
+    // Magick::Image im2_pmetric_transformed(im1_crop_clone.size(), "black");
+    Magick::Image im2_pmetric_transformed(im1_crop);
+    im1_crop_clone.type(Magick::TrueColorType);
+    im2t_crop_clone.type(Magick::TrueColorType);
     im2_pmetric_transformed.type(Magick::TrueColorType);
-    // img_two_transformed.backgroundColor( Magick::Color( "white" ));
-    im2_pmetric_transformed.erase();
 
-    estimate_photo_transform(im1_crop, im2t_crop, im2_pmetric_transformed);
+    compute_photo_transform(im1_crop_clone, im2t_crop_clone, im2_pmetric_transformed);
 
     // save result
     // im2t_crop.write(im2_tx_fn);
@@ -875,8 +995,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // cout << "before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
 
     // difference image
-    Magick::Image cdiff(im1_crop);
-    get_diff_image(im1_crop, im2t_crop, cdiff);
+    Magick::Image cdiff(im2t_crop_clone);
+    get_diff_image(im2t_crop_clone, im2t_crop_clone, cdiff);
     cdiff.write(diff_image_fn);
 
     // high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();

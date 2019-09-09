@@ -84,8 +84,11 @@ class imreg_sift {
   // https://github.com/scikit-image/scikit-image/blob/master/skimage/transform/_geometric.py
   static void estimate_transform(const MatrixXd& X, const MatrixXd& Y, std::string& transform, Matrix<double,3,3>& T);
 
-  // estimates the photometric transform given two sets of images
-  static void estimate_photo_transform(Magick::Image img_one, Magick::Image img_two, Magick::Image& transformed_img);
+  // solves the linear system of equations y = ax + b for a and b values
+  static void solve_lse(Eigen::VectorXd x, Eigen::VectorXd y, Eigen::VectorXd& a_and_b);
+
+  // Computes the actual photometric transform given two sets of images
+  static void compute_photo_transform(Magick::Image img_one, Magick::Image img_two, Magick::Image& transformed_img);
 
   // use vlfeat to compute SIFT keypoint and descriptors
   //static void compute_sift_features(const string filename, vector<VlSiftKeypoint>& keypoint_list, vector< vector<vl_uint8> >& descriptor_list, bool verbose=false);
