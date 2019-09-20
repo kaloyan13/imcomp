@@ -408,8 +408,10 @@ _imcomp_model.prototype.compare_img_pair = function(c) {
     args.push('region=' + c.region1.join(','));
     var algname = this.c.compare.algorithm;
     var transform = this.c.compare.transform;
+    var is_photometric = this.c.compare.is_photometric;
     args.push('algname=' + algname);
     args.push('transform=' + transform);
+    args.push('is_photometric=' + is_photometric);
 
     var cr = new XMLHttpRequest();
     cr.addEventListener('timeout', function(e) {

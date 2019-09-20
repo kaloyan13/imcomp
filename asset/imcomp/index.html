@@ -68,66 +68,69 @@
   </div>
 
   <div id="top_panel" class="top_panel display-none">
-    <div class="top_right" id="top_right">
-      <div class="toolbar">
-        <div id="icon_home_div" onclick="_imcomp_set_panel('step1', true)">
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_home"></use><title>Go to home page</title>
-          </svg>
-        </div>
-        <div id="icon_back_div" >
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_back"></use><title>Go to previous page</title>
-          </svg>
-        </div>
-        <div id="icon_forward_div">
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_forward"></use><title>Go to next page</title>
-          </svg>
-        </div>
-        <div id="icon_save_div">
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_save"></use><title>Save current visualization</title>
-          </svg>
-        </div>
-        <div id="icon_zoomin_div">
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_zoomin"></use><title>zoom in</title>
-          </svg>
-        </div>
-        <div id="icon_zoomout_div">
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_zoomout"></use><title>zoom out</title>
-          </svg>
-        </div>
-        <div id="icon_magnify_div">
-          <svg viewbox="0 0 24 24">
-            <use xlink:href="#icon_magnify"></use><title>Magnifying glass to zoom within an image</title>
-          </svg>
-        </div>
+    <div class="toolbar">
+      <div id="icon_home_div" onclick="_imcomp_set_panel('step1', true)">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_home"></use><title>Go to home page</title>
+        </svg>
+      </div>
+      <div id="icon_back_div" >
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_back"></use><title>Go to previous page</title>
+        </svg>
+      </div>
+      <div id="icon_forward_div">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_forward"></use><title>Go to next page</title>
+        </svg>
+      </div>
+      <div id="icon_save_div">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_save"></use><title>Save current visualization</title>
+        </svg>
+      </div>
+      <div id="icon_zoomin_div">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_zoomin"></use><title>zoom in</title>
+        </svg>
+      </div>
+      <div id="icon_zoomout_div">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_zoomout"></use><title>zoom out</title>
+        </svg>
+      </div>
+      <div id="icon_magnify_div">
+        <svg viewbox="0 0 24 24">
+          <use xlink:href="#icon_magnify"></use><title>Magnifying glass to zoom within an image</title>
+        </svg>
       </div>
     </div>
-
-    <select name="transform" id="trnasformation_select">
-      <option value="affine">Select a Transform</option>
-      <option value="identity">Identity</option>
-      <option value="rigid">Rigid</option>
-      <option value="similarity">Similarity</option>
-      <option value="affine">Affine</option>
-      <option value="tps">Thin Plate Spline</option>
-    </select>
-
+    <div class="transform_div">
+      Geometric Transform:
+      <select name="transform" id="trnasformation_select">
+        <option value="affine">Select a Transform</option>
+        <option value="identity">Identity</option>
+        <option value="translation">Translation</option>
+        <option value="rigid">Rigid</option>
+        <option value="similarity">Similarity</option>
+        <option value="affine" selected>Affine</option>
+        <option value="tps">Thin Plate Spline</option>
+      </select>
+    </div>
+    <div class="transform_div dis">
+        <input class="transform_div_checkbox " type="checkbox" name="is_photometric" id="is_photometric">
+        Photometric Transform
+    </div>
     <div class="compare_panel">
       <button id="compare_base_comp" type="button" title="Compare the two chosen images">compare</button>
     </div>
-
   </div>
 
   <div class="instructions">
     <div id="instruction_step1" class="instruction_step1" onclick="_imcomp_set_panel('step1', true)" >1. Upload Image</div>
-    <div class="right_arrow"> <span>&#10230;</span> </div>
+    <div id="right_arrow_one" class="right_arrow">  </div>
     <div id="instruction_step2" class="instruction_step2">2. Select Images and Compare</div>
-    <div class="right_arrow"> <span>&#10230;</span> </div>
+    <div id="right_arrow_two" class="right_arrow">  </div>
     <div id="instruction_step3" class="instruction_step3">3. Visualize Results</div>
   </div>
 

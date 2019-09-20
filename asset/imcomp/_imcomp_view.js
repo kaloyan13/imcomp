@@ -165,6 +165,9 @@ _imcomp_view.prototype.connect_ui_elements_to_imcomp_view = function() {
   document.getElementById('trnasformation_select').addEventListener('change', function(e) {
     this.c.algorithm_change_handler(e);
   }.bind(this), false);
+  document.getElementById('is_photometric').addEventListener('click', function(e) {
+    this.c.is_photometric_handler(e);
+  }.bind(this), false);
 
   // step 1 panel for files upload
   document.getElementById( 'add_images').addEventListener('click', this, false);

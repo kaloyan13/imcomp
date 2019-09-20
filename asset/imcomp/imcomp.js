@@ -76,7 +76,7 @@ function _imcomp_init() {
 function _imcomp_set_panel(panel_id, is_navigation) {
 
 	if ( panel_id === IMCOMP_PANEL_NAME.STEP1 ) {
-		document.getElementById('top_right').style.display = 'none';
+		document.getElementById('top_panel').style.display = 'none';
 		document.getElementById('step1_text').style.border = '';
 		show_instruction("Upload at least two of your images below to compare them. <br/> Or try our demo images at the bottom of the page by clicking on them.");
 	}
@@ -88,7 +88,7 @@ function _imcomp_set_panel(panel_id, is_navigation) {
       _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
       return;
     }
-		document.getElementById('top_right').style.display = '';
+		document.getElementById('top_panel').style.display = '';
 		// always show the first two images in files panel as the now files
 		_imcomp.c.set_now('base', 0);
 		_imcomp.c.set_now('comp', 1);

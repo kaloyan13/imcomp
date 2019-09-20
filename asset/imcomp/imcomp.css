@@ -67,7 +67,7 @@ body {
 .instructions {
   display: flex;
   margin-top: 0.5rem;
-  height: 1.6rem;
+  height: 2rem;
   text-align: center;
   border: 1px;
   width: 100%;
@@ -78,18 +78,21 @@ body {
   width: 35%;
   font-size: larger;
   cursor: pointer;
+  padding-top: 4px;
 }
 .instruction_step2 {
   background-color: #cccccc;
   width: 35%;
   font-size: larger;
   cursor: pointer;
+  padding-top: 4px;
 }
 .instruction_step3 {
   background-color: #cccccc;
   width: 35%;
   font-size: larger;
   cursor: pointer;
+  padding-top: 4px;
 }
 .instruction_active {
   background-color: #673AB7;
@@ -97,11 +100,18 @@ body {
 }
 
 .right_arrow {
-  margin-top: 0.2em;
-  width: 5%;
-  color: #673AB7;
-  font-weight: bolder;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
 }
+.right_arrow_inactive {
+  border-left: 10px solid #cccccc;
+}
+.right_arrow_active {
+  border-left: 10px solid #673AB7;
+  /* background-color: #cccccc; */
+}
+
+
 .step1_button_color {
     background-color:#673AB7;
     color:white;
@@ -142,11 +152,15 @@ body {
 
 /* top panel for branding and global settings */
 .top_panel {
+  display: flex;
   background-color: #673AB7;
   padding:0.4em 0.5em;
 }
 .top_panel * {
   vertical-align: middle;
+}
+.top_panel_texts {
+  font-size: large;
 }
 .top_left_logo {
   font-size: 1.3em;
@@ -157,6 +171,17 @@ body {
   text-decoration: none;
   color:white;
 }
+.transform_div {
+  color: white;
+  font-size: large;
+  padding-left: 4em;
+  padding-top: .2rem;
+}
+.transform_div_checkbox {
+  width: 20px;
+  height: 20px;
+}
+
 .compare_panel {
   display:inline;
   margin-left: 1em;
@@ -166,7 +191,7 @@ body {
   border-radius:0.5em;
   background-color:white;
   color:#673AB7;
-  width:16em;
+  width:8em;
   font-size:1.4em;
 }
 
@@ -194,9 +219,9 @@ body {
 }
 
 #trnasformation_select {
-  font-size: larger;
+  font-size: large;
   width: 16rem;
-  margin-left: 20em;
+  /* margin-left: 20em; */
   background-color: white;
   color: #673AB7;
   border-radius: 0.5em;
@@ -207,9 +232,9 @@ body {
   height: 8rem;
   float: right;
 }
-.top_right {
+/* .top_right {
   display:inline-block !important;
-}
+} */
 
 #step1_panel {
   margin-top: 0.5rem;
@@ -525,11 +550,11 @@ body {
     position: relative;
 }
 #left_content_image_top_panel {
-    position: absolute;
-    z-index: 1002;
-    width: 100%;
-    height: 100%;
-    top: 0;
+  position: absolute;
+  z-index: 1002;
+  width: 100%;
+  height: 100%;
+  top: 0;
 }
 #left_content_image_zoom_panel {
     position: absolute;

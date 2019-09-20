@@ -56,6 +56,9 @@ function _imcomp_controller() {
   this.compare.result = {};
   this.compare.algorithm = {};
   this.compare.transform = {};
+  // lets default to affine for naive user's sake
+  this.compare.transform = 'affine';
+  this.compare.is_photometric = false;
 
   this.ref_line = {};
 
@@ -399,6 +402,9 @@ _imcomp_controller.prototype.on_compare_success = function() {
   var img_div = document.getElementById('left_content_image');
   this.results.canvas_width = img_div.style.width;
   this.results.canvas_height = img_div.style.width;
+  this.results.active_tab = 'default';
+  this.remove_overlay_elem();
+  this.remove_slider_elem('all');
 }
 
 _imcomp_controller.prototype.format_comparison_page = function() {
@@ -505,21 +511,34 @@ _imcomp_controller.prototype.enable_results_tabs = function() {
 }
 
 _imcomp_controller.prototype.brighten_instructions = function(panel_id) {
+  // console.log("panel id is: ", panel_id);
   switch (panel_id) {
     case 'step1':
       document.getElementById('instruction_step1').classList.add('instruction_active');
       document.getElementById('instruction_step2').classList.remove('instruction_active');
       document.getElementById('instruction_step3').classList.remove('instruction_active');
+      document.getElementById('right_arrow_one').classList.add('right_arrow_active');
+      document.getElementById('right_arrow_one').classList.remove('right_arrow_inactive');
+      document.getElementById('right_arrow_two').classList.remove('right_arrow_active');
+      document.getElementById('right_arrow_two').classList.add('right_arrow_inactive');
       break;
     case 'step3':
       document.getElementById('instruction_step1').classList.remove('instruction_active');
       document.getElementById('instruction_step2').classList.add('instruction_active');
       document.getElementById('instruction_step3').classList.remove('instruction_active');
+      document.getElementById('right_arrow_one').classList.remove('right_arrow_active');
+      document.getElementById('right_arrow_one').classList.add('right_arrow_inactive');
+      document.getElementById('right_arrow_two').classList.add('right_arrow_active');
+      document.getElementById('right_arrow_two').classList.remove('right_arrow_inactive');
       break;
     case 'step4':
       document.getElementById('instruction_step1').classList.remove('instruction_active');
       document.getElementById('instruction_step2').classList.remove('instruction_active');
       document.getElementById('instruction_step3').classList.add('instruction_active');
+      document.getElementById('right_arrow_one').classList.remove('right_arrow_active');
+      document.getElementById('right_arrow_one').classList.add('right_arrow_inactive');
+      document.getElementById('right_arrow_two').classList.remove('right_arrow_active');
+      document.getElementById('right_arrow_two').classList.add('right_arrow_inactive');
       break;
     default:
   }
@@ -1578,6 +1597,10 @@ _imcomp_controller.prototype.algorithm_change_handler = function(e) {
       this.compare.transform = 'identity';
       this.compare.algorithm = 'ransac_dlt';
       break;
+    case 'translation':
+      this.compare.transform = 'translation';
+      this.compare.algorithm = 'ransac_dlt';
+      break;
     case 'rigid':
       this.compare.transform = 'rigid';
       this.compare.algorithm = 'ransac_dlt';
@@ -1595,9 +1618,14 @@ _imcomp_controller.prototype.algorithm_change_handler = function(e) {
       this.compare.algorithm = 'robust_ransac_tps';
       break;
     default: // affine
-      // this.compare.transform = 'affine';
+      this.compare.transform = 'affine';
       this.compare.algorithm = 'ransac_dlt';
   }
+}
+
+_imcomp_controller.prototype.is_photometric_handler = function(e) {
+  console.log(e.target.checked);
+  this.compare.is_photometric = e.target.checked;
 }
 
 _imcomp_controller.prototype.instruction_step1_handler = function(e) {
