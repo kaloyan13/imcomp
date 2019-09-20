@@ -65,7 +65,7 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
          0.0, 0.0, 1.0;
   }
 
-  if (transform == "rigid" || transform == "similarity") {
+  if (transform == "translation" || transform == "rigid" || transform == "similarity") {
     // ignore homogenous representation
     Matrix<double,4,2> X_, Y_;
     X_ = X.block<4,2>(0,0);
@@ -143,9 +143,16 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
     Vector2d t = Y_mu - (scale * (R * X_mu));
     R = R * scale;
 
-    T << R(0,0), R(0,1), t(0),
-         R(1,0), R(1,1), t(1),
-         0,      0,      1.0;
+    if (transform == "translation") {
+      // apply identity rotation
+      T << 1, 0, t(0),
+           0, 1, t(1),
+           0, 0, 1;
+    } else {
+      T << R(0,0), R(0,1), t(0),
+           R(1,0), R(1,1), t(1),
+           0,      0,      1.0;
+    }
   }
 
   if (transform == "affine") {
@@ -156,49 +163,19 @@ void imreg_sift::estimate_transform(const MatrixXd& X, const MatrixXd& Y, string
   // cout << T << endl;
 }
 
+void imreg_sift::compute_photo_transform(Magick::Image img_one, Magick::Image img_two, Magick::Image& transformed_img) {
+  int w = img_two.rows();
+  int h = img_two.columns();
 
-void imreg_sift::compute_photo_transform(Magick::Image img_one,
-                                         Magick::Image img_two,
-                                         Magick::Image& transformed_img) {
-  // init some constants
-  int score_r = 0;
-  int score_g = 0;
-  int score_b = 0;
-  int max_score_r = 0;
-  int max_score_g = 0;
-  int max_score_b = 0;
-  int ransac_iters = 1000;
-  float error_threshold = 0.01;
+  int ransac_iters = 10;
+  float error_threshold = 0.05;
+  int num_pts = min(400, min(w,h));
+  int score = 0;
+  int max_score = 0;
 
-  // float tolerance = std::numeric_limits<float>::epsilon();
-  int w = img_one.columns();
-  int h = img_one.rows();
-  // min of 300 points or lesser if img is smaller
-  int num_pts = min(600, min(w,h));
-  cout << "compute_photo_transform: runnning for " << num_pts << " points" << endl;
-
-  std::vector<int> inlier_x_pts_r, inlier_y_pts_r,
-                   inlier_x_pts_g, inliner_y_pts_g,
-                   inlier_x_pts_b, inlier_y_pts_b;
-  std::vector<int> best_inlier_x_pts_r, best_inlier_y_pts_r,
-                   best_inlier_x_pts_g, best_inlier_y_pts_g,
-                   best_inlier_x_pts_b, best_inlier_y_pts_b;
-
-  // test for solve_lse function:
-  // expected: 0.9791, 0.0102
-  // VectorXd x(num_pts);
-  // x << 1.0000,0.7686,0.7529,0.5373;
-  // VectorXd y(num_pts);
-  // y << 1.0000,0.7686,0.7843,0.5294;
-  // Vector2d a_b;
-  // solve_lse(x,y,a_b);
-  // cout << "solved values are: " << a_b(0) << " " << a_b(1) << endl;
-  //
-  // // expected:     1.5000, -0.2637
-  // x << 0.5098,0.5373,0.4902,0.5373;
-  // y << 0.5098,0.5373,0.5098,0.5294;
-  // solve_lse(x,y,a_b);
-  // cout << "solved values are: " << a_b(0) << " " << a_b(1) << endl;
+  std::vector<int> x_pts, y_pts;
+  std::vector<int> inlier_x_pts, inlier_y_pts;
+  std::vector<int> best_inlier_x_pts, best_inlier_y_pts;
 
   // initialize random number generator to randomly sample pixels from images
   random_device rand_device;
@@ -206,21 +183,15 @@ void imreg_sift::compute_photo_transform(Magick::Image img_one,
   uniform_int_distribution<int> x_dist(0, w);
   uniform_int_distribution<int> y_dist(0, h);
 
-  // RANSAC iteration loop
-  for (int i = 0; i < ransac_iters; i++) {
-    VectorXi x_pts(num_pts);
-    VectorXi y_pts(num_pts);
-    inlier_x_pts_r.clear();
-    inlier_x_pts_g.clear();
-    inlier_x_pts_b.clear();
-    inlier_y_pts_r.clear();
-    inliner_y_pts_g.clear();
-    inlier_y_pts_b.clear();
+  Magick::Color pix = img_one.pixelColor(10,10);
 
-    // randomly select n_pts points
+  for (int r = 0; r < ransac_iters; r++) {
+    x_pts.clear(); y_pts.clear();
+    inlier_x_pts.clear(); inlier_y_pts.clear();
+    // pick random x and y points
     for (int i = 0; i < num_pts; i++) {
-      x_pts[i] = x_dist(generator);
-      y_pts[i] = y_dist(generator);
+      x_pts.push_back(x_dist(generator));
+      y_pts.push_back(y_dist(generator));
     }
 
     // select intensities at the random points
@@ -228,24 +199,18 @@ void imreg_sift::compute_photo_transform(Magick::Image img_one,
     Eigen::VectorXd img_one_green(num_pts), img_two_green(num_pts);
     Eigen::VectorXd img_one_blue(num_pts), img_two_blue(num_pts);
     for (int i = 0; i < num_pts; i++) {
-      Magick::ColorRGB img_one_px = img_one.pixelColor(x_pts[i], y_pts[i]);
+      Magick::ColorRGB img_one_px(img_one.pixelColor(x_pts[i], y_pts[i]));
+      img_one_blue[i] = img_one_px.blue();
       img_one_red[i] = img_one_px.red();
       img_one_green[i] = img_one_px.green();
-      img_one_blue[i] = img_one_px.blue();
 
-      Magick::ColorRGB img_two_px = img_two.pixelColor(x_pts[i], y_pts[i]);
+      // cout << img_one_red[i] << " " << img_one_green[i] << " " << img_one_blue[i] << endl;
+
+      Magick::ColorRGB img_two_px(img_two.pixelColor(x_pts[i], y_pts[i]));
+      img_two_blue[i] = img_two_px.blue();
       img_two_red[i] = img_two_px.red();
       img_two_green[i] = img_two_px.green();
-      img_two_blue[i] = img_two_px.blue();
     }
-
-    // fix NaN values
-    img_one_red = img_one_red.array().isNaN().select(1e-8,img_one_red);
-    img_one_green = img_one_green.array().isNaN().select(1e-8,img_one_green);
-    img_one_blue = img_one_blue.array().isNaN().select(1e-8,img_one_blue);
-    img_two_red = img_two_red.array().isNaN().select(1e-8,img_two_red);
-    img_two_green = img_two_green.array().isNaN().select(1e-8,img_two_green);
-    img_two_blue = img_two_blue.array().isNaN().select(1e-8,img_two_blue);
 
     // estimate photometric transform
     Matrix3d A = Matrix3d::Identity();
@@ -264,14 +229,11 @@ void imreg_sift::compute_photo_transform(Magick::Image img_one,
     A(2,2) = a_b(0);
     b(2) = a_b(1);
 
-    // form matrix B with b vector as diagonal to solve
     MatrixXd B = b.transpose().replicate(num_pts, 1);
-    // cout << "In RANSAC: Estimated value of A is: " << endl;
+    // cout << "Computed A amd B are: " << endl;
     // cout << A << endl;
-    // cout << "value of B is: " << endl;
-    // cout << B(0,0)  << " " << B(0,1)  << " " << B(0,2) << endl;
+    // cout << B << endl;
 
-    // apply photometric transform to compute error
     MatrixXd iter_img_one = MatrixXd::Ones(num_pts, 3);
     MatrixXd iter_img_two = MatrixXd::Ones(num_pts, 3);
     iter_img_one.col(0) << img_one_red;
@@ -283,180 +245,115 @@ void imreg_sift::compute_photo_transform(Magick::Image img_one,
 
     // compute image one from estimate
     MatrixXd computed_img_one = (iter_img_two * A) + B;
+    VectorXd errors = (iter_img_one - computed_img_one).cwiseAbs2().rowwise().sum().cwiseSqrt();
 
-    // VectorXd errors = (iter_img_one - computed_img_one).cwiseAbs2().rowwise().sum().cwiseSqrt();
-    MatrixXd errors_rgb = (iter_img_one - computed_img_one).cwiseAbs2().cwiseSqrt();
-    // cout << "errors in r,g,b are: " << endl;
-    // cout << errors_rgb << endl;
-
-    for(int k = 0; k < errors_rgb.rows(); k++) {
-      if (errors_rgb(k,0) < error_threshold) {
-        inlier_x_pts_r.push_back(x_pts[k]);
-        inlier_y_pts_r.push_back(y_pts[k]);
-      }
-      if (errors_rgb(k,1) < error_threshold) {
-        inlier_x_pts_g.push_back(x_pts[k]);
-        inliner_y_pts_g.push_back(y_pts[k]);
-      }
-      if (errors_rgb(k,2) < error_threshold) {
-        inlier_x_pts_b.push_back(x_pts[k]);
-        inlier_y_pts_b.push_back(y_pts[k]);
+    for(int k = 0; k < errors.size(); k++) {
+      // cout << errors(k) << endl;
+      if (errors(k) < error_threshold) {
+        inlier_x_pts.push_back(x_pts[k]);
+        inlier_y_pts.push_back(y_pts[k]);
       }
     }
+    score = inlier_x_pts.size();
 
-    // how many we are eligible to be selected in this iteration
-    score_r = inlier_x_pts_r.size();
-    score_g = inlier_x_pts_g.size();
-    score_b = inlier_x_pts_b.size();
-
-    if (score_r > max_score_r) {
-      max_score_r = score_r;
-      best_inlier_x_pts_r.clear();
-      best_inlier_y_pts_r.clear();
-      for (unsigned i = 0; i < inlier_x_pts_r.size(); i++) {
-        best_inlier_x_pts_r.push_back(inlier_x_pts_r[i]);
-        best_inlier_y_pts_r.push_back(inlier_y_pts_r[i]);
+    if (score > max_score) {
+      best_inlier_x_pts.clear();
+      best_inlier_y_pts.clear();
+      for (int j=0; j < inlier_x_pts.size(); j++) {
+        best_inlier_x_pts.push_back(inlier_x_pts[j]);
+        best_inlier_y_pts.push_back(inlier_y_pts[j]);
       }
     }
-    if (score_g > max_score_g) {
-      max_score_g = score_g;
-      best_inlier_x_pts_g.clear();
-      best_inlier_y_pts_g.clear();
-      for (unsigned i = 0; i < inlier_x_pts_g.size(); i++) {
-        best_inlier_x_pts_g.push_back(inlier_x_pts_g[i]);
-        best_inlier_y_pts_g.push_back(inliner_y_pts_g[i]);
-      }
-    }
-    if (score_b > max_score_b) {
-      max_score_b = score_b;
-      best_inlier_x_pts_b.clear();
-      best_inlier_y_pts_b.clear();
-      for (unsigned i = 0; i < inlier_x_pts_b.size(); i++) {
-        best_inlier_x_pts_b.push_back(inlier_x_pts_b[i]);
-        best_inlier_y_pts_b.push_back(inlier_y_pts_b[i]);
-      }
-    }
-  } // end of RANSAC loop
+    max_score = best_inlier_x_pts.size();
+  } // end of ransac loop
 
-  if (max_score_r < 2 || max_score_g < 2 || max_score_b < 2) {
-    cout << "Less than 2 points for photometric transformation! Returning!" << endl;
+  // cout << "best inliers are: " << endl;
+  // cout << best_inlier_x_pts.size() << endl;
+
+  if (max_score < 2) {
+    cout << "Less than 2 points in best inliers. Returning!" << endl;
     return;
   }
 
-  // --------------------------------------
-  // recompute transform with best inliers
-  // --------------------------------------
-  cout << "\n Recomputing photometric transform with best estimate. \n" << endl;
+  // select intensities at the best inlier points
+  int best_num_pts = best_inlier_x_pts.size();
+  Eigen::VectorXd img_one_red(best_num_pts), img_two_red(best_num_pts);
+  Eigen::VectorXd img_one_green(best_num_pts), img_two_green(best_num_pts);
+  Eigen::VectorXd img_one_blue(best_num_pts), img_two_blue(best_num_pts);
+  img_one.modifyImage(); img_two.modifyImage(); transformed_img.modifyImage();
 
-  Eigen::VectorXd img_one_red(num_pts), img_two_red(num_pts);
-  Eigen::VectorXd img_one_green(num_pts), img_two_green(num_pts);
-  Eigen::VectorXd img_one_blue(num_pts), img_two_blue(num_pts);
-  Magick::ColorRGB img_one_px;
-  Magick::ColorRGB img_two_px;
-  for (int i = 0; i < best_inlier_x_pts_r.size(); i++) {
-    img_one_px = img_one.pixelColor(best_inlier_x_pts_r[i], best_inlier_y_pts_r[i]);
+  for (int i = 0; i < best_num_pts; i++) {
+    Magick::ColorRGB img_one_px(img_one.pixelColor(best_inlier_x_pts[i], best_inlier_y_pts[i]));
+    img_one_blue[i] = img_one_px.blue();
+    img_one_green[i] = img_one_px.green();
     img_one_red[i] = img_one_px.red();
-    img_two_px = img_two.pixelColor(best_inlier_x_pts_r[i], best_inlier_y_pts_r[i]);
+
+    Magick::ColorRGB img_two_px(img_two.pixelColor(best_inlier_x_pts[i], best_inlier_y_pts[i]));
+    img_two_blue[i] = img_two_px.blue();
+    img_two_green[i] = img_two_px.green();
     img_two_red[i] = img_two_px.red();
   }
-  for (int i = 0; i < best_inlier_x_pts_g.size(); i++) {
-    img_one_px = img_one.pixelColor(best_inlier_x_pts_g[i], best_inlier_y_pts_g[i]);
-    img_one_green[i] = img_one_px.green();
-    img_two_px = img_two.pixelColor(best_inlier_x_pts_g[i], best_inlier_y_pts_g[i]);
-    img_two_green[i] = img_two_px.green();
-  }
-  for (int i = 0; i < best_inlier_x_pts_b.size(); i++) {
-    img_one_px = img_one.pixelColor(best_inlier_x_pts_b[i], best_inlier_y_pts_b[i]);
-    img_one_blue[i] = img_one_px.blue();
-    img_two_px = img_two.pixelColor(best_inlier_x_pts_b[i], best_inlier_y_pts_b[i]);
-    img_two_blue[i] = img_two_px.blue();
-  }
 
-  // fix NaN values
-  img_one_red = img_one_red.array().isNaN().select(1e-8,img_one_red);
-  img_one_green = img_one_green.array().isNaN().select(1e-8,img_one_green);
-  img_one_blue = img_one_blue.array().isNaN().select(1e-8,img_one_blue);
-  img_two_red = img_two_red.array().isNaN().select(1e-8,img_two_red);
-  img_two_green = img_two_green.array().isNaN().select(1e-8,img_two_green);
-  img_two_blue = img_two_blue.array().isNaN().select(1e-8,img_two_blue);
-
+  // estimate photometric transform
   Matrix3d A = Matrix3d::Identity();
   Vector3d b;
   VectorXd a_b;
 
   solve_lse(img_one_red, img_two_red, a_b);
-  // cout << "a_b vector is: " << a_b << endl;
   A(0,0) = a_b(0);
   b(0) = a_b(1);
 
   solve_lse(img_one_green, img_two_green, a_b);
-  // cout << "a_b vector is: " << a_b << endl;
   A(1,1) = a_b(0);
   b(1) = a_b(1);
 
   solve_lse(img_one_blue, img_two_blue, a_b);
-  // cout << "a_b vector is: " << a_b << endl;
   A(2,2) = a_b(0);
   b(2) = a_b(1);
 
   MatrixXd B = b.transpose().replicate(num_pts, 1);
 
-  cout << "final A matrix is: " << endl;
-  cout << A << endl;
-  cout << "final b vector is: " << endl;
-  cout << B(0,0) << " " << B(0,1) << " " << B(0,2) << endl;
+  // cout << "Final A and B values are: " << endl;
+  // cout << A << endl;
+  // cout << B << endl;
 
-  // apply the computed transformation on the image
-  for(unsigned int i = 0; i < transformed_img.rows(); i++) {
-    for(unsigned int j = 0; j < transformed_img.columns(); j++) {
-      Magick::ColorRGB img_two_pixel = img_two.pixelColor(j, i);
+  for(unsigned int ii = 0; ii < transformed_img.rows(); ii++) {
+    for(unsigned int jj = 0; jj < transformed_img.columns(); jj++) {
+      Magick::ColorRGB img_two_pixel(img_two.pixelColor(jj, ii));
+      // apply the computed transform
       double r = (img_two_pixel.red() * A(0,0)) + B(0,0);
       double g = (img_two_pixel.green() * A(1,1)) +  B(0,1);
       double b = (img_two_pixel.blue() * A(2,2)) + B(0,2);
       img_two_pixel.red(r);
       img_two_pixel.green(g);
       img_two_pixel.blue(b);
-      transformed_img.pixelColor(j,i,img_two_pixel);
+      transformed_img.pixelColor(jj,ii,img_two_pixel);
     }
   }
-  transformed_img.type(TrueColorType);
-  cout << "done with photometric transform." << endl;
-  // transformed_img.write("/home/shrinivasan/Desktop/res.jpg");
-} // end of function
+
+  // cout << "done with photometric transform!" << endl;
+  // transformed_img.write("/home/shrinivasan/Desktop/res_test.jpg");
+  return;
+}
 
 
 void imreg_sift::solve_lse(Eigen::VectorXd x, Eigen::VectorXd y, VectorXd& a_and_b) {
-  // cout << "in svd: x points are: " << endl;
-  // cout << x << endl;
-  // cout << "in svd: y points are: " << endl;
-  // cout << y << endl;
-
-  // cout << "creating S matrix with size: " << x.size() << endl;
   MatrixXd S = MatrixXd::Ones(y.size(), 2);
   double tolerance = 1e-4;
   S.col(0) << y;
-  JacobiSVD<MatrixXd> svd(S, ComputeFullU | ComputeFullV);
+  JacobiSVD<MatrixXd> svd(S, ComputeThinU | ComputeThinV);
   MatrixXd singular_values = svd.singularValues();
   MatrixXd singular_values_inv(S.rows(), S.cols());
   singular_values_inv.setZero();
 
-  // cout << "singular_values are: " << endl;
   for (unsigned int i = 0; i < singular_values.rows(); ++i) {
-    // cout << singular_values(i) << endl;
     if (singular_values(i) > tolerance) {
-        singular_values_inv(i, i) = 1. / float(singular_values(i));
-        // cout << "singular_values_inv is: " << singular_values_inv(i, i) << endl;
+        singular_values_inv(i, i) = 1. / singular_values(i);
     } else {
         singular_values_inv(i, i) = 0.;
     }
   }
-
-  // cout << "V matrices are: " << endl;
-  // cout << svd.matrixV() << endl;
-
   a_and_b = (svd.matrixU() * singular_values_inv * svd.matrixV().transpose()).transpose() * x;
-  // a_and_b = svd.solve(x);
-  // cout << "in svd a_and_b values are: " << a_and_b << endl;
 }
 
 double imreg_sift::clamp(double v, double min, double max) {
@@ -703,7 +600,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                             bool& success,
                             std::string& message,
                             imcomp_cache * cache,
-                            std::string& transform) {
+                            std::string& transform,
+                            bool is_photometric) {
   try {
     high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
@@ -727,21 +625,21 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // to ensure that image pixel values are 8bit RGB
     im1.type(Magick::TrueColorType);
     im2.type(Magick::TrueColorType);
-    // im1.contrastStretch(0.,1.0);
-    // im2.contrastStretch(0.,1.0);
 
-    // temp to test
-    // Magick::Image im2_pmetric_transformed(im2.size(), "black");
-    // im2_pmetric_transformed.type(Magick::TrueColorType);
-    // compute_photo_transform_new(im1, im2, im2_pmetric_transformed);
-    // compute_photo_transform(im1, im2, im2_pmetric_transformed);
-    // im2_pmetric_transformed.write("/home/shrinivasan/Desktop/res.jpg");
-    // return;
+    // the photometric transformed image
+    Magick::Image im2_pt(im2.size(), "black");
+    im2_pt.type(Magick::TrueColorType);
+
+    if (is_photometric) {
+      compute_photo_transform(im1, im2, im2_pt);
+    }
 
     Magick::Image im1_g = im1;
     im1_g.crop( Magick::Geometry(xu-xl, yu-yl, xl, yl) );
 
     Magick::Image im2_g = im2;
+    // use the photometric transformed image for geometric transform estimation
+    // Magick::Image im2_g = im2_pt;
 
     vector<VlSiftKeypoint> keypoint_list1, keypoint_list2;
     vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
@@ -788,7 +686,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     get_putative_matches(descriptor_list1, descriptor_list2, putative_matches, threshold);
     size_t n_match = putative_matches.size();
     fp_match_count = n_match;
-    //cout << "Putative matches (using Lowe's 2nd NN test) = " << n_match << endl;
+    // cout << "Putative matches (using Lowe's 2nd NN test) = " << n_match << endl;
     // high_resolution_clock::time_point after_putative_match = std::chrono::high_resolution_clock::now();
     // cout << "time after putative match computation: " << (duration_cast<duration<double>>(after_putative_match - after_second_sift)).count() << endl;
 
@@ -843,7 +741,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     double geom_err_threshold_norm = im2_match_kp_tform(0,0) * 3;
     size_t RANSAC_ITER_COUNT = (size_t) ((double) n_match * 0.6);
     for( unsigned int iter=0; iter<RANSAC_ITER_COUNT; iter++ ) {
-      //cout << "\n==========================[ iter=" << iter << " ]==============================" << flush;
+      // cout << "==========================[ iter=" << iter << " ]==============================" << endl;
 
       // randomly select 4 matches from putative_matches
       int kp_id1 = dist(generator);
@@ -864,10 +762,6 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
       Y.row(2) = im2_match_norm.col(kp_id3).transpose();
       Y.row(3) = im2_match_norm.col(kp_id4).transpose();
 
-      // cout << "X is: " << endl;
-      // cout << X << endl;
-      // cout << "Y is: " << endl;
-      // cout << Y << endl;
       // dlt(X, Y, Hi);
       estimate_transform(X, Y, transform, Hi);
 
@@ -921,8 +815,8 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     Matrix<double, 3, 3> Hopt_norm, H;
 
     // dlt(X, Y, Hopt_norm);
+    cout << "estimateing transform: " << transform << endl;
     estimate_transform(X, Y, transform, Hopt_norm);
-    // cout << "estimated T is: " << T << endl;
 
     // see Hartley and Zisserman p.109
     H = im2_match_kp_tform_inv * Hopt_norm * im1_match_kp_tform;
@@ -938,14 +832,20 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
 
     Magick::Image im2_crop(im2);
     im2_crop.crop( cropRect1 );
-    //im2_crop.write( im2_crop_fn );
+    im2_crop.write( im2_crop_fn );
 
     // ----------------------------------------------------------------
     // apply Homography to im2 in order to visualize it along with im1.
     // ----------------------------------------------------------------
     Matrix<double, 3, 3> Hinv = H.inverse();
-    Magick::Image im2t_crop(im2);
-    string op_w_h_and_offsets;
+    // if we are doing photometric, use photometric transformed image
+    // else just the image 2.
+    Magick::Image im2t_crop;
+    if (is_photometric) {
+      im2t_crop = im2_pt;
+    } else {
+      im2t_crop = im2;
+    }
 
     // some simple affine tralsformations for testing:
     // Magick::DrawableAffine affine(1.0,  1.0, 0, 0, 0.0, 0.0);
@@ -960,43 +860,26 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // As we need to render the image on a webpage canvas, we need to resize the
     // width and height of im2. Then offset in x and y direction based on the translation
     // computed by Homography (H and Hinv matrices).
-    op_w_h_and_offsets = std::to_string(xu-xl) +
-                         "x" +
-                         std::to_string(yu-yl) +
-                         "-" + to_string((int) Hinv(0,2)) +
-                         "-" + to_string((int) Hinv(1,2));
-    // apply the values set above
+    string op_w_h_and_offsets = std::to_string(xu-xl) +
+                                "x" +
+                                std::to_string(yu-yl) +
+                                "-" + to_string((int) Hinv(0,2)) +
+                                "-" + to_string((int) Hinv(1,2));
     im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
     im2t_crop.affineTransform(hinv_affine);
-
-    // estimate and apply photometric transform
-    im2t_crop.type(Magick::TrueColorType);
-    im1_crop.type(Magick::TrueColorType);
-    Magick::Image im2t_crop_clone(im2t_crop);
-    Magick::Image im1_crop_clone(im1_crop);
-    // Magick::Image im2_pmetric_transformed(im1_crop_clone.size(), "black");
-    Magick::Image im2_pmetric_transformed(im1_crop);
-    im1_crop_clone.type(Magick::TrueColorType);
-    im2t_crop_clone.type(Magick::TrueColorType);
-    im2_pmetric_transformed.type(Magick::TrueColorType);
-
-    compute_photo_transform(im1_crop_clone, im2t_crop_clone, im2_pmetric_transformed);
+    cout << "done applying Affine Transform" << endl;
 
     // save result
-    // im2t_crop.write(im2_tx_fn);
-    im2_pmetric_transformed.write(im2_tx_fn);
-    // TODO: find a way to create a good overlap image. For now use im2t_crop
-    // overlap.write(overlap_image_fn);
+    im2t_crop.write(im2_tx_fn);
     // TODO: fix the javascript so that we don't use overlap image as im2t!!
-    // im2t_crop.write(overlap_image_fn);
-    im2_pmetric_transformed.write(overlap_image_fn);
+    im2t_crop.write(overlap_image_fn);
 
     // high_resolution_clock::time_point before_diff = std::chrono::high_resolution_clock::now();
     // cout << "before diff image comp is: " << (duration_cast<duration<double>>(before_diff - after_ransac)).count() << flush;
 
     // difference image
-    Magick::Image cdiff(im2t_crop_clone);
-    get_diff_image(im2t_crop_clone, im2t_crop_clone, cdiff);
+    Magick::Image cdiff(im1_crop);
+    get_diff_image(im1_crop, im2t_crop, cdiff);
     cdiff.write(diff_image_fn);
 
     // high_resolution_clock::time_point after_diff = std::chrono::high_resolution_clock::now();
@@ -1192,7 +1075,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
       message = "Very low number of robust matching feature points";
       return;
     }
-    //cout << "\nrobust match pairs = " << fp_match_count << flush;
+    //cout << "robust match pairs = " << fp_match_count << endl;
 
     // bin each correspondence pair into cells dividing the original image into KxK cells
     // a single point in each cell ensures that no two control points are very close
@@ -1307,8 +1190,9 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
       P(i,1) = cp1(0,i);
       P(i,2) = cp1(1,i);
     }
-    //cout << "P=" << P.rows() << "," << P.cols() << endl;
+    // cout << "P=" << P.rows() << "," << P.cols() << endl;
     //cout << "K=" << endl << K.block(0,0,6,6) << endl;
+    // cout << "K=" << endl << K << endl;
 
     // create matrix L
     MatrixXd L(n_cp+3, n_cp+3);
@@ -1316,7 +1200,7 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     L.block(0, n_cp, n_cp, 3) = P;
     L.block(n_cp, 0, 3, n_cp) = P.transpose();
     L.block(n_cp, n_cp, 3, 3).setZero();
-    //cout << "\nL=" << L.rows() << "," << L.cols() << flush;
+    // cout << "L rows and cols are: " << L.rows() << "," << L.cols() << endl;
 
     // create matrix V
     MatrixXd V(n_cp+3, 2);
@@ -1329,15 +1213,89 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     MatrixXd W = Linv * V;
 
     // apply compyute transformations to second image
-    Magick::Image im2t_crop(im2);
-    string op_w_h_and_offsets;
-    Magick::DrawableAffine hinv_affine(W(0,0), W(1,1), W(1,0), W(0,1), 0, 0);
-    op_w_h_and_offsets = std::to_string(xu-xl) +
-                         "x" +
-                         std::to_string(yu-yl) +
-                         "-" + to_string((int) W(0,2)) +
-                         "-" + to_string((int) W(1,2));
-    im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+    // cout << "L matrix is: " << endl;
+    // cout << L << endl;
+
+    // Magick::Image im2t_crop( im1_crop.size(), "white");
+    // string op_w_h_and_offsets;
+    // Magick::DrawableAffine hinv_affine(W(0,0), W(1,1), W(1,0), W(0,1), 0, 0);
+    // op_w_h_and_offsets = std::to_string(xu-xl) +
+    //                      "x" +
+    //                      std::to_string(yu-yl) +
+    //                      "-" + to_string((int) W(0,2)) +
+    //                      "-" + to_string((int) W(1,2));
+    // im2t_crop.affineTransform(hinv_affine);
+    // im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
+
+    Magick::Image im2t_crop( im1_crop.size(), "white");
+    double x0,x1,y0,y1;
+    double x, y;
+    double dx0, dx1, dy0, dy1;
+    double fxy0, fxy1;
+    double fxy_red, fxy_green, fxy_blue;
+    double xi, yi;
+    double x_non_linear_terms, y_non_linear_terms;
+    double x_affine_terms, y_affine_terms;
+    for(unsigned int j=0; j<im1_crop.rows(); j++) {
+      for(unsigned int i=0; i<im1_crop.columns(); i++) {
+        //cout << "(" << i << "," << j << ") :" << endl;
+        xi = ((double) i) + 0.5; // center of pixel
+        yi = ((double) j) + 0.5; // center of pixel
+        x_non_linear_terms = 0.0;
+        y_non_linear_terms = 0.0;
+        for(unsigned int k=0; k<n_cp; ++k) {
+          //cout << " k=" << k << endl;
+          rx = cp1(0,k) - xi;
+          ry = cp1(1,k) - yi;
+          r = sqrt(rx*rx + ry*ry);
+          r2 = r*r;
+          x_non_linear_terms += W(k, 0) * r2 * log(r2);
+          y_non_linear_terms += W(k, 1) * r2 * log(r2);
+          //cout << "(" << x_non_linear_terms << "," << y_non_linear_terms << ")" << flush;
+        }
+        x_affine_terms = W(n_cp,0) + W(n_cp+1,0)*xi + W(n_cp+2,0)*yi;
+        y_affine_terms = W(n_cp,1) + W(n_cp+1,1)*xi + W(n_cp+2,1)*yi;
+        x = x_affine_terms + x_non_linear_terms;
+        y = y_affine_terms + y_non_linear_terms;
+
+        //printf("(%d,%d) : (xi,yi)=(%.2f,%.2f) (x,y)=(%.2f,%.2f) : (x,y)-affine = (%.2f,%.2f) (x,y)-nonlin = (%.2f,%.2f)", i, j, xi, yi, x, y, x_affine_terms, y_affine_terms, x_non_linear_terms, y_non_linear_terms);
+
+        // neighbourhood of xh
+        x0 = ((int) x);
+        x1 = x0 + 1;
+        dx0 = x - x0;
+        dx1 = x1 - x;
+
+        y0 = ((int) y);
+        y1 = y0 + 1;
+        dy0 = y - y0;
+        dy1 = y1 - y;
+
+        Magick::ColorRGB fx0y0 = im2.pixelColor(x0, y0);
+        Magick::ColorRGB fx1y0 = im2.pixelColor(x1, y0);
+        Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
+        Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
+
+        // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
+        fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1
+        fxy1 = dx1 * fx0y1.red() + dx0 * fx1y1.red(); // note: x1 - x0 = 1
+        fxy_red = dy1 * fxy0 + dy0 * fxy1;
+
+        fxy0 = dx1 * fx0y0.green() + dx0 * fx1y0.green(); // note: x1 - x0 = 1
+        fxy1 = dx1 * fx0y1.green() + dx0 * fx1y1.green(); // note: x1 - x0 = 1
+        fxy_green = dy1 * fxy0 + dy0 * fxy1;
+
+        fxy0 = dx1 * fx0y0.blue() + dx0 * fx1y0.blue(); // note: x1 - x0 = 1
+        fxy1 = dx1 * fx0y1.blue() + dx0 * fx1y1.blue(); // note: x1 - x0 = 1
+        fxy_blue = dy1 * fxy0 + dy0 * fxy1;
+
+        // cout << "red is: " << fx0y0.red() << " green is: " << fx0y0.green() << " blue is: " << fx0y0.blue() << endl;
+
+        Magick::ColorRGB fxy(fxy_red, fxy_green, fxy_blue);
+        im2t_crop.pixelColor(i, j, fxy);
+
+      }
+    }
 
     im2t_crop.write( im2_tx_fn );
     im2t_crop.write( overlap_image_fn );

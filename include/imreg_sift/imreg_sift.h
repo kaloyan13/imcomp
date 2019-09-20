@@ -50,7 +50,8 @@ class imreg_sift {
                          bool& success,
                          std::string& message,
                          imcomp_cache* cache,
-                         std::string& transform);
+                         std::string& transform,
+                         bool is_photometric);
 
   // Applies robust filtering of point correspondences and uses Thin Plate Spline for image registration
   //

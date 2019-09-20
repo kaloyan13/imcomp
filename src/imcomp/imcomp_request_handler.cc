@@ -148,11 +148,15 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
       string region1_str = uri_arg["region"];
       string algname = "default";
       string transform = "none";
+      bool is_photometric = false;
       if(uri_arg.count("algname")) {
         algname = uri_arg["algname"];
       }
       if (uri_arg.count("transform")) {
         transform = uri_arg["transform"];
+      }
+      if (uri_arg.count("is_photometric")) {
+        is_photometric = (uri_arg["is_photometric"] == "true") ? true : false;
       }
 
       //cout << "\n  fid1=" << fid1 << flush;
@@ -216,7 +220,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                success,
                                message,
                                cache_,
-                               transform);
+                               transform,
+                               is_photometric);
       }
 
       std::ostringstream json;
