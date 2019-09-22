@@ -196,7 +196,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
                                       overlap_fn.string().c_str(),
                                       success,
                                       message,
-                                      cache_);
+                                      cache_,
+                                      is_photometric);
       } else if (algname == "identity") {
         // TODO: implement
         cout << "\n in identity transform " << flush;

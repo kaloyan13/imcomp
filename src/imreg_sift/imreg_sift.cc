@@ -914,7 +914,8 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
                                    const char overlap_image_fn[],
                                    bool& success,
                                    std::string& message,
-                                   imcomp_cache * cache) {
+                                   imcomp_cache * cache,
+                                   bool is_photometric) {
   try {
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -937,6 +938,14 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
     // to ensure that image pixel values are 8bit RGB
     im1.type(Magick::TrueColorType);
     im2.type(Magick::TrueColorType);
+
+    // the photometric transformed image
+    Magick::Image im2_pt(im2.size(), "black");
+    im2_pt.type(Magick::TrueColorType);
+
+    if (is_photometric) {
+      compute_photo_transform(im1, im2, im2_pt);
+    }
 
     Magick::Image im1_g = im1;
     im1_g.crop(Magick::Geometry(xu-xl, yu-yl, xl, yl));
@@ -1271,10 +1280,18 @@ void imreg_sift::robust_ransac_tps(const char im1_fn[], const char im2_fn[],
         dy0 = y - y0;
         dy1 = y1 - y;
 
-        Magick::ColorRGB fx0y0 = im2.pixelColor(x0, y0);
-        Magick::ColorRGB fx1y0 = im2.pixelColor(x1, y0);
-        Magick::ColorRGB fx0y1 = im2.pixelColor(x0, y1);
-        Magick::ColorRGB fx1y1 = im2.pixelColor(x1, y1);
+        Magick::ColorRGB fx0y0, fx1y0, fx0y1, fx1y1;
+        if (is_photometric) {
+          fx0y0 = im2_pt.pixelColor(x0, y0);
+          fx1y0 = im2_pt.pixelColor(x1, y0);
+          fx0y1 = im2_pt.pixelColor(x0, y1);
+          fx1y1 = im2_pt.pixelColor(x1, y1);
+        } else {
+          fx0y0 = im2.pixelColor(x0, y0);
+          fx1y0 = im2.pixelColor(x1, y0);
+          fx0y1 = im2.pixelColor(x0, y1);
+          fx1y1 = im2.pixelColor(x1, y1);
+        }
 
         // Bilinear interpolation: https://en.wikipedia.org/wiki/Bilinear_interpolation
         fxy0 = dx1 * fx0y0.red() + dx0 * fx1y0.red(); // note: x1 - x0 = 1

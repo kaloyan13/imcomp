@@ -68,7 +68,8 @@ class imreg_sift {
                                 const char overlap_image_fn[],
                                 bool& success,
                                 std::string& message,
-                                imcomp_cache* cache);
+                                imcomp_cache* cache,
+                                bool is_photometric);
 
  // Computes image features for a give uploaded file with a unique file id
  // and caches the features to imrpove performance.
