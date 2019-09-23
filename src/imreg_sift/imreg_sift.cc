@@ -796,7 +796,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     // high_resolution_clock::time_point after_ransac = std::chrono::high_resolution_clock::now();
     // cout << "after ransac is: " << (duration_cast<duration<double>>(after_ransac - after_putative_match)).count() << endl;
 
-    if( max_score < 3 ) {
+    if(transform != "identity" && max_score < 3 ) {
       message = "Failed to find a suitable transformation";
       return;
     }
