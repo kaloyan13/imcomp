@@ -1,9 +1,10 @@
-Note: version A.B.C corresponds to:
-  A : the major version number of imcomp server
-  B : the minor version number of imcomp server
-  C : the version number for client user interfaces of imcomp and traherne
+## imcomp-1.0.0 - 04 October 2019
+ * builds on the Traherne codebase
+ * supports photometric transformation
+ * provides a large number of visualizations to help users spot the difference between two images
+ * reduced the amount of time taken to compare a pair of images
+ * improved user interface
 
-  
 ## [imcomp_server-2.0.x] - March 06, 2018
  * code natively compiles in Linux, Windows and MacOS
  * native installers for Windows and MacOS
