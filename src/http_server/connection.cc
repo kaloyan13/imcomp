@@ -23,6 +23,13 @@ boost::asio::ip::tcp::socket& connection::socket() {
 }
 
 void connection::process_connection() {
+  boost::system::error_code ec;
+  boost::asio::ip::tcp::endpoint ep = socket_.remote_endpoint(ec);
+  if ( ec ) {
+    close_connection();
+    return;
+  }
+  
   socket_.async_read_some(boost::asio::buffer( buffer_ ),
                           strand_.wrap( boost::bind(&connection::on_request_data, shared_from_this(),
                                                     boost::asio::placeholders::error,
@@ -108,10 +115,18 @@ void connection::on_response_write(const boost::system::error_code& e) {
     std::cerr << "\nfailed to send http response" << std::endl;
   }
 
-  close_connection(e);
+  close_connection();
 }
 
-void connection::close_connection(const boost::system::error_code& e) {
-  boost::system::error_code ignored_err;
-  socket_.shutdown( boost::asio::ip::tcp::socket::shutdown_both, ignored_err );
+void connection::close_connection() {
+  boost::system::error_code ec;
+  boost::asio::ip::tcp::endpoint ep = socket_.remote_endpoint(ec);
+  if ( ec ) {
+    return;
+  }
+
+  if ( socket_.is_open() ) {
+    socket_.shutdown( boost::asio::ip::tcp::socket::shutdown_both, ec );
+    socket_.close(ec);
+  }
 }

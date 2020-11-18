@@ -1,69 +1,51 @@
 #!/bin/sh
 
-if [ "$#" -ne 1 ] || ! [ -d "$1" ]; then
-  echo "Usage: $0 DEPENDENCY_FILES_LOCATION/" >&2
+## check dependency location provided by user
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 [FOLDER TO STORE DEPENDENCIES]" >&2
+  exit 1
+fi
+if ! [ -e "$1" ]; then
+  echo "$1 not found" >&2
+  exit 1
+fi
+if ! [ -d "$1" ]; then
+  echo "$1 not a directory" >&2
   exit 1
 fi
 
-# $1
-# |- lib  
-# |- tmp_libsrc
-DEP_BASEDIR=$1
-DEP_LIBDIR="${DEP_BASEDIR}lib/"
-DEP_SRCDIR="${DEP_BASEDIR}tmp_libsrc"
-
-#
-# Install ImageMagick
-#
-IMAGEMAGICK_LIBDIR=$DEP_LIBDIR"imagemagick_q8/"
-if [ -d "$IMAGEMAGICK_LIBDIR" ]; then
-    echo "Skipping ImageMagick library as it already exists at "$IMAGEMAGICK_LIBDIR
-else
-    echo "Installing imagemagick at "$IMAGEMAGICK_LIBDIR
-    cd $DEP_SRCDIR
-    #wget https://www.imagemagick.org/download/releases/ImageMagick-6.9.8-4.tar.gz
-    #wget -O ImageMagick-6.9.8-4.tar.gz http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.gz?ref=6.9.8-4
-    #wget -O ImageMagick-7.0.5-6.tar.gz http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.gz?ref=7.0.5-6
-    #wget -O ImageMagick-6.9.8-8.tar.gz http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.gz?ref=6.9.8-8
-    #tar -zxvf ImageMagick-6.9.8-8.tar.gz
-    cd ImageMagick-6.9.8-8
-    ./configure --prefix=$IMAGEMAGICK_LIBDIR -enable-hdri=no --with-quantum-depth=8 --disable-dependency-tracking --with-x=yes --without-perl
-    make -j8
-    make install
+DEPDIR=$1
+DEPSRC="${DEPDIR}/_tmp_libsrc"
+if ! [ -d "${DEPSRC}" ]; then
+  mkdir "${DEPSRC}"
 fi
 
-#
-# Install vlfeat
-#
-VLFEAT_LIBDIR=$DEP_LIBDIR"vlfeat/"
-if [ -d "$VLFEAT_LIBDIR" ]; then
-    echo "Skipping VLFEAT library as it already exists at "$VLFEAT_LIBDIR
-else
-    echo "Installing VLFEAT at "$VLFEAT_LIBDIR
-    cd $DEP_SRCDIR
-    wget http://www.vlfeat.org/download/vlfeat-0.9.21-bin.tar.gz
-    tar -zxvf vlfeat-0.9.21-bin.tar.gz 
-    cd vlfeat-0.9.21/
-    ./configure --prefix=$IMAGEMAGICK_LIBDIR -enable-hdri=no --with-quantum-depth=8 --disable-dependency-tracking --with-x=yes --without-perl
-    make -j8
-    make install
+#sudo apt install libssl-dev # required by cmake
+
+## cmake
+if ! [ -f "${DEPDIR}/bin/cmake" ]; then
+  cd $DEPSRC && wget https://github.com/Kitware/CMake/releases/download/v3.18.0/cmake-3.18.0.tar.gz && tar -zxvf cmake-3.18.0.tar.gz && cd cmake-3.18.0 && ./configure --prefix=$DEPDIR && make -j 16 && make install
 fi
 
-#
-# Install vlfeat
-#
-EIGEN_LIBDIR=$DEP_LIBDIR"eigen/"
-if [ -d "$EIGEN_LIBDIR" ]; then
-    echo "Skipping EIGEN library as it already exists at "$EIGEN_LIBDIR
-else
-    echo "Installing EIGEN at "$EIGEN_LIBDIR
-    cd $DEP_SRCDIR
-    wget -O eigen-3.3.4.tar.gz http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz
-    tar -zxvf eigen-3.3.4.tar.gz
-    cd eigen-3.3.4/
-    mkdir build
-    cd build
-    /ssd/adutta/build_deps/lib/cmake/bin/cmake -DCMAKE_INSTALL_PREFIX=/ssd/adutta/build_deps/lib/eigen ../
-    make install
+## boost
+if ! [ -d "${DEPDIR}/include/boost" ]; then
+  cd $DEPSRC && wget https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.gz && tar -zxvf boost_1_73_0.tar.gz && cd boost_1_73_0 && ./bootstrap.sh --prefix=$DEPDIR --with-toolset=gcc --with-libraries=filesystem,system,thread,atomic && ./b2 --with-filesystem --with-system --with-thread --with-atomic variant=release threading=multi toolset=gcc install
 fi
 
+# imagemagick
+if ! [ -d "${DEPDIR}/include/ImageMagick-6" ]; then
+  cd $DEPSRC && wget -O ImageMagick6-6.9.11-22.tar.gz https://github.com/ImageMagick/ImageMagick6/archive/6.9.11-22.tar.gz && tar -zxvf ImageMagick6-6.9.11-22.tar.gz && cd ImageMagick6-6.9.11-22 && ./configure --prefix=$DEPDIR -enable-hdri=no --with-quantum-depth=8 --disable-dependency-tracking --with-x=no --without-perl && make -j 16 && make install
+fi
+
+# eigen
+if ! [ -d "${DEPDIR}/include/eigen3/Eigen" ]; then
+  cd $DEPSRC && wget -O eigen-3.3.7.tar.gz https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz && tar -zxvf eigen-3.3.7.tar.gz && cd eigen-3.3.7/ && mkdir cmake_build && cd cmake_build && $DEPDIR"/bin/cmake" -DCMAKE_INSTALL_PREFIX=$DEPDIR ../ && make -j8 && make install
+fi
+
+# vlfeat
+if ! [ -d "${DEPDIR}/include/vl" ]; then
+  cd $DEPSRC && wget http://www.vlfeat.org/download/vlfeat-0.9.21-bin.tar.gz && tar -zxvf vlfeat-0.9.21-bin.tar.gz && cd vlfeat-0.9.21 && make -j16 && cp "${DEPSRC}/vlfeat-0.9.21/bin/glnxa64/libvl.so" "${DEPDIR}/lib/libvl.so" && mkdir "${DEPDIR}/include/vl" && cp -fr $DEPSRC/vlfeat-0.9.21/vl/*.* "${DEPDIR}/include/vl/"
+fi
+
+echo "****************************************************************"
+echo "All dependencies downloaded, compiled and installed to ${DEPDIR}"

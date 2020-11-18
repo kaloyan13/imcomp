@@ -57,6 +57,12 @@ void http_server::accept_new_connection() {
 }
 
 void http_server::handle_connection(const boost::system::error_code& e) {
+  // check if server was stopped by a signal before handle_connection()
+  // had a chance to run
+  if (!acceptor_.is_open()) {
+    return;
+  }
+  
   if ( !e ) {
     new_connection_->process_connection();
   }
