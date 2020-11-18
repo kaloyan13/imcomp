@@ -645,7 +645,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     vector< vector<vl_uint8> > descriptor_list1, descriptor_list2;
 
     high_resolution_clock::time_point before_sift = std::chrono::high_resolution_clock::now();
-    cout << "time before sift computation: " << (duration_cast<duration<double>>(before_sift - start)).count() << endl;
+    //cout << "time before sift computation: " << (duration_cast<duration<double>>(before_sift - start)).count() << endl;
 
     // check cache before computing features
     // TODO: Enable when we have a proper implementation of caching mechanism.
@@ -815,7 +815,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     Matrix<double, 3, 3> Hopt_norm, H;
 
     // dlt(X, Y, Hopt_norm);
-    cout << "estimateing transform: " << transform << endl;
+    //cout << "estimateing transform: " << transform << endl;
     estimate_transform(X, Y, transform, Hopt_norm);
 
     // see Hartley and Zisserman p.109
@@ -867,7 +867,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
                                 "-" + to_string((int) Hinv(1,2));
     im2t_crop.artifact("distort:viewport", op_w_h_and_offsets);
     im2t_crop.affineTransform(hinv_affine);
-    cout << "done applying Affine Transform" << endl;
+    //cout << "done applying Affine Transform" << endl;
 
     // save result
     im2t_crop.write(im2_tx_fn);
@@ -892,6 +892,7 @@ void imreg_sift::ransac_dlt(const char im1_fn[], const char im2_fn[],
     success = false;
     std::ostringstream ss;
     ss << "Exception occured: [" << e.what() << "]";
+    std::cout << ss.str() << std::endl;
     message = ss.str();
   }
 }
