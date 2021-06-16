@@ -41,6 +41,7 @@ function _imcomp_model() {
 
   this.files = [];
   this.demo_files = [];
+  this.lib_files = [];
   this.file_count = 0;
   this.fid_to_index = {};
   this.index_to_fid = {};
@@ -134,6 +135,7 @@ _imcomp_model.prototype.set_via_config = function() {
 
 _imcomp_model.prototype.clear_images = function() {
   this.files = [];
+  this.lib_files = [];
 
   this.file_count = 0;
   this.fid_to_index = {};
@@ -496,6 +498,70 @@ _imcomp_model.prototype.fetch_show_demo_pair = function (e) {
       for( type in this.c.type_list ) {
         for ( var i = start; i < end; ++i ) {
           via_promises[type].push( this.via[type].m.add_file_from_url(this.demo_files[i], 'image'));
+        }
+      }
+      Promise.all(via_promises['base']).then( function(base_via_fileid) {
+        for ( var i = start; i < end; ++i ) {
+          this.fid_to_via_fileid['base'][i] = base_via_fileid[i];
+        }
+        Promise.all(via_promises['comp']).then( function(comp_via_fileid) {
+          for ( i = start; i < end; ++i ) {
+            this.fid_to_via_fileid['comp'][i] = comp_via_fileid[i];
+          }
+          // triggers the display of compare page with files panel and view panel
+          this.c.on_filelist_update(true);
+
+        }.bind(this), function(err) {
+          console.log('failed to add images to comp VIA');
+          console.log(err);
+        });
+      }.bind(this), function(err) {
+        console.log('failed to add images to base VIA');
+        console.log(err);
+      });
+    }
+  }.bind(this));
+
+}
+
+_imcomp_model.prototype.fetch_lib_files = function () {
+  var start = this.files.length;
+  this.files_upload_start = start;
+
+  for ( var i = 0; i < this.lib_files.length; ++i ) {
+    console.log('lib file names are: ', this.lib_files[i]);
+    this.files.push(this.lib_files[i]);
+  }
+  var end = this.files.length;
+  this.files_upload_end = end;
+
+  for (var i = start; i < end ; i++) {
+    this.upload_status[i] = {};
+    this.set_upload_status(i, '...', 'Queued for upload');
+
+    this.files_upload_mode[i] = 'lib';
+    // upload the read file and get a unique string
+    this.upload[i] = this.read_and_upload_img(this.lib_files[i]);
+    console.log('upload promise is: ', this.upload[i]);
+  }
+  console.log('uppload done in fetch_lib_files');
+
+  Promise.all( this.upload ).then( function(result) {
+    var n = result.length;
+    var i, fid, type;
+    for (i = 0; i < n; i++) {
+      fid = result[i];
+      this.fid_to_index[fid] = i;
+      this.index_to_fid[i] = fid;
+      this.file_count = this.file_count + 1;
+    }
+    // add images to via
+    if (this.file_count) {
+      console.log('in file count');
+      var via_promises = { 'base':[], 'comp':[] };
+      for( type in this.c.type_list ) {
+        for ( var i = start; i < end; ++i ) {
+          via_promises[type].push( this.via[type].m.add_file_from_url(this.lib_files[i], 'image'));
         }
       }
       Promise.all(via_promises['base']).then( function(base_via_fileid) {

@@ -65,10 +65,33 @@ var _imcomp = new _imcomp_user_interface();
 _imcomp.init();
 
 function _imcomp_init() {
+
+	var step_n = 1;
+
   console.log('Initializing imcomp ...');
   init_message_panel();
-  _imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
-  show_message('Image Comparator ' + _imcomp_about.version);
+
+  var items = location.search.substr(1).split("&");
+
+	for (var index = 0; index < items.length; index++) {
+    var tmp = items[index].split("=");
+    if (tmp[0] === 'images'){
+			var images = decodeURIComponent(tmp[1]).split(",");
+
+			for (var im = 0; im < images.length; im++) {
+				console.log('Adding image from GET [' + im + '] ' + images[im]);
+				_imcomp.m.lib_files.push("library/" + images[im]);
+			}
+			step_n = 3;
+		}
+	}
+
+	if(step_n == 1){
+		_imcomp_set_panel(IMCOMP_PANEL_NAME.STEP1, false);
+	}else{
+		_imcomp.m.fetch_lib_files();
+	}
+	show_message('Image Comparator ' + _imcomp_about.version);
 }
 
 // sets the right panel based on panel_id
@@ -171,14 +194,21 @@ function _imcomp_set_panel_content(panel_id, is_navigation) {
 				    }.bind(this));
 						// for the files panel images
 				    fr.readAsDataURL( _imcomp.m.files[i] );
-					} else { // demo images
+					}else if (_imcomp.m.files_upload_mode[i] === 'demo') {
 						console.log('appending demo images ');
 						var img = document.createElement('img');
 						img.setAttribute('draggable', true);
 						img.setAttribute('id', 'files_panel_file_' + i);
 						img.src = _imcomp.m.demo_files[i];
 						fp.appendChild(img);
-				}
+					} else { // library images
+						console.log('appending library images ');
+						var img = document.createElement('img');
+						img.setAttribute('draggable', true);
+						img.setAttribute('id', 'files_panel_file_' + i);
+						img.src = _imcomp.m.lib_files[i];
+						fp.appendChild(img);
+				  }
 			}
 	  }
 		_imcomp.c.format_comparison_page();
