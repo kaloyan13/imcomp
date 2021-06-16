@@ -36,17 +36,16 @@ cd build
 cmake ../ -DVLFEAT_INCLUDE_DIR=/usr/include -DVLFEAT_LIB=/usr/lib/libvl.so
 make -j 8
 
-# to run the imcomp_server
-../bin/imcomp_server 0.0.0.0 9972 4 $IMCOMP_SOURCE_FOLDER/asset /tmp/imcomp
-
-# To use this applicaton, visit http://localhost:9972/imcomp/traherne in your web browser
-
 # Link or create the library folder in asset
   ln -s YOUR_LIB_FOLDER $IMCOMP_SOURCE_FOLDER/asset/library
   ls library/
 A.jpg  B.jpg
 
-# To use library functionality, visit http://localhost:9972/imcomp/index.html?images=A.jpg,B.jpg in your web browser
+# to run the imcomp_server
+../bin/imcomp_server 0.0.0.0 9972 4 $IMCOMP_SOURCE_FOLDER/asset /tmp/imcomp
+
+# To use this applicaton, visit http://localhost:9972/imcomp/traherne in your web browser
+# To use library compare, visit http://localhost:9972/imcomp/index.html?images=A.jpg,B.jpg in your web browser
 ```
 
 
