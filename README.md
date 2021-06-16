@@ -14,10 +14,26 @@ This software builds on the following open source software libraries:
 You must install these libraries prior to compiling this software as follows:
 
 ```
+# Fedora 35 packages
+dnf install boost-devel ImageMagick-devel ImageMagick-c++-devel eigen3-devel octave-devel
+
+# Ubuntu 20 packages
+apt-get install make gcc g++ libboost-dev libboost-filesystem-dev libboost-thread-dev imagemagick cmake libeigen3-dev libmagick++-dev
+
+# install VLFEAT
+wget -P/tmp https://www.vlfeat.org/download/vlfeat-0.9.21-bin.tar.gz
+tar -xf vlfeat-0.9.21-bin.tar.gz
+cd vlfeat-0.9.21
+make
+
+mkdir /usr/include/vl
+cp vl/*.h /usr/include/vl
+cp bin/glnxa64/libvl.so /usr/lib/
+
 cd $IMCOMP_SOURCE_FOLDER # replace this with the folder that contains source code
 mkdir build
 cd build
-cmake ../
+cmake ../ -DVLFEAT_INCLUDE_DIR=/usr/include -DVLFEAT_LIB=/usr/lib/libvl.so
 make -j 8
 
 # to run the imcomp_server
