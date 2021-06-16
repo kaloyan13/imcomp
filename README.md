@@ -37,7 +37,7 @@ cmake ../ -DVLFEAT_INCLUDE_DIR=/usr/include -DVLFEAT_LIB=/usr/lib/libvl.so
 make -j 8
 
 # Link or create the library folder in asset
-  ln -s YOUR_LIB_FOLDER $IMCOMP_SOURCE_FOLDER/asset/library
+  ln -s YOUR_LIB_FOLDER $IMCOMP_SOURCE_FOLDER/asset/imcomp/library
   ls library/
 A.jpg  B.jpg
 
