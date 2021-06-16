@@ -87,7 +87,8 @@ void imcomp_request_handler::handle_http_request(const http_request& request, ht
 
   if ( util::begins_with(request.uri_, "/imcomp/") && request.method_ == "GET") {
     // serve application assets (css, html, js, etc)
-    boost::filesystem::path static_res_path( request.uri_ );
+    std::string uri = request.uri_.substr(0, request.uri_.find("?", 0));
+    boost::filesystem::path static_res_path( uri );
     static_res_path = static_res_path.lexically_normal();
     boost::filesystem::path fn = asset_dir_ / static_res_path;
     //std::cout << "\nfetching file: " << fn.string() << flush;
