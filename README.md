@@ -1,7 +1,7 @@
 # Image Comparator
 
-Image comparator is a standalone and lightweight tool to compare a pair of images. 
-It is an open source project developed at the [Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) and 
+Image comparator is a standalone and lightweight tool to compare a pair of images.
+It is an open source project developed at the [Visual Geometry Group](http://www.robots.ox.ac.uk/~vgg/) and
 released under the BSD-2 clause license. For more details, see [http://www.robots.ox.ac.uk/~vgg/software/imcomp/].
 For more details, see http://www.robots.ox.ac.uk/~vgg/software/traherne/
 
@@ -24,6 +24,13 @@ make -j 8
 ../bin/imcomp_server 0.0.0.0 9972 4 $IMCOMP_SOURCE_FOLDER/asset /tmp/imcomp
 
 # To use this applicaton, visit http://localhost:9972/imcomp/traherne in your web browser
+
+# Link or create the library folder in asset
+  ln -s YOUR_LIB_FOLDER $IMCOMP_SOURCE_FOLDER/asset/library
+  ls library/
+A.jpg  B.jpg
+
+# To use library functionality, visit http://localhost:9972/imcomp/index.html?images=A.jpg,B.jpg in your web browser
 ```
 
 
